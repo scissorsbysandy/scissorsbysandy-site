@@ -1,0 +1,6 @@
+# Netlify publishes the site/ folder.
+# Every deploy first runs the preflight. If any check fails, the build fails
+# and Netlify keeps the current live site untouched. Nothing broken can ship.
+[build]
+  publish = "site"
+  command = "python3 pricing/preflight.py"

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://scissorsbysandy.com/sitemap.xml

@@ -1,0 +1,28 @@
+==============================================================
+PLATFORM CHECKLIST — effective 2026-10-01
+==============================================================
+
+PRICE CHANGES  (update on every platform)
+   The Sovereign                  $115  ->  $120
+   The Regent                     $108  ->  $113
+   The Ambassador                 $ 90  ->  $95
+   The Officer                    $ 85  ->  $90
+   The Diplomat                   $ 75  ->  $80
+   The Majesty Hot Towel Shave    $ 70  ->  $75
+   The Royal Hot Towel Shave      $ 50  ->  $55
+   The Executive                  $ 50  ->  $60
+   The Signature                  $ 45  ->  $50
+   The Fresh Fade                 $ 40  ->  $50
+   The Royal Roots                $ 35  ->  $40
+   Scalp Treatment                $ 30  ->  $35
+   Grey Blending                  $ 50  ->  $55
+
+NEW SERVICES  (create in Booksy first, then paste variantId into prices.json)
+   The Statesman Beard Shaping    $ 35   30 min
+   The Regiment                   $ 45   30 min
+
+RENAME IN BOOKSY  (edit the name — do NOT delete, it keeps the variantId)
+   The Groom & Relax  ->  The Diplomat
+
+UPDATE ON:  [ ] Booksy   [ ] Google   [ ] Yelp   [ ] Apple   [ ] Facebook
+            (Bing syncs from Google — no action)
