@@ -1,0 +1,107 @@
+GOOGLE BUSINESS PROFILE — SERVICES
+Paste one service at a time. Name, then Description, then Price.
+
+HOW:  Business Profile > Edit services > Add custom service
+      Name  <= 58 chars   Description <= 300 chars   Price = its own field
+
+DO FIRST: tick every predefined service Google already offers for
+          Barber Shop (haircut, beard trim, shave etc). Then add the
+          custom ones below for anything Google doesn't list.
+
+DO NOT put the price or a phone number inside the description —
+Google rejects that. The price has its own field.
+======================================================================
+
+--- PACKAGES ---
+
+NAME:  The Sovereign
+DESC:  The Executive cut paired with The Majesty Hot Towel Shave.
+PRICE: Fixed  $120
+
+NAME:  The Regent
+DESC:  The Signature cut paired with The Majesty Hot Towel Shave.
+PRICE: Fixed  $115
+
+NAME:  The Ambassador
+DESC:  The Signature cut paired with The Royal Hot Towel Shave.
+PRICE: Fixed  $95
+
+NAME:  The Officer
+DESC:  The Regiment cut paired with The Royal Hot Towel Shave.
+PRICE: Fixed  $90
+
+NAME:  The Gentleman
+DESC:  The Signature cut paired with The Statesman Beard Shaping.
+PRICE: Fixed  $80
+
+NAME:  The Diplomat
+DESC:  The Signature cut paired with a Scalp Treatment.
+PRICE: Fixed  $80
+
+--- SIGNATURE SHAVES & BEARD ---
+
+NAME:  The Majesty Hot Towel Shave
+DESC:  Our most indulgent ritual. Facial steam, exfoliation, warm aromatic towels, a traditional straight-razor shave, and a customized mini facial to finish. Clients call it calming, soothing, and more than just a shave — you leave feeling brand new.
+PRICE: Fixed  $75
+
+NAME:  The Royal Hot Towel Shave
+DESC:  A meticulously curated hot towel shave with beard trim. Warm towels and premium products prepare the skin for a traditional straight-razor shave, finished close and comfortable.
+PRICE: Fixed  $55
+
+NAME:  The Statesman Beard Shaping
+DESC:  Full beard sculpting and detailing with clippers, shaped to your face with clean, deliberate lines. Hot towel included.
+PRICE: Fixed  $35
+
+--- PRECISION HAIRCUTS ---
+
+NAME:  The Executive
+DESC:  The house specialty. Wash and cut, shaped entirely with shears — no clippers, no guards — every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.
+PRICE: Fixed  $60
+
+NAME:  The Signature
+DESC:  Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout — nobody should leave a haircut feeling roughed up.
+PRICE: Fixed  $50
+
+NAME:  The Fresh Fade
+DESC:  Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top — a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.
+PRICE: Fixed  $50
+
+NAME:  The Regiment
+DESC:  Wash and cut. The classic crew cut — clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.
+PRICE: Fixed  $45
+
+NAME:  The Royal Roots
+DESC:  Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair — kids notice when someone takes their time with them.
+PRICE: Fixed  $40
+
+--- GROOMING & WAXING ---
+
+NAME:  Nose Waxing
+DESC:  Precise removal of nasal hair for a polished look.
+PRICE: Fixed  $25
+
+NAME:  Ear Waxing
+DESC:  Gentle, hygienic removal of excess ear hair.
+PRICE: Fixed  $20
+
+NAME:  Eyebrow Waxing
+DESC:  Sculpting and shaping to define your look with precision.
+PRICE: Fixed  $20
+
+--- TREATMENTS ---
+
+NAME:  Scalp Treatment
+DESC:  A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.
+PRICE: Fixed  $35
+
+--- COLOR ---
+
+NAME:  Grey Blending
+DESC:  A refined technique to create a soft, natural transition with our professional grey blending service.
+PRICE: Fixed  $55
+
+======================================================================
+BUSINESS DESCRIPTION (750 char limit, first 250 shown in search)
+
+Scissors by Sandy is a private one-chair barber suite at The Shoppes at Old Bridge. Master barber Sandra Mordan brings 25+ years from premier New Jersey barbershops to a space where no one is rushed and no one is just a number. Precision haircuts shaped by hand, traditional straight-razor hot towel shaves finished with a customized mini facial, beard shaping, scalp treatments and waxing. Scissors-only cuts are the house specialty. First responders save $5 on every visit. By appointment only — book online any time.
+[519 characters]

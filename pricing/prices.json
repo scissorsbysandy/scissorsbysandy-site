@@ -1,0 +1,249 @@
+{
+  "_comment": "SINGLE SOURCE OF TRUTH for Scissors by Sandy pricing. Edit ONLY this file, then run build.py.",
+  "meta": {
+    "business": "Scissors by Sandy",
+    "effective_date": "2026-10-01",
+    "version": 3,
+    "currency": "USD",
+    "notes": "First responders get an additional $5 off their total, every visit.",
+    "combo_padding_note": "Booksy applies the trailing 10-min padding to combos automatically from the last component service. Do NOT add extra minutes into the combo duration — that double-pads and wastes 10 min of chair time per package. Combo duration = sum of components, nothing more."
+  },
+  "booksy": {
+    "profile_url": "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge",
+    "widget_base": "https://booksy.com/widget/index.html?id=1823074&lang=en&country=us&theme=default&variantId="
+  },
+  "categories": [
+    {
+      "name": "Packages",
+      "services": [
+        {
+          "id": "sovereign",
+          "name": "The Sovereign",
+          "price": 120,
+          "prev_price": 115,
+          "minutes": 90,
+          "save": 15,
+          "components": [
+            "executive",
+            "majesty"
+          ],
+          "desc": "The Executive cut paired with The Majesty Hot Towel Shave.",
+          "variantId": "22331854"
+        },
+        {
+          "id": "regent",
+          "name": "The Regent",
+          "price": 115,
+          "prev_price": 113,
+          "minutes": 85,
+          "save": 10,
+          "components": [
+            "signature",
+            "majesty"
+          ],
+          "desc": "The Signature cut paired with The Majesty Hot Towel Shave.",
+          "variantId": "22331856"
+        },
+        {
+          "id": "ambassador",
+          "name": "The Ambassador",
+          "price": 95,
+          "prev_price": 90,
+          "minutes": 70,
+          "save": 10,
+          "components": [
+            "signature",
+            "royal"
+          ],
+          "desc": "The Signature cut paired with The Royal Hot Towel Shave.",
+          "variantId": "22331859"
+        },
+        {
+          "id": "officer",
+          "name": "The Officer",
+          "price": 90,
+          "prev_price": 85,
+          "minutes": 60,
+          "save": 10,
+          "components": [
+            "regiment",
+            "royal"
+          ],
+          "desc": "The Regiment cut paired with The Royal Hot Towel Shave.",
+          "variantId": "22331878"
+        },
+        {
+          "id": "gentleman",
+          "name": "The Gentleman",
+          "price": 80,
+          "prev_price": 80,
+          "minutes": 70,
+          "save": 5,
+          "components": [
+            "signature",
+            "statesman"
+          ],
+          "desc": "The Signature cut paired with The Statesman Beard Shaping.",
+          "variantId": "22331887"
+        },
+        {
+          "id": "diplomat",
+          "name": "The Diplomat",
+          "price": 80,
+          "prev_price": 75,
+          "minutes": 60,
+          "save": 5,
+          "components": [
+            "signature",
+            "scalp"
+          ],
+          "desc": "The Signature cut paired with a Scalp Treatment.",
+          "variantId": "21840943",
+          "booksy_rename_from": "The Groom & Relax"
+        }
+      ]
+    },
+    {
+      "name": "Signature Shaves &amp; Beard",
+      "services": [
+        {
+          "id": "majesty",
+          "name": "The Majesty Hot Towel Shave",
+          "price": 75,
+          "prev_price": 70,
+          "minutes": 45,
+          "desc": "Our most indulgent ritual. Facial steam, exfoliation, warm aromatic towels, a traditional straight-razor shave, and a customized mini facial to finish. Clients call it calming, soothing, and more than just a shave &mdash; you leave feeling brand new.",
+          "variantId": "21617198"
+        },
+        {
+          "id": "royal",
+          "name": "The Royal Hot Towel Shave",
+          "price": 55,
+          "prev_price": 50,
+          "minutes": 30,
+          "desc": "A meticulously curated hot towel shave with beard trim. Warm towels and premium products prepare the skin for a traditional straight-razor shave, finished close and comfortable.",
+          "variantId": "21617202"
+        },
+        {
+          "id": "statesman",
+          "name": "The Statesman Beard Shaping",
+          "price": 35,
+          "prev_price": null,
+          "minutes": 30,
+          "desc": "Full beard sculpting and detailing with clippers, shaped to your face with clean, deliberate lines. Hot towel included.",
+          "variantId": "22331824"
+        }
+      ]
+    },
+    {
+      "name": "Precision Haircuts",
+      "services": [
+        {
+          "id": "executive",
+          "name": "The Executive",
+          "price": 60,
+          "prev_price": 50,
+          "minutes": 45,
+          "desc": "The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.",
+          "variantId": "21617218"
+        },
+        {
+          "id": "signature",
+          "name": "The Signature",
+          "price": 50,
+          "prev_price": 45,
+          "minutes": 40,
+          "desc": "Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.",
+          "variantId": "21617223"
+        },
+        {
+          "id": "freshfade",
+          "name": "The Fresh Fade",
+          "price": 50,
+          "prev_price": 40,
+          "minutes": 40,
+          "desc": "Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.",
+          "variantId": "21617225"
+        },
+        {
+          "id": "regiment",
+          "name": "The Regiment",
+          "price": 45,
+          "prev_price": null,
+          "minutes": 30,
+          "desc": "Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.",
+          "variantId": "22331829"
+        },
+        {
+          "id": "royalroots",
+          "name": "The Royal Roots",
+          "price": 40,
+          "prev_price": 35,
+          "minutes": 30,
+          "desc": "Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.",
+          "variantId": "21617226"
+        }
+      ]
+    },
+    {
+      "name": "Grooming &amp; Waxing",
+      "services": [
+        {
+          "id": "nosewax",
+          "name": "Nose Waxing",
+          "price": 25,
+          "prev_price": 25,
+          "minutes": 10,
+          "desc": "Precise removal of nasal hair for a polished look.",
+          "variantId": "21629583"
+        },
+        {
+          "id": "earwax",
+          "name": "Ear Waxing",
+          "price": 20,
+          "prev_price": 20,
+          "minutes": 10,
+          "desc": "Gentle, hygienic removal of excess ear hair.",
+          "variantId": "21629569"
+        },
+        {
+          "id": "browwax",
+          "name": "Eyebrow Waxing",
+          "price": 20,
+          "prev_price": 20,
+          "minutes": 10,
+          "desc": "Sculpting and shaping to define your look with precision.",
+          "variantId": "21629592"
+        }
+      ]
+    },
+    {
+      "name": "Treatments",
+      "services": [
+        {
+          "id": "scalp",
+          "name": "Scalp Treatment",
+          "price": 35,
+          "prev_price": 30,
+          "minutes": 20,
+          "desc": "A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.",
+          "variantId": "21641264"
+        }
+      ]
+    },
+    {
+      "name": "Color",
+      "services": [
+        {
+          "id": "greyblend",
+          "name": "Grey Blending",
+          "price": 55,
+          "prev_price": 50,
+          "minutes": 45,
+          "desc": "A refined technique to create a soft, natural transition with our professional grey blending service.",
+          "variantId": "21630689"
+        }
+      ]
+    }
+  ]
+}
