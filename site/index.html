@@ -400,6 +400,8 @@
   .visit-grid p{font-size:.98rem;color:var(--ink-soft)}
   .visit-grid a{color:var(--ink);text-decoration:none;font-weight:400}
   .appt{color:var(--gold-deep);letter-spacing:.14em;font-size:.85rem;margin-top:.6rem}
+  .visit-note{text-align:center;max-width:920px;margin:2.6rem auto 0;font-family:var(--serif);
+    font-style:italic;font-size:1.05rem;letter-spacing:.04em;color:var(--ink-soft)}
   .socials{text-align:center;margin-top:2.8rem}
   .socials p:first-child{letter-spacing:.24em;text-transform:uppercase;font-size:.75rem;color:var(--gold-deep);margin-bottom:.9rem}
   .socials a{color:var(--ink);text-decoration:none;margin:0 1rem}
@@ -479,6 +481,14 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Scissors by Sandy is by appointment only. That's deliberate — one chair means your time is yours, with no waiting room and no rushing. Book online at scissorsbysandy.com or call (848) 230-5995."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What if I need to cancel or reschedule?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Life happens. Just give me at least 24 hours’ notice, in Booksy or by call or text to (848) 230-5995. With one chair, a missed appointment is an hour nobody else can use, so late cancellations and no-shows may be charged 50% of the service."
       }
     },
     {
@@ -646,6 +656,39 @@
   <p class="sec-sub">Precision. Ritual. Craft.</p>
   <p class="responders">First responders get $5 off their total &mdash; every visit.</p>
   <div class="menu">
+    <h3>Precision Haircuts</h3>
+    <div class="cat-items">
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Executive</span><span class="leader" aria-hidden="true"></span><span class="item-price">$60</span></div>
+      <p class="item-dur">45 min</p>
+      <p>The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.</p>
+      <a class="book-link" data-booksy data-service="executive" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617218" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Signature</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
+      <p class="item-dur">40 min</p>
+      <p>Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.</p>
+      <a class="book-link" data-booksy data-service="signature" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617223" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Fresh Fade</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
+      <p class="item-dur">40 min</p>
+      <p>Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.</p>
+      <a class="book-link" data-booksy data-service="freshfade" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617225" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Regiment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$45</span></div>
+      <p class="item-dur">30 min</p>
+      <p>Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.</p>
+      <a class="book-link" data-booksy data-service="regiment" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331829" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Royal Roots</span><span class="leader" aria-hidden="true"></span><span class="item-price">$40</span></div>
+      <p class="item-dur">30 min</p>
+      <p>Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.</p>
+      <a class="book-link" data-booksy data-service="royalroots" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617226" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+    </div>
     <h3>Packages</h3>
     <div class="cat-items">
       <div class="item">
@@ -706,37 +749,13 @@
       <a class="book-link" data-booksy data-service="statesman" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331824" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
-    <h3>Precision Haircuts</h3>
+    <h3>Treatments</h3>
     <div class="cat-items">
       <div class="item">
-      <div class="item-line"><span class="item-name">The Executive</span><span class="leader" aria-hidden="true"></span><span class="item-price">$60</span></div>
-      <p class="item-dur">45 min</p>
-      <p>The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.</p>
-      <a class="book-link" data-booksy data-service="executive" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617218" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Signature</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
-      <p class="item-dur">40 min</p>
-      <p>Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.</p>
-      <a class="book-link" data-booksy data-service="signature" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617223" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Fresh Fade</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
-      <p class="item-dur">40 min</p>
-      <p>Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.</p>
-      <a class="book-link" data-booksy data-service="freshfade" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617225" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Regiment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$45</span></div>
-      <p class="item-dur">30 min</p>
-      <p>Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.</p>
-      <a class="book-link" data-booksy data-service="regiment" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331829" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Royal Roots</span><span class="leader" aria-hidden="true"></span><span class="item-price">$40</span></div>
-      <p class="item-dur">30 min</p>
-      <p>Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.</p>
-      <a class="book-link" data-booksy data-service="royalroots" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617226" target="_blank" rel="noopener">Book this service &rarr;</a>
+      <div class="item-line"><span class="item-name">Scalp Treatment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$35</span></div>
+      <p class="item-dur">20 min</p>
+      <p>A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.</p>
+      <a class="book-link" data-booksy data-service="scalp" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21641264" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
     <h3>Grooming &amp; Waxing</h3>
@@ -758,15 +777,6 @@
       <p class="item-dur">10 min</p>
       <p>Sculpting and shaping to define your look with precision.</p>
       <a class="book-link" data-booksy data-service="browwax" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21629592" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-    </div>
-    <h3>Treatments</h3>
-    <div class="cat-items">
-      <div class="item">
-      <div class="item-line"><span class="item-name">Scalp Treatment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$35</span></div>
-      <p class="item-dur">20 min</p>
-      <p>A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.</p>
-      <a class="book-link" data-booksy data-service="scalp" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21641264" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
     <h3>Color</h3>
@@ -798,6 +808,10 @@
       <details class="faq-item">
         <summary>Do you take walk-ins?</summary>
         <p>Scissors by Sandy is by appointment only. That's deliberate — one chair means your time is yours, with no waiting room and no rushing. Book online at scissorsbysandy.com or call (848) 230-5995.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What if I need to cancel or reschedule?</summary>
+        <p>Life happens. Just give me at least 24 hours&rsquo; notice, in Booksy or by call or text to (848) 230-5995. With one chair, a missed appointment is an hour nobody else can use, so late cancellations and no-shows may be charged 50% of the service.</p>
       </details>
       <details class="faq-item">
         <summary>What's included in a hot towel shave?</summary>
@@ -843,6 +857,7 @@
       <p style="margin-top:.3rem;font-size:.85rem">Or call / text for an appointment</p>
     </div>
   </div>
+  <p class="visit-note">In the chair, I use Reuzel.</p>
 </section>
 
 <footer>
@@ -868,11 +883,11 @@
     var WIDGET  = "https://booksy.com/widget/index.html?id=1823074&lang=en&country=us&theme=default&variantId=";
     var PROFILE = "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge";
     var SERVICE_IDS = {
-      "sovereign":"22331854","regent":"22331856","ambassador":"22331859","officer":"22331878",
-      "gentleman":"22331887","diplomat":"21840943","majesty":"21617198","royal":"21617202",
-      "statesman":"22331824","executive":"21617218","signature":"21617223","freshfade":"21617225",
-      "regiment":"22331829","royalroots":"21617226","nosewax":"21629583","earwax":"21629569",
-      "browwax":"21629592","scalp":"21641264","greyblend":"21630689"
+      "executive":"21617218","signature":"21617223","freshfade":"21617225","regiment":"22331829",
+      "royalroots":"21617226","sovereign":"22331854","regent":"22331856","ambassador":"22331859",
+      "officer":"22331878","gentleman":"22331887","diplomat":"21840943","majesty":"21617198",
+      "royal":"21617202","statesman":"22331824","scalp":"21641264","nosewax":"21629583",
+      "earwax":"21629569","browwax":"21629592","greyblend":"21630689"
     };
     function urlFor(slug){
       var id = slug && SERVICE_IDS[slug];
