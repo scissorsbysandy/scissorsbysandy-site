@@ -1,10 +1,13 @@
+# Images keep their filenames when replaced (new photos go in under the same
+# names), so they must never be cached as "immutable" for a year. One day is
+# a safe balance. Only ONE rule may set Cache-Control for any file: Netlify
+# merges every rule that matches a path, so two would stack into one header.
 /*.webp
-  Cache-Control: public, max-age=31536000, immutable
-/*.png
-  Cache-Control: public, max-age=31536000, immutable
-/*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-/og-image.jpg
   Cache-Control: public, max-age=86400, must-revalidate
-/index.html
-  Cache-Control: public, max-age=0, must-revalidate
+/*.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/*.jpg
+  Cache-Control: public, max-age=86400, must-revalidate
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

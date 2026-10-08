@@ -87,11 +87,28 @@ PREFLIGHT  (preflight.py)
     - no known stale wording (Gift Cards, Groom & Relax, Back to School,
       "The Statesman beard trim")
     - every service in prices.json actually appears on the page
-    - sitemap lastmod is today, or crawlers ignore the update
+    - sitemap lastmod is today (stamped automatically on each Netlify build)
     - all 14 deploy files present
     - package savings and durations reconcile against their components
+    - map pin within 150 m of Google's pin, hasMap carries the place id,
+      postal code 08857 (the pin once sat 3.5 miles away, Oct 2026)
+  Added 2026-10-08:
+    - menu categories in prices.json order, Precision Haircuts first,
+      every category priced high to low
+    - EACH Book button carries its own service's variantId (the older check
+      compared sets, so two swapped buttons would have passed)
+    - "Reuzel" appears only inside Precision Haircuts (the shave and facial
+      products are not Reuzel)
+    - no Booksy iframe; every Booksy link opens in a new tab with noopener
+    - FAQ schema text matches the visible answers word for word, and the
+      visible hours match the schema hours (Google requires both)
+    - the cancellation answer mentions no fee, charge or penalty (policy is
+      courtesy only)
+    - anchors resolve, no duplicate ids, Get Directions uses the place id
+    - first-screen images are not lazy-loaded; every image has alt text
+    - _headers: nothing "immutable", one Cache-Control rule per file
 
-  Verified against deliberate breakage - all four test failures were caught.
+  Verified against deliberate breakage: 15 injected faults, 15 caught.
 
   Preflight does NOT open a browser. Layout, overflow, contrast, tap
   targets and image sizing still need the render pass.
