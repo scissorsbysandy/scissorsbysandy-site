@@ -1,6 +1,5 @@
-# Netlify publishes the site/ folder.
-# Every deploy first runs the preflight. If any check fails, the build fails
-# and Netlify keeps the current live site untouched. Nothing broken can ship.
 [build]
   publish = "site"
-  command = "python3 pricing/preflight.py"
+  # 1. date-stamp the sitemap for the day this deploy goes live
+  # 2. run every preflight check; any failure stops the deploy
+  command = "python3 pricing/stamp_sitemap.py && python3 pricing/preflight.py"
