@@ -14,6 +14,57 @@
   },
   "categories": [
     {
+      "name": "Precision Haircuts",
+      "services": [
+        {
+          "id": "executive",
+          "name": "The Executive",
+          "price": 60,
+          "prev_price": 50,
+          "minutes": 45,
+          "desc": "The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.",
+          "variantId": "21617218"
+        },
+        {
+          "id": "signature",
+          "name": "The Signature",
+          "price": 50,
+          "prev_price": 45,
+          "minutes": 40,
+          "desc": "Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.",
+          "variantId": "21617223"
+        },
+        {
+          "id": "freshfade",
+          "name": "The Fresh Fade",
+          "price": 50,
+          "prev_price": 40,
+          "minutes": 40,
+          "desc": "Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.",
+          "variantId": "21617225"
+        },
+        {
+          "id": "regiment",
+          "name": "The Regiment",
+          "price": 45,
+          "prev_price": null,
+          "minutes": 30,
+          "desc": "Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.",
+          "variantId": "22331829"
+        },
+        {
+          "id": "royalroots",
+          "name": "The Royal Roots",
+          "price": 40,
+          "prev_price": 35,
+          "minutes": 30,
+          "desc": "Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.",
+          "variantId": "21617226"
+        }
+      ],
+      "note": "In the chair, I use Reuzel hair products."
+    },
+    {
       "name": "Packages",
       "services": [
         {
@@ -136,52 +187,16 @@
       ]
     },
     {
-      "name": "Precision Haircuts",
+      "name": "Treatments",
       "services": [
         {
-          "id": "executive",
-          "name": "The Executive",
-          "price": 60,
-          "prev_price": 50,
-          "minutes": 45,
-          "desc": "The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.",
-          "variantId": "21617218"
-        },
-        {
-          "id": "signature",
-          "name": "The Signature",
-          "price": 50,
-          "prev_price": 45,
-          "minutes": 40,
-          "desc": "Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.",
-          "variantId": "21617223"
-        },
-        {
-          "id": "freshfade",
-          "name": "The Fresh Fade",
-          "price": 50,
-          "prev_price": 40,
-          "minutes": 40,
-          "desc": "Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.",
-          "variantId": "21617225"
-        },
-        {
-          "id": "regiment",
-          "name": "The Regiment",
-          "price": 45,
-          "prev_price": null,
-          "minutes": 30,
-          "desc": "Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.",
-          "variantId": "22331829"
-        },
-        {
-          "id": "royalroots",
-          "name": "The Royal Roots",
-          "price": 40,
-          "prev_price": 35,
-          "minutes": 30,
-          "desc": "Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.",
-          "variantId": "21617226"
+          "id": "scalp",
+          "name": "Scalp Treatment",
+          "price": 35,
+          "prev_price": 30,
+          "minutes": 20,
+          "desc": "A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.",
+          "variantId": "21641264"
         }
       ]
     },
@@ -214,20 +229,6 @@
           "minutes": 10,
           "desc": "Sculpting and shaping to define your look with precision.",
           "variantId": "21629592"
-        }
-      ]
-    },
-    {
-      "name": "Treatments",
-      "services": [
-        {
-          "id": "scalp",
-          "name": "Scalp Treatment",
-          "price": 35,
-          "prev_price": 30,
-          "minutes": 20,
-          "desc": "A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.",
-          "variantId": "21641264"
         }
       ]
     },

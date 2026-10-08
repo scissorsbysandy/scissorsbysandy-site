@@ -48,6 +48,8 @@ def services_html():
             out.append(f'      <a class="book-link" data-booksy{ds} href="{href}" target="_blank" rel="noopener">Book this service &rarr;</a>')
             out.append('    </div>')
         out.append('    </div>')
+        if c.get('note'):
+            out.append(f'    <p class="cat-note">{c["note"]}</p>')
     out.append('  </div>')
     return "\n".join(out)
 

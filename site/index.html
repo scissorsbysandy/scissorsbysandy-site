@@ -162,7 +162,7 @@
   :root{
     --navy:#16293C; --navy-deep:#0E1A26; --navy-lift:#2C547A;
     --gold:#F8D094; --gold-deep:#A27E3C; --gold-hi:#FFF2B8; --gold-lo:#D1A265;
-    --cream:#F4EFE4; --cream-soft:#D6D6CC; --ink:#16293C; --ink-soft:#3A586E;
+    --gold-text:#7F622F; --cream:#F4EFE4; --cream-soft:#D6D6CC; --ink:#16293C; --ink-soft:#3A586E;
     --serif:'Cormorant Garamond', Georgia, serif;
     --sans:'Jost', 'Helvetica Neue', sans-serif;
   }
@@ -173,7 +173,7 @@
     -webkit-background-clip:text;background-clip:text;color:transparent}
   a:focus-visible{outline:2px solid var(--gold-deep);outline-offset:3px}
 
-  /* ---- PROMO BAR: remove after Aug 31 (see markup marked PROMO BAR) ---- */
+  /* ---- PROMO BAR (evergreen; swap the text in the markup marked PROMO BAR) ---- */
   .topstack{position:fixed;top:0;left:0;right:0;z-index:50}
   .promo-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
     gap:.35rem 1.1rem;padding:.55rem 6vw;text-align:center;line-height:1.5;
@@ -275,15 +275,22 @@
   .menu h3{font-family:var(--serif);font-weight:600;text-align:center;letter-spacing:.22em;
     text-transform:uppercase;font-size:1.35rem;margin:2.6rem 0 1.8rem;color:var(--ink)}
   .item{margin-bottom:2rem}
+  .cat-note{text-align:center;margin:.4rem auto 0;font-family:var(--serif);
+    font-style:italic;font-size:1.05rem;letter-spacing:.04em;color:var(--ink-soft)}
   .item-line{display:flex;align-items:baseline;gap:.9rem}
   .item-name{font-family:var(--serif);font-weight:600;font-size:1.3rem;letter-spacing:.08em;white-space:nowrap;color:var(--ink)}
   .leader{flex:1;border-bottom:2px dotted rgba(162,126,60,.55);transform:translateY(-4px)}
   .item-price{font-family:var(--serif);font-weight:600;font-size:1.3rem;color:var(--ink)}
   .item p{color:var(--ink-soft);font-size:.98rem;max-width:60ch;margin-top:.45rem}
-  .book-link{display:inline-block;margin-top:.55rem;color:var(--gold-deep);text-decoration:none;
+  .book-link{display:inline-block;margin-top:.25rem;padding-top:.3rem;color:var(--gold-text);text-decoration:none;
     letter-spacing:.2em;text-transform:uppercase;font-size:.72rem;font-weight:400;
     border-bottom:1px solid rgba(162,126,60,.5);padding-bottom:2px;transition:color .2s}
   .book-link:hover{color:var(--navy)}
+  /* bigger tap area without changing the look */
+  .promo-cta{position:relative}
+  .promo-cta::after{content:"";position:absolute;inset:-10px -8px}
+  .nav-brand,.visit-grid p>a:not(.btn),footer p a,.quote-note a{position:relative}
+  .nav-brand::after,.visit-grid p>a:not(.btn)::after,footer p a::after,.quote-note a::after{content:"";position:absolute;inset:-8px -4px}
 
   /* gallery */
   #suite{background:var(--cream);border-top:5px solid var(--gold-deep);border-bottom:5px solid var(--gold-deep)}
@@ -349,9 +356,9 @@
     padding:.7rem 1rem}
   @media (max-width:599px){ .responders{font-size:.66rem;letter-spacing:.07em;padding:.6rem .5rem} }
   .item-dur{font-size:.60rem;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--gold-deep);margin:.1rem 0 .4rem;font-weight:400;opacity:.85}
+    color:var(--gold-deep);margin:.1rem 0 .4rem;font-weight:400}
   .item-save{display:inline;margin-left:.45rem;font-size:.94em;
-    color:var(--gold-deep);font-weight:400;letter-spacing:.14em;opacity:.8}
+    color:var(--gold-text);font-weight:400;letter-spacing:.14em}
   .item-save::before{content:'· '}
   .quote-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
     gap:1.7rem;max-width:1180px;margin:2.6rem auto 0}
@@ -377,7 +384,7 @@
   .bio .sig-rule::before,.bio .sig-rule::after{content:"";flex:1;height:1px;background:var(--gold-deep);opacity:.6}
   .bio .sig-rule .dia{width:8px;height:8px;background:var(--gold-deep);transform:rotate(45deg);flex:none}
   .bio .sig{font-family:var(--serif);font-size:1.35rem;letter-spacing:.12em;color:var(--ink)}
-  .bio .sig-title{letter-spacing:.26em;text-transform:uppercase;font-size:.74rem;color:var(--gold-deep);margin-top:.4rem}
+  .bio .sig-title{letter-spacing:.26em;text-transform:uppercase;font-size:.74rem;color:var(--gold-text);margin-top:.4rem}
   @media (max-width:820px){
     .bio-wrap{gap:2.2rem}
     .bio-photo{flex:0 0 260px;max-width:260px}
@@ -388,11 +395,11 @@
   #gift .gift-card{max-width:640px;margin:0 auto;text-align:center;border:2px solid var(--gold-deep);
     outline:1px solid rgba(162,126,60,.4);outline-offset:-10px;padding:3rem 2.4rem;background:#fff}
   #gift{background:var(--cream);border-top:5px solid var(--gold-deep);border-bottom:5px solid var(--gold-deep)}
-  .gift-card h3{font-family:var(--serif);font-weight:600;letter-spacing:.2em;color:var(--ink);
+  .gift-card h2{font-family:var(--serif);font-weight:600;letter-spacing:.2em;color:var(--ink);
     text-transform:uppercase;font-size:1.5rem;margin-bottom:1rem}
   .gift-card p{color:var(--ink-soft);max-width:46ch;margin:0 auto 1.8rem}
 
-  #visit .visit-h{font-family:var(--sans);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep);margin:0 0 .5rem;font-weight:500}
+  #visit .visit-h{font-family:var(--sans);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-text);margin:0 0 .5rem;font-weight:500}
   .visit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
     gap:2.4rem;max-width:920px;margin:0 auto;text-align:center}
   .visit-grid h4{font-family:var(--serif);letter-spacing:.24em;text-transform:uppercase;
@@ -422,7 +429,7 @@
     section{padding:4rem 7vw}
     .item-line{flex-wrap:wrap}
     .leader{display:none}
-    .item-price{margin-left:auto;color:var(--gold-deep)}
+    .item-price{margin-left:auto;color:var(--gold-text)}
     .gallery img{height:220px}
   }
   @media (prefers-reduced-motion: reduce){
@@ -483,6 +490,14 @@
     },
     {
       "@type": "Question",
+      "name": "What if I need to cancel or reschedule?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Life happens. If you can, please give me at least 24 hours’ notice, in Booksy or by call or text to (848) 230-5995. With one chair, that heads-up means I can offer your time to someone else. Thank you!"
+      }
+    },
+    {
+      "@type": "Question",
       "name": "What's included in a hot towel shave?",
       "acceptedAnswer": {
         "@type": "Answer",
@@ -518,7 +533,7 @@
       "name": "Do you offer gift certificates?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Call or text (848) 230-5995 and I'll prepare a personalised certificate for whichever service you'd like to give — ready to print, or emailed to you to forward."
+        "text": "Yes. Call or text (848) 230-5995 and I’ll prepare a personalized certificate for whichever service you’d like to give — ready to print, or emailed to you to forward."
       }
     }
   ]
@@ -572,7 +587,7 @@
 <header class="hero" id="top">
   <div class="hero-glow" aria-hidden="true"></div>
   <picture><source srcset="barber-pole.webp" type="image/webp"><img class="hero-pole" src="barber-pole.png" alt="" aria-hidden="true" width="150" height="1467" fetchpriority="high" decoding="async"></picture>
-  <picture><source srcset="sbs-emblem.webp" type="image/webp"><img class="mark" src="sbs-emblem.png" alt="Scissors by Sandy — S·B·S barber emblem" width="230" height="230" loading="lazy" decoding="async"></picture>
+  <picture><source srcset="sbs-emblem.webp" type="image/webp"><img class="mark" src="sbs-emblem.png" alt="Scissors by Sandy — S·B·S barber emblem" width="230" height="230" decoding="async"></picture>
   <div class="divider" aria-hidden="true"><span class="dia"></span></div>
   <h1 class="gold-grad">Scissors by Sandy</h1>
   <p class="tagline">Where Style Meets Perfection</p>
@@ -646,6 +661,40 @@
   <p class="sec-sub">Precision. Ritual. Craft.</p>
   <p class="responders">First responders get $5 off their total &mdash; every visit.</p>
   <div class="menu">
+    <h3>Precision Haircuts</h3>
+    <div class="cat-items">
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Executive</span><span class="leader" aria-hidden="true"></span><span class="item-price">$60</span></div>
+      <p class="item-dur">45 min</p>
+      <p>The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.</p>
+      <a class="book-link" data-booksy data-service="executive" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617218" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Signature</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
+      <p class="item-dur">40 min</p>
+      <p>Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.</p>
+      <a class="book-link" data-booksy data-service="signature" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617223" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Fresh Fade</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
+      <p class="item-dur">40 min</p>
+      <p>Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.</p>
+      <a class="book-link" data-booksy data-service="freshfade" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617225" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Regiment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$45</span></div>
+      <p class="item-dur">30 min</p>
+      <p>Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.</p>
+      <a class="book-link" data-booksy data-service="regiment" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331829" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+      <div class="item">
+      <div class="item-line"><span class="item-name">The Royal Roots</span><span class="leader" aria-hidden="true"></span><span class="item-price">$40</span></div>
+      <p class="item-dur">30 min</p>
+      <p>Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.</p>
+      <a class="book-link" data-booksy data-service="royalroots" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617226" target="_blank" rel="noopener">Book this service &rarr;</a>
+    </div>
+    </div>
+    <p class="cat-note">In the chair, I use Reuzel hair products.</p>
     <h3>Packages</h3>
     <div class="cat-items">
       <div class="item">
@@ -706,37 +755,13 @@
       <a class="book-link" data-booksy data-service="statesman" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331824" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
-    <h3>Precision Haircuts</h3>
+    <h3>Treatments</h3>
     <div class="cat-items">
       <div class="item">
-      <div class="item-line"><span class="item-name">The Executive</span><span class="leader" aria-hidden="true"></span><span class="item-price">$60</span></div>
-      <p class="item-dur">45 min</p>
-      <p>The house specialty. Wash and cut, shaped entirely with shears &mdash; no clippers, no guards &mdash; every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.</p>
-      <a class="book-link" data-booksy data-service="executive" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617218" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Signature</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
-      <p class="item-dur">40 min</p>
-      <p>Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout &mdash; nobody should leave a haircut feeling roughed up.</p>
-      <a class="book-link" data-booksy data-service="signature" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617223" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Fresh Fade</span><span class="leader" aria-hidden="true"></span><span class="item-price">$50</span></div>
-      <p class="item-dur">40 min</p>
-      <p>Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top &mdash; a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.</p>
-      <a class="book-link" data-booksy data-service="freshfade" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617225" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Regiment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$45</span></div>
-      <p class="item-dur">30 min</p>
-      <p>Wash and cut. The classic crew cut &mdash; clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.</p>
-      <a class="book-link" data-booksy data-service="regiment" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331829" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-      <div class="item">
-      <div class="item-line"><span class="item-name">The Royal Roots</span><span class="leader" aria-hidden="true"></span><span class="item-price">$40</span></div>
-      <p class="item-dur">30 min</p>
-      <p>Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.</p>
-      <a class="book-link" data-booksy data-service="royalroots" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617226" target="_blank" rel="noopener">Book this service &rarr;</a>
+      <div class="item-line"><span class="item-name">Scalp Treatment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$35</span></div>
+      <p class="item-dur">20 min</p>
+      <p>A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.</p>
+      <a class="book-link" data-booksy data-service="scalp" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21641264" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
     <h3>Grooming &amp; Waxing</h3>
@@ -760,15 +785,6 @@
       <a class="book-link" data-booksy data-service="browwax" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21629592" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
-    <h3>Treatments</h3>
-    <div class="cat-items">
-      <div class="item">
-      <div class="item-line"><span class="item-name">Scalp Treatment</span><span class="leader" aria-hidden="true"></span><span class="item-price">$35</span></div>
-      <p class="item-dur">20 min</p>
-      <p>A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.</p>
-      <a class="book-link" data-booksy data-service="scalp" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21641264" target="_blank" rel="noopener">Book this service &rarr;</a>
-    </div>
-    </div>
     <h3>Color</h3>
     <div class="cat-items">
       <div class="item">
@@ -783,8 +799,8 @@
 
 <section id="gift">
   <div class="gift-card">
-    <h3>Gift Certificates</h3>
-    <p>Treat someone to a hot towel shave or a precision cut. Call or text and I&rsquo;ll prepare a personalised certificate for the service you choose &mdash; ready to print, or sent straight to your inbox to forward.</p>
+    <h2>Gift Certificates</h2>
+    <p>Treat someone to a hot towel shave or a precision cut. Call or text and I&rsquo;ll prepare a personalized certificate for the service you choose &mdash; ready to print, or sent straight to your inbox to forward.</p>
     <div class="gift-actions">
       <a class="btn btn-gold" href="tel:+18482305995">Call or Text (848) 230-5995</a>
     </div>
@@ -798,6 +814,10 @@
       <details class="faq-item">
         <summary>Do you take walk-ins?</summary>
         <p>Scissors by Sandy is by appointment only. That's deliberate — one chair means your time is yours, with no waiting room and no rushing. Book online at scissorsbysandy.com or call (848) 230-5995.</p>
+      </details>
+      <details class="faq-item">
+        <summary>What if I need to cancel or reschedule?</summary>
+        <p>Life happens. If you can, please give me at least 24 hours&rsquo; notice, in Booksy or by call or text to (848) 230-5995. With one chair, that heads-up means I can offer your time to someone else. Thank you!</p>
       </details>
       <details class="faq-item">
         <summary>What's included in a hot towel shave?</summary>
@@ -817,7 +837,7 @@
       </details>
       <details class="faq-item">
         <summary>Do you offer gift certificates?</summary>
-        <p>Yes. Call or text (848) 230-5995 and I&rsquo;ll prepare a personalised certificate for whichever service you&rsquo;d like to give &mdash; ready to print, or emailed to you to forward.</p>
+        <p>Yes. Call or text (848) 230-5995 and I&rsquo;ll prepare a personalized certificate for whichever service you&rsquo;d like to give &mdash; ready to print, or emailed to you to forward.</p>
       </details>
   </div>
 </section>
@@ -829,7 +849,7 @@
     <div>
       <h3 class="visit-h">Location</h3>
       <p>The Shoppes at Old Bridge<br>3813 US 9 North, Suite 101<br>Old Bridge, NJ 08857</p>
-      <p style="margin-top:.6rem"><a href="https://www.google.com/maps/search/?api=1&amp;query=3813+US+9+North+Suite+101+Old+Bridge+NJ+08857" target="_blank" rel="noopener" style="color:var(--gold-deep);letter-spacing:.12em;text-transform:uppercase;font-size:.8rem">Get Directions →</a></p>
+      <p style="margin-top:.6rem"><a href="https://www.google.com/maps/search/?api=1&amp;query=Scissors+by+Sandy+Old+Bridge+NJ&amp;query_place_id=ChIJv508gQTPw4kRJdMmGQk01zw" target="_blank" rel="noopener" style="color:var(--gold-text);letter-spacing:.12em;text-transform:uppercase;font-size:.8rem">Get Directions →</a></p>
     </div>
     <div>
       <h3 class="visit-h">Hours</h3>
@@ -868,11 +888,11 @@
     var WIDGET  = "https://booksy.com/widget/index.html?id=1823074&lang=en&country=us&theme=default&variantId=";
     var PROFILE = "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge";
     var SERVICE_IDS = {
-      "sovereign":"22331854","regent":"22331856","ambassador":"22331859","officer":"22331878",
-      "gentleman":"22331887","diplomat":"21840943","majesty":"21617198","royal":"21617202",
-      "statesman":"22331824","executive":"21617218","signature":"21617223","freshfade":"21617225",
-      "regiment":"22331829","royalroots":"21617226","nosewax":"21629583","earwax":"21629569",
-      "browwax":"21629592","scalp":"21641264","greyblend":"21630689"
+      "executive":"21617218","signature":"21617223","freshfade":"21617225","regiment":"22331829",
+      "royalroots":"21617226","sovereign":"22331854","regent":"22331856","ambassador":"22331859",
+      "officer":"22331878","gentleman":"22331887","diplomat":"21840943","majesty":"21617198",
+      "royal":"21617202","statesman":"22331824","scalp":"21641264","nosewax":"21629583",
+      "earwax":"21629569","browwax":"21629592","greyblend":"21630689"
     };
     function urlFor(slug){
       var id = slug && SERVICE_IDS[slug];

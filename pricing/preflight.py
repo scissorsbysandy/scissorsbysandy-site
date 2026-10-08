@@ -152,6 +152,111 @@ for s in svc:
 if not any('components' in s for s in svc) or not [f for f in fails if 'save $' in f or 'min but' in f]:
     ok("package savings and durations reconcile")
 
+# ---------- 10. menu order and per-service booking links (added 2026-10-08) ----------
+# Parse the rendered menu category by category, item by item.
+U=html.unescape
+menu=h[h.find('<div class="menu">'):h.find('</section>',h.find('<div class="menu">'))]
+cats=[(U(m.group(1)),m.start()) for m in re.finditer(r'<h3>(.*?)</h3>',menu)]
+want_cats=[U(c['name']) for c in P['categories']]
+(ok if [c for c,_ in cats]==want_cats else bad)(
+    f"menu categories in prices.json order, starting with {want_cats[0]}" if [c for c,_ in cats]==want_cats
+    else f"MENU ORDER WRONG: page {[c for c,_ in cats]} vs prices.json {want_cats}")
+# Luis's rule (2026-10-08): haircuts open the menu, and every category reads high to low
+(ok if want_cats and want_cats[0]=='Precision Haircuts' else bad)(
+    "Precision Haircuts is the first category" if want_cats and want_cats[0]=='Precision Haircuts'
+    else f"first category is {want_cats[:1]}, should be Precision Haircuts")
+unsorted=[U(c['name']) for c in P['categories'] if [s['price'] for s in c['services']]!=sorted([s['price'] for s in c['services']],reverse=True)]
+(ok if not unsorted else bad)("every category lists prices high to low" if not unsorted else f"not high-to-low: {unsorted}")
+# Each item's OWN button must carry its own service id and variantId. The older check
+# compared sets, so two swapped links (Executive opening Signature) would have passed.
+byname={U(s['name']):s for s in svc}
+wrong=[]
+for blk in menu.split('<div class="item">')[1:]:
+    n=re.search(r'<span class="item-name">(.*?)</span>',blk); a=re.search(r'<a class="book-link"[^>]*>',blk)
+    if not n or not a: wrong.append("unparseable item"); continue
+    s=byname.get(U(n.group(1)))
+    ds=re.search(r'data-service="([^"]+)"',a.group(0)); vid=re.search(r'variantId=(\d+)',a.group(0))
+    if not s: wrong.append(f"{U(n.group(1))}: not in prices.json"); continue
+    if not ds or ds.group(1)!=s['id'] or not vid or vid.group(1)!=s['variantId']:
+        wrong.append(f"{s['name']}: button says {ds and ds.group(1)}/{vid and vid.group(1)}, should be {s['id']}/{s['variantId']}")
+(ok if not wrong and len(byname)==len(svc) else bad)(f"each of the {len(svc)} Book buttons opens its own service" if not wrong
+    else f"BOOK BUTTON MISMATCH: {wrong}")
+# Reuzel is haircuts only (Luis, 2026-10-08): never let it drift near shaves or the facial
+hs=h.find('<h3>Precision Haircuts</h3>'); he=h.find('<h3>',hs+5) if hs>=0 else -1
+reu=[m.start() for m in re.finditer('Reuzel',h)]
+inside=[x for x in reu if hs>=0 and hs<x<he]
+(ok if reu and len(inside)==len(reu) else bad)("Reuzel mentioned only within Precision Haircuts" if reu and len(inside)==len(reu)
+    else ("Reuzel line missing from Precision Haircuts" if not reu else "REUZEL mentioned outside Precision Haircuts — shave and facial products are not Reuzel"))
+
+# ---------- 11. Booksy must open in a new tab, never inside the page ----------
+# An on-site iframe trapped clients in endless Booksy registration loops (browsers block
+# third-party cookies in frames). All booking links open booksy.com in a new tab.
+(ok if not re.search(r'<iframe[^>]*booksy',h,re.I) else bad)("no Booksy iframe" if not re.search(r'<iframe[^>]*booksy',h,re.I)
+    else "BOOKSY IFRAME on the page — this caused the registration loop; open in a new tab instead")
+bl=re.findall(r'<a [^>]*href="https://booksy\.com[^"]*"[^>]*>',h)
+nt=[x[:60] for x in bl if 'target="_blank"' not in x or 'noopener' not in x]
+(ok if bl and not nt else bad)(f"all {len(bl)} Booksy links open in a new tab" if bl and not nt else f"Booksy link not opening in a new tab: {nt}")
+prof=P['booksy']['profile_url']
+badprof=[u for u in re.findall(r'href="(https://booksy\.com/en-us/[^"]+)"',h) if u!=prof]
+(ok if not badprof else bad)("general Book links all point at the Booksy profile" if not badprof else f"unexpected Booksy profile URL: {badprof}")
+
+# ---------- 12. what Google reads must match what visitors see ----------
+# Google requires FAQ and hours markup to match the visible page; a mismatch can cost
+# the rich result. The gift-certificate answer had drifted (straight vs curly quotes).
+def norm(t): return re.sub(r'\s+',' ',U(re.sub(r'<[^>]+>','',t))).strip()
+vis=dict((norm(q),norm(a)) for q,a in re.findall(r'<summary>(.*?)</summary>\s*<p>(.*?)</p>',h,re.S))
+fq=next((b for b in blocks if b.get('@type')=='FAQPage'),{})
+sch={norm(q['name']):norm(q['acceptedAnswer']['text']) for q in fq.get('mainEntity',[])}
+diff=[q for q in set(vis)|set(sch) if vis.get(q)!=sch.get(q)]
+(ok if not diff else bad)(f"FAQ schema matches the {len(vis)} visible answers word for word" if not diff else f"FAQ SCHEMA DIFFERS from the page: {diff}")
+canc=next((a for q,a in vis.items() if 'cancel' in q.lower()),'')
+pen=re.findall(r'\b(charge[ds]?|fee|fees|penalt\w*|deposit)\b',canc,re.I)
+(ok if canc and not pen else bad)("cancellation answer is a courtesy request, no fees" if canc and not pen
+    else ("cancellation FAQ missing" if not canc else f"CANCELLATION FAQ mentions {pen} — policy is courtesy only, no fees (Luis, 2026-10-08)"))
+if bs:
+    DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    def t12(x):
+        hh,mm=map(int,x.split(':')); return f"{(hh-1)%12+1}{':%02d'%mm if mm else ''} {'AM' if hh<12 else 'PM'}"
+    shown={}
+    for d,txt in re.findall(r'(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday): ([^<]+)',h): shown.setdefault(d,txt.strip())
+    sched={}
+    for o in bs.get('openingHoursSpecification',[]):
+        for d in ([o['dayOfWeek']] if isinstance(o['dayOfWeek'],str) else o['dayOfWeek']):
+            sched[d]='Closed' if o['opens']==o['closes']=='00:00' else f"{t12(o['opens'])} – {t12(o['closes'])}"
+    hd=[f"{d}: page '{shown.get(d)}' vs schema '{sched.get(d)}'" for d in DAYS if shown.get(d)!=sched.get(d)]
+    (ok if not hd else bad)("hours on the page match the schema for all 7 days" if not hd else f"HOURS MISMATCH: {hd}")
+
+# ---------- 13. links, anchors, directions ----------
+ids=re.findall(r'\sid="([^"]+)"',h)
+dups=sorted({i for i in ids if ids.count(i)>1})
+dead=sorted({a for a in re.findall(r'href="#([^"]+)"',h) if a not in ids})
+(ok if not dups and not dead else bad)("in-page anchors all resolve, no duplicate ids" if not dups and not dead
+    else f"anchor problems: dead {dead} duplicate {dups}")
+blank=[x[:70] for x in re.findall(r'<a [^>]*target="_blank"[^>]*>',h) if 'noopener' not in x]
+(ok if not blank else bad)("every new-tab link has rel=noopener" if not blank else f"new-tab links missing noopener: {blank}")
+dirs=re.findall(r'href="(https://www\.google\.com/maps[^"]+)"',h)
+(ok if dirs and all(PLACE_ID in d for d in dirs) else bad)("Get Directions opens the shop's own Google listing" if dirs and all(PLACE_ID in d for d in dirs)
+    else f"directions link not tied to place id {PLACE_ID}: {dirs}")
+
+# ---------- 14. images and caching ----------
+hero=h[h.find('<header'):h.find('</header>')]
+lazyhero=re.findall(r'<img[^>]*loading="lazy"[^>]*>',hero)
+(ok if not lazyhero else bad)("no lazy-loading on the first-screen images" if not lazyhero else "hero image is lazy-loaded — it's above the fold, load it immediately")
+noalt=[m for m in re.findall(r'<img [^>]*>',h) if ' alt=' not in m]
+(ok if not noalt else bad)("every image has alt text" if not noalt else f"images missing alt: {noalt}")
+hp=os.path.join(SITE,'_headers')
+if os.path.exists(hp):
+    hd_='\n'.join(l for l in open(hp).read().splitlines() if not l.lstrip().startswith('#'))
+    (ok if 'immutable' not in hd_.lower() else bad)("no year-long 'immutable' caching on reusable image names" if 'immutable' not in hd_.lower()
+        else "_headers marks images immutable — replaced photos (same filename) would stay stale for a year")
+    rules=re.split(r'^(?=/)',hd_,flags=re.M)
+    cc=[r.splitlines()[0] for r in rules if re.search(r'^\s+cache-control',r,re.I|re.M)]
+    def covers(a,b):  # could one path pattern match the same file as another?
+        ra=re.escape(a).replace(r'\*','.*'); return re.fullmatch(ra,b.replace('*','x')) or re.fullmatch(re.escape(b).replace(r'\*','.*'),a.replace('*','x'))
+    ov=[(a,b) for i,a in enumerate(cc) for b in cc[i+1:] if covers(a,b)]
+    (ok if not ov else bad)("only one Cache-Control rule can match any file" if not ov
+        else f"overlapping Cache-Control rules {ov} — Netlify merges them into one doubled header")
+
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)
 for m in passes: print(f"  ok    {m}")
