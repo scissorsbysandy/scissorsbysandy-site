@@ -11,3 +11,7 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+# Post images and videos are staged in /social/ only long enough for Instagram,
+# Facebook and Google to copy them, then deleted. Never let search engines index them.
+/social/*
+  X-Robots-Tag: noindex, nofollow, noimageindex
