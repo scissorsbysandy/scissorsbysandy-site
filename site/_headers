@@ -15,3 +15,6 @@
 # Facebook and Google to copy them, then deleted. Never let search engines index them.
 /social/*
   X-Robots-Tag: noindex, nofollow, noimageindex
+# Private hand-off page for sending client texts from Messages. Never index it.
+/text/*
+  X-Robots-Tag: noindex, nofollow
