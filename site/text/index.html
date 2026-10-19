@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Open in Messages · Scissors by Sandy</title>
+<style>
+  /* Private hand-off page: the message and number travel only in the #fragment,
+     which browsers never send to the server, so nothing is stored or logged here. */
+  :root { --navy:#203E58; --gold:#B8955A; --ink:#16212c; --muted:#5b6876; --bg:#f6f7f9; --card:#fff; --line:#dde2e8; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#e8edf2; --muted:#9aa8b6; --bg:#0f1720; --card:#17222e; --line:#2a3846; --navy:#4a7aa3; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; padding:24px 16px; }
+  main { max-width:520px; margin:0 auto; display:grid; gap:16px; }
+  .eyebrow { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+  h1 { font:400 26px/1.15 Georgia,"Times New Roman",serif; margin:0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; display:grid; gap:10px; }
+  .to { font-variant-numeric:tabular-nums; color:var(--muted); }
+  .msg { white-space:pre-wrap; }
+  a.btn { display:block; text-align:center; background:var(--navy); color:#fff; text-decoration:none; font-weight:600; padding:14px; border-radius:10px; font-size:17px; }
+  .note { color:var(--muted); font-size:14px; margin:0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Scissors by Sandy</div>
+  <h1 id="h">Open in Messages</h1>
+  <div class="card" id="card" hidden>
+    <div class="to" id="to"></div>
+    <div class="msg" id="msg"></div>
+  </div>
+  <a class="btn" id="go" href="#" hidden>Open in Messages</a>
+  <p class="note" id="note">Tap the button to open the text in your Messages app, then press send.</p>
+</main>
+<script>
+(function () {
+  var p = new URLSearchParams(location.hash.slice(1));
+  var n = (p.get('n') || '').replace(/[^\d+]/g, '');
+  var b = p.get('b') || '';
+  if (!n) { document.getElementById('h').textContent = 'Nothing to send'; document.getElementById('note').textContent = 'This link is missing a phone number.'; return; }
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var href = 'sms:' + n + (b ? (ios ? '&' : '?') + 'body=' + encodeURIComponent(b) : '');
+  var d = n.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  document.getElementById('to').textContent = 'To: ' + (d.length === 10 ? '(' + d.slice(0,3) + ') ' + d.slice(3,6) + '-' + d.slice(6) : n);
+  document.getElementById('msg').textContent = b;
+  document.getElementById('card').hidden = false;
+  var go = document.getElementById('go'); go.href = href; go.hidden = false;
+  if (ios) { setTimeout(function () { location.href = href; }, 150); }
+})();
+</script>
+</body>
+</html>
