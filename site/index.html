@@ -474,6 +474,43 @@
     nav ul{gap:.44rem}
     nav ul a{font-size:.53rem;letter-spacing:.03em}
   }
+
+  @media (min-width:901px) and (max-width:1320px){
+    nav ul{gap:1.15rem}
+    nav ul a{letter-spacing:.13em;white-space:nowrap}
+  }
+  @media (min-width:901px) and (max-width:1080px){
+    nav ul{gap:.75rem}
+    nav ul a{font-size:.68rem;letter-spacing:.08em}
+    .nav-brand{letter-spacing:.2em}
+  }
+  /* ===== Weddings ===== */
+  #weddings{background:var(--navy);color:var(--cream);border-top:5px solid var(--gold-deep)}
+  #weddings .sec-head{color:var(--gold)}
+  #weddings .sec-sub{color:#d6d6cc}
+  .wed-intro{max-width:62ch;margin:1.8rem auto 0;text-align:center;font-family:var(--serif);font-size:1.22rem;line-height:1.7;color:var(--cream)}
+  .wed-rating{text-align:center;margin:1.3rem auto 0;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:#d6d6cc}
+  .wed-rating .stars{color:var(--gold);letter-spacing:.2em;margin-right:.5rem}
+  .wed-rating a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(248,208,148,.45)}
+  .wed-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.6rem;max-width:1180px;margin:2.8rem auto 0}
+  @media (max-width:1000px){ .wed-grid{grid-template-columns:1fr;max-width:620px} }
+  .wed-card{background:rgba(255,255,255,.045);border:1px solid rgba(248,208,148,.32);padding:2rem 1.7rem 1.7rem;display:flex;flex-direction:column;min-width:0}
+  .wed-card.feature{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(248,208,148,.35)}
+  .wed-card h3{font-family:var(--serif);font-weight:600;font-size:1.55rem;letter-spacing:.08em;color:var(--gold);margin:0}
+  .wed-price{font-family:var(--serif);font-weight:600;font-size:2rem;color:var(--cream);margin:.35rem 0 .1rem}
+  .wed-meta{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:#d6d6cc;margin-bottom:1.1rem}
+  .wed-card ul{list-style:none;margin:0;padding:0;display:grid;gap:.75rem}
+  .wed-card li{position:relative;padding-left:1.15rem;font-size:.95rem;line-height:1.6;color:var(--cream)}
+  .wed-card li::before{content:'';position:absolute;left:0;top:.62em;width:.42rem;height:.42rem;background:var(--gold);transform:rotate(45deg)}
+  .wed-card li b{color:var(--gold);font-weight:500}
+  .wed-note{margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(248,208,148,.25);font-size:.86rem;line-height:1.6;color:#d6d6cc}
+  .wed-know{max-width:820px;margin:2.6rem auto 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4rem}
+  @media (max-width:820px){ .wed-know{grid-template-columns:1fr;max-width:620px} }
+  .wed-know div{min-width:0}
+  .wed-know h4{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:500;margin:0 0 .45rem}
+  .wed-know p{font-size:.9rem;line-height:1.65;color:#d6d6cc;margin:0}
+  .wed-cta{text-align:center;margin-top:2.6rem}
+  @media (max-width:479px){ .wed-cta .btn{display:block;letter-spacing:.08em;font-size:.72rem;padding:.9rem .6rem} .wed-intro{font-size:1.1rem} }
 </style>
 <script type="application/ld+json">
 {
@@ -509,7 +546,15 @@
       "name": "Do you cut children's hair?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. The Royal Roots is a wash and cut for our youngest gentlemen — patient, unhurried, and taken as seriously as any cut in the chair."
+        "text": "Yes. The Royal Roots is a wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you offer wedding packages?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The Groom ($250) includes a consultation and trial cut, a wedding-week cut with a hot towel shave and scalp treatment, and a day-before touch-up. Groomsmen get $10 off each when three or more book, and The Wedding Party reserves the suite for the groom and four groomsmen for $595. Call or text (848) 230-5995 to plan your date."
       }
     },
     {
@@ -577,6 +622,7 @@
     <li><a href="#meet">Meet Sandy</a></li>
     <li><a href="#words">Reviews</a></li>
     <li><a href="#services">Services</a></li>
+    <li><a href="#weddings">Weddings</a></li>
     <li><a href="#faq">FAQ</a></li>
     <li><a href="#gift">Gift Certificates</a></li>
     <li><a href="#visit">Visit</a></li>
@@ -690,7 +736,7 @@
       <div class="item">
       <div class="item-line"><span class="item-name">The Royal Roots</span><span class="leader" aria-hidden="true"></span><span class="item-price">$40</span></div>
       <p class="item-dur">30 min</p>
-      <p>Wash and cut for our youngest gentlemen. Patient, unhurried, and taken as seriously as any cut in the chair &mdash; kids notice when someone takes their time with them.</p>
+      <p>Wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair. Kids notice when someone takes their time with them.</p>
       <a class="book-link" data-booksy data-service="royalroots" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21617226" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
@@ -797,6 +843,55 @@
   </div>
 </section>
 
+<section id="weddings">
+  <h2 class="sec-head">Weddings</h2>
+  <p class="sec-sub">For the groom and his party</p>
+  <p class="wed-intro">I&rsquo;ve spent more than 25 years in barbershops across North and Central New Jersey, and some of my favorite clients have trusted me with their wedding day. A wedding cut isn&rsquo;t a regular cut. I plan it with you, test it, and time it so it looks its best in every photo. Every appointment is private, one client at a time, in my own suite.</p>
+  <p class="wed-rating"><span class="stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>5.0 on Google from 43 reviews &middot; <a href="https://search.google.com/local/reviews?placeid=ChIJv508gQTPw4kRJdMmGQk01zw" target="_blank" rel="noopener">Read them</a></p>
+  <div class="wed-grid">
+    <div class="wed-card feature">
+      <h3>The Groom</h3>
+      <p class="wed-price">$250</p>
+      <p class="wed-meta">Three visits &middot; about 2 hr 50 min in all</p>
+      <ul>
+        <li><b>Consultation and trial cut,</b> 4 to 6 weeks out (45 min). We settle the style and the timing together.</li>
+        <li><b>Wedding-week visit,</b> 2 to 5 days before (about 1 hr 50 min): your cut, The Majesty Hot Towel Shave or The Statesman for a beard, and a Scalp Treatment.</li>
+        <li><b>Day-before touch-up</b> (15 min): neckline and edges, so everything is crisp for the photos.</li>
+        <li>A styling product to take home, with notes for styling on the morning.</li>
+      </ul>
+    </div>
+    <div class="wed-card">
+      <h3>The Groomsmen</h3>
+      <p class="wed-price">$80 &ndash; $95</p>
+      <p class="wed-meta">Each &middot; 70 min</p>
+      <ul>
+        <li><b>The Gentleman, $80:</b> The Signature cut with The Statesman beard shaping.</li>
+        <li><b>The Ambassador, $95:</b> The Signature cut with The Royal Hot Towel Shave.</li>
+        <li><b>Wedding party rate:</b> $10 off each when three or more of you book for the same wedding.</li>
+      </ul>
+      <p class="wed-note">Ring bearer? The Royal Roots is $40 for ages 12 and under.</p>
+    </div>
+    <div class="wed-card">
+      <h3>The Wedding Party</h3>
+      <p class="wed-price">$595</p>
+      <p class="wed-meta">Groom and four groomsmen &middot; about 5 to 6 hours</p>
+      <ul>
+        <li>The suite reserved for your party alone, before or after regular hours.</li>
+        <li>The groom&rsquo;s full wedding-week visit.</li>
+        <li>A cut with a hot towel finish and styling for each groomsman.</li>
+        <li>Espresso and sparkling water while you wait your turn.</li>
+      </ul>
+      <p class="wed-note">Additional groomsmen are $110 each, up to six of you in all.</p>
+    </div>
+  </div>
+  <div class="wed-know">
+    <div><h4>Book early</h4><p>Wedding weeks fill up fast. Reach out 2 to 3 months before the date.</p></div>
+    <div><h4>Timing</h4><p>Fades look sharpest cut 1 to 3 days before; tapers settle best about a week out. I&rsquo;ll set your timing at the consultation.</p></div>
+    <div><h4>Reserving</h4><p>The Wedding Party is held with a 50% deposit, refundable up to 7 days before the date. The Groom and The Groomsmen need no deposit.</p></div>
+  </div>
+  <div class="wed-cta"><a class="btn btn-gold" href="tel:+18482305995">Call or Text (848) 230-5995 to Plan Your Date</a></div>
+</section>
+
 <section id="gift">
   <div class="gift-card">
     <h2>Gift Certificates</h2>
@@ -825,7 +920,7 @@
       </details>
       <details class="faq-item">
         <summary>Do you cut children's hair?</summary>
-        <p>Yes. The Royal Roots is a wash and cut for our youngest gentlemen — patient, unhurried, and taken as seriously as any cut in the chair.</p>
+        <p>Yes. The Royal Roots is a wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair.</p>
       </details>
       <details class="faq-item">
         <summary>Where are you located, and is there parking?</summary>
@@ -834,6 +929,10 @@
       <details class="faq-item">
         <summary>Which areas do you serve?</summary>
         <p>Clients travel from across Middlesex and Monmouth Counties — Old Bridge, Matawan, Marlboro, Manalapan, Monroe Township, East Brunswick, Sayreville, Aberdeen and Parlin.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Do you offer wedding packages?</summary>
+        <p>Yes. The Groom ($250) includes a consultation and trial cut, a wedding-week cut with a hot towel shave and scalp treatment, and a day-before touch-up. Groomsmen get $10 off each when three or more book, and The Wedding Party reserves the suite for the groom and four groomsmen for $595. Call or text (848) 230-5995 to plan your date.</p>
       </details>
       <details class="faq-item">
         <summary>Do you offer gift certificates?</summary>
