@@ -20,6 +20,7 @@ PRICE CHANGES  (update on every platform)
 NEW SERVICES  (create in Booksy first, then paste variantId into prices.json)
    The Regiment                   $ 45   30 min
    The Statesman Beard Shaping    $ 35   30 min
+   Mini Facial                    $ 50   30 min
 
 RENAME IN BOOKSY  (edit the name — do NOT delete, it keeps the variantId)
    The Groom & Relax  ->  The Diplomat

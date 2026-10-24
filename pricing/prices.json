@@ -190,6 +190,15 @@
       "name": "Treatments",
       "services": [
         {
+          "id": "minifacial",
+          "name": "Mini Facial",
+          "price": 50,
+          "prev_price": null,
+          "minutes": 30,
+          "desc": "A focused facial in thirty minutes: warm steam and towels, a gentle cleanse and exfoliation, a deep pore cleanse, then a hydrating mask and moisturizer suited to your skin. Relaxing on its own or added to any cut.",
+          "variantId": "22527665"
+        },
+        {
           "id": "scalp",
           "name": "Scalp Treatment",
           "price": 35,

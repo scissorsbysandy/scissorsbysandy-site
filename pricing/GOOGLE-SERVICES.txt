@@ -90,6 +90,10 @@ PRICE: Fixed  $20
 
 --- TREATMENTS ---
 
+NAME:  Mini Facial
+DESC:  A focused facial in thirty minutes: warm steam and towels, a gentle cleanse and exfoliation, a deep pore cleanse, then a hydrating mask and moisturizer suited to your skin. Relaxing on its own or added to any cut.
+PRICE: Fixed  $50
+
 NAME:  Scalp Treatment
 DESC:  A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.
 PRICE: Fixed  $35
