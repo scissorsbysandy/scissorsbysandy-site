@@ -131,3 +131,12 @@ SERVICE PAGES  (build_pages.py, added Oct 2026)
   every Book button, FAQ schema vs visible text, hours vs the homepage, wedding
   terms vs the homepage, sitemap entry, homepage link, and the house rules
   (Reuzel only on haircuts, no "extractions", no review count, no years).
+
+
+HOME-SCREEN INSTALL + INDEXNOW  (Oct 2026)
+  manifest.webmanifest + icon-192/512/maskable-512.png let clients add the site to
+  their phone's home screen ("SBS", gold SBS emblem, opens full screen).
+  Icons are cut from SBS-apple-logo-2048.png (the approved emblem).
+  44fc1baf8592499a943a1002560bd047.txt is the IndexNow key (OpenSEO project
+  "Scissors by Sandy"). After each deploy, submit the changed URLs through
+  OpenSEO's submit_indexnow_urls so Bing recrawls them. Do not delete the key file.
