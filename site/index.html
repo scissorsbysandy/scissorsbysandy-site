@@ -252,6 +252,10 @@
     font-family:var(--serif);letter-spacing:.34em;font-size:1.05rem;color:var(--gold);
     text-transform:uppercase;margin-bottom:2.6rem}
   .cta-row{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center}
+  .book-help{margin-top:1rem;font-size:.85rem;opacity:.85;text-align:center}
+  .book-help a{color:var(--gold);white-space:nowrap}
+  #services .book-help a{color:#7A5F27;font-weight:600}
+  .hero>.book-help{align-self:center}
   .btn{display:inline-block;padding:.95rem 2.4rem;text-decoration:none;letter-spacing:.2em;
     text-transform:uppercase;font-size:.78rem;transition:all .25s}
   .btn-gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 50%,var(--gold-lo));
@@ -287,6 +291,11 @@
     letter-spacing:.2em;text-transform:uppercase;font-size:.72rem;font-weight:400;
     border-bottom:1px solid rgba(162,126,60,.5);padding-bottom:2px;transition:color .2s}
   .book-link:hover{color:var(--navy)}
+  /* links from each menu category to its own page */
+  .cat-more{text-align:center;margin:.2rem auto 0}
+  .cat-more a{color:var(--gold-text);text-decoration:none;letter-spacing:.16em;text-transform:uppercase;font-size:.72rem;
+    border-bottom:1px solid rgba(162,126,60,.5);padding:.6rem 0 2px;display:inline-block}
+  .cat-more a:hover{color:var(--navy)}
   /* bigger tap area without changing the look */
   .promo-cta{position:relative}
   .promo-cta::after{content:"";position:absolute;inset:-10px -8px}
@@ -421,6 +430,8 @@
   footer .fb{font-family:var(--serif);letter-spacing:.3em;font-size:1.1rem;margin-bottom:.6rem}
   footer p{font-size:.75rem;letter-spacing:.18em;color:#c9cfd4;text-transform:uppercase}
   footer a{color:var(--gold)}
+  footer .page-links{margin-top:1.2rem;line-height:2.1}
+  footer .page-links a{text-decoration:none;margin:0 .55rem;white-space:nowrap}
 
   @media (max-width:640px){
     .hero{padding-top:13.2rem}
@@ -647,6 +658,7 @@
     <a class="btn btn-gold" href="#services">View Services</a>
     <a class="btn btn-line" href="https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge" data-booksy target="_blank" rel="noopener">Book Online</a>
   </div>
+  <p class="book-help">Trouble booking online? Call or text Sandy at <a href="tel:+18482305995">(848) 230-5995</a></p>
 </header>
 
 <section id="meet">
@@ -711,6 +723,7 @@
   <h2 class="sec-head">Services &amp; Pricing</h2>
   <p class="sec-sub">Precision. Ritual. Craft.</p>
   <p class="responders">First responders get $5 off their total &mdash; every visit.</p>
+  <p class="book-help">Trouble booking online? Call or text Sandy at <a href="tel:+18482305995">(848) 230-5995</a></p>
   <div class="menu">
     <h3>Precision Haircuts</h3>
     <div class="cat-items">
@@ -746,6 +759,7 @@
     </div>
     </div>
     <p class="cat-note">In the chair, I use Reuzel hair products.</p>
+    <p class="cat-more"><a href="/haircuts/">More about haircuts &rarr;</a></p>
     <h3>Packages</h3>
     <div class="cat-items">
       <div class="item">
@@ -785,6 +799,7 @@
       <a class="book-link" data-booksy data-service="diplomat" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21840943" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
+    <p class="cat-more"><a href="/hot-towel-shaves/">More about shaves and packages &rarr;</a></p>
     <h3>Signature Shaves &amp; Beard</h3>
     <div class="cat-items">
       <div class="item">
@@ -806,6 +821,7 @@
       <a class="book-link" data-booksy data-service="statesman" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=22331824" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
+    <p class="cat-more"><a href="/hot-towel-shaves/">More about hot towel shaves &rarr;</a></p>
     <h3>Treatments</h3>
     <div class="cat-items">
       <div class="item">
@@ -821,6 +837,7 @@
       <a class="book-link" data-booksy data-service="scalp" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21641264" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
+    <p class="cat-more"><a href="/facials-and-treatments/">More about facials and treatments &rarr;</a></p>
     <h3>Grooming &amp; Waxing</h3>
     <div class="cat-items">
       <div class="item">
@@ -842,6 +859,7 @@
       <a class="book-link" data-booksy data-service="browwax" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21629592" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
+    <p class="cat-more"><a href="/facials-and-treatments/">More about waxing &rarr;</a></p>
     <h3>Color</h3>
     <div class="cat-items">
       <div class="item">
@@ -851,6 +869,7 @@
       <a class="book-link" data-booksy data-service="greyblend" href="https://booksy.com/widget/index.html?id=1823074&amp;lang=en&amp;country=us&amp;theme=default&amp;variantId=21630689" target="_blank" rel="noopener">Book this service &rarr;</a>
     </div>
     </div>
+    <p class="cat-more"><a href="/haircuts/">More about haircuts and color &rarr;</a></p>
   </div>
 </section>
 
@@ -905,6 +924,7 @@
     <div><h4>Reserving</h4><p>The Wedding Party is held with a 50% deposit, refundable up to 7 days before the date. The Groom and The Groomsmen need no deposit.</p></div>
   </div>
   <div class="wed-cta"><a class="btn btn-gold" href="tel:+18482305995">Call or Text (848) 230-5995 to Plan Your Date</a></div>
+  <p class="wed-rating"><a href="/weddings/">Everything about weddings &rarr;</a></p>
 </section>
 
 <section id="gift">
@@ -974,7 +994,7 @@
       <h3 class="visit-h">Book</h3>
       <p><a class="btn btn-gold" href="https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge" style="font-size:.72rem;padding:.75rem 1.8rem" data-booksy target="_blank" rel="noopener">Book Online</a></p>
       <p style="margin-top:.9rem"><a href="tel:+18482305995">(848) 230-5995</a></p>
-      <p style="margin-top:.3rem;font-size:.85rem">Or call / text for an appointment</p>
+      <p style="margin-top:.3rem;font-size:.85rem">Or call / text for an appointment, or if online booking gives you trouble</p>
     </div>
   </div>
 </section>
@@ -987,6 +1007,7 @@
     <a href="https://www.linkedin.com/in/sandy-mordan-a08013422" target="_blank" rel="noopener" aria-label="LinkedIn — Sandy Mordan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.54C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg></a>
     <a href="https://www.yelp.com/biz/scissors-by-sandy-old-bridge" aria-label="Yelp — Scissors by Sandy" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.6 2.05c.63-.16 1.28.19 1.5.8.06.18.09.37.09.56v8.06c0 .8-.86 1.3-1.55.9a1.05 1.05 0 0 1-.35-.34L7.9 5.1a1.05 1.05 0 0 1 .42-1.5 12.4 12.4 0 0 1 4.28-1.55Z"/><path d="M20.6 12.9c.5.42.53 1.18.06 1.63a1.05 1.05 0 0 1-.4.24l-3.9 1.27c-.76.25-1.46-.48-1.2-1.24.03-.1.08-.2.15-.29l2.42-3.3a1.05 1.05 0 0 1 1.5-.2c.5.4.96.86 1.37 1.35v.54Z"/><path d="M14.9 17.1c-.42-.65.06-1.5.83-1.48.12 0 .23.03.34.07l3.86 1.4c.6.22.87.93.55 1.48a10.3 10.3 0 0 1-2.6 2.9 1.05 1.05 0 0 1-1.54-.3l-1.44-4.07Z"/><path d="M10.2 15.6c.72-.28 1.48.33 1.36 1.09-.02.11-.05.22-.1.32l-1.9 3.72c-.29.57-1 .78-1.53.44a10.6 10.6 0 0 1-2.9-2.66 1.05 1.05 0 0 1 .35-1.52l4.72-1.39Z"/><path d="M9.5 12.2c.5.6.13 1.52-.64 1.6l-4.12.42a1.05 1.05 0 0 1-1.14-.86 10.7 10.7 0 0 1 .2-4.2c.18-.63.87-.95 1.46-.68l4.24 3.72Z"/></svg></a>
   </div>
+  <p class="page-links"><a href="/haircuts/">Haircuts</a> <a href="/hot-towel-shaves/">Hot Towel Shaves</a> <a href="/facials-and-treatments/">Facials &amp; Treatments</a> <a href="/weddings/">Weddings</a></p>
   <p style="margin-top:1.4rem">Scissors by Sandy — Master Barber · Where Style Meets Perfection</p>
   <p style="margin-top:.6rem">The Shoppes at Old Bridge · 3813 US 9 North, Suite 101 · Old Bridge, NJ 08857 · <a href="tel:+18482305995">(848) 230-5995</a></p>
   <p style="margin-top:.6rem;opacity:.7">© 2026 Scissors by Sandy. All rights reserved.</p>
