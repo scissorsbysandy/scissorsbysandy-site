@@ -13,7 +13,8 @@ p = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'site', 'site
 s = open(p).read()
 today = datetime.date.today().isoformat()
 s2, n = re.subn(r'<lastmod>[\d-]+</lastmod>', f'<lastmod>{today}</lastmod>', s)
-if n != 1:
-    raise SystemExit(f"sitemap.xml: expected exactly one <lastmod>, found {n}")
+locs = len(re.findall(r'<loc>', s))
+if n == 0 or n != locs:
+    raise SystemExit(f"sitemap.xml: {locs} pages but {n} <lastmod> dates; every page needs one")
 open(p, 'w').write(s2)
-print(f"sitemap lastmod -> {today}")
+print(f"sitemap lastmod -> {today} on {n} pages")

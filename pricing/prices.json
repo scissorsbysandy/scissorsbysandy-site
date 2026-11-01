@@ -62,7 +62,11 @@
           "variantId": "21617226"
         }
       ],
-      "note": "In the chair, I use Reuzel hair products."
+      "note": "In the chair, I use Reuzel hair products.",
+      "more": {
+        "href": "/haircuts/",
+        "label": "More about haircuts"
+      }
     },
     {
       "name": "Packages",
@@ -152,7 +156,11 @@
           "variantId": "21840943",
           "booksy_rename_from": "The Groom & Relax"
         }
-      ]
+      ],
+      "more": {
+        "href": "/hot-towel-shaves/",
+        "label": "More about shaves and packages"
+      }
     },
     {
       "name": "Signature Shaves &amp; Beard",
@@ -184,7 +192,11 @@
           "desc": "Full beard sculpting and detailing with clippers, shaped to your face with clean, deliberate lines. Hot towel included.",
           "variantId": "22331824"
         }
-      ]
+      ],
+      "more": {
+        "href": "/hot-towel-shaves/",
+        "label": "More about hot towel shaves"
+      }
     },
     {
       "name": "Treatments",
@@ -207,7 +219,11 @@
           "desc": "A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.",
           "variantId": "21641264"
         }
-      ]
+      ],
+      "more": {
+        "href": "/facials-and-treatments/",
+        "label": "More about facials and treatments"
+      }
     },
     {
       "name": "Grooming &amp; Waxing",
@@ -239,7 +255,11 @@
           "desc": "Sculpting and shaping to define your look with precision.",
           "variantId": "21629592"
         }
-      ]
+      ],
+      "more": {
+        "href": "/facials-and-treatments/",
+        "label": "More about waxing"
+      }
     },
     {
       "name": "Color",
@@ -253,7 +273,11 @@
           "desc": "A refined technique to create a soft, natural transition with our professional grey blending service.",
           "variantId": "21630689"
         }
-      ]
+      ],
+      "more": {
+        "href": "/haircuts/",
+        "label": "More about haircuts and color"
+      }
     }
   ]
 }
