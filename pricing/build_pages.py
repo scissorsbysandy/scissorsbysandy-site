@@ -326,7 +326,7 @@ def build():
 <header class="page-hero" id="top">
   <p class="crumbs"><a href="/">Home</a> &rsaquo; {esc(LABEL[p['slug']])}</p>
   <picture><source srcset="/sbs-emblem.webp" type="image/webp"><img class="mark" src="/sbs-emblem.png" alt="Scissors by Sandy emblem" width="230" height="230" decoding="async"></picture>
-  <h1 class="gold-grad">{esc(p['h1'])}<span class="where">in {esc(p['where'])}</span></h1>
+  <h1 class="gold-grad">{esc(p['h1'])} <span class="where">in {esc(p['where'])}</span></h1>
   <p class="tagline">{esc(p['tag'])}</p>
   <p class="page-intro">{esc(p['intro'])}</p>
   <div class="cta-row">
