@@ -257,6 +257,76 @@ if os.path.exists(hp):
     (ok if not ov else bad)("only one Cache-Control rule can match any file" if not ov
         else f"overlapping Cache-Control rules {ov} — Netlify merges them into one doubled header")
 
+# ---------- 15. service pages (added 2026-10-31) ----------
+# Four pages built by build_pages.py. Each one repeats prices, Booksy links and FAQ
+# answers, so each gets the same scrutiny as the homepage. A price change that
+# skipped build.py would leave a page quoting the old price: that fails here.
+PAGES=['haircuts','hot-towel-shaves','facials-and-treatments','weddings']
+smx=open(os.path.join(SITE,'sitemap.xml')).read() if os.path.exists(os.path.join(SITE,'sitemap.xml')) else ''
+titles={}; descs={}
+for slug in PAGES:
+    fp=os.path.join(SITE,slug,'index.html')
+    if not os.path.exists(fp): bad(f"{slug}: page missing — run build.py"); continue
+    g=open(fp,encoding='utf-8').read(); url=f"https://scissorsbysandy.com/{slug}/"; pf=[]
+    vv=V(); vv.feed(g)
+    if vv.st or vv.er: pf.append(f"HTML malformed {vv.st[:3]} {vv.er[:3]}")
+    if f'<link rel="canonical" href="{url}">' not in g: pf.append("canonical missing or wrong")
+    if f"<loc>{url}</loc>" not in smx: pf.append("not in sitemap.xml")
+    if f'href="/{slug}/"' not in h: pf.append("homepage does not link to it")
+    t=re.search(r'<title>(.*?)</title>',g); dsc=re.search(r'<meta name="description" content="([^"]+)"',g)
+    if not t or not dsc: pf.append("title or description missing")
+    else: titles[slug]=t.group(1); descs[slug]=dsc.group(1)
+    if len(re.findall(r'<h1[ >]',g))!=1: pf.append("needs exactly one h1")
+    # every priced item: right price, right duration, right Booksy button
+    for blk in g.split('<div class="item">')[1:]:
+        n=re.search(r'<span class="item-name">(.*?)</span>',blk); pr=re.search(r'<span class="item-price">\$(\d+)</span>',blk)
+        du=re.search(r'<p class="item-dur">(\d+) min',blk); a=re.search(r'<a class="book-link"[^>]*>',blk)
+        sv=byname.get(U(n.group(1))) if n else None
+        if not sv: pf.append(f"unknown service {n and U(n.group(1))}"); continue
+        if not pr or int(pr.group(1))!=sv['price']: pf.append(f"{sv['name']} shows ${pr and pr.group(1)}, prices.json says ${sv['price']}")
+        if not du or int(du.group(1))!=sv['minutes']: pf.append(f"{sv['name']} duration wrong")
+        ds=re.search(r'data-service="([^"]+)"',a.group(0)) if a else None; vid=re.search(r'variantId=(\d+)',a.group(0)) if a else None
+        if not ds or ds.group(1)!=sv['id'] or not vid or vid.group(1)!=sv['variantId']: pf.append(f"{sv['name']} Book button opens the wrong service")
+    if '<div class="item">' not in g: pf.append("no services listed")
+    # booking safety, same rules as the homepage
+    if re.search(r'<iframe[^>]*booksy',g,re.I): pf.append("Booksy iframe")
+    if [x for x in re.findall(r'<a [^>]*target="_blank"[^>]*>',g) if 'noopener' not in x]: pf.append("new-tab link without noopener")
+    if [x for x in re.findall(r'<a [^>]*href="https://booksy\.com[^"]*"[^>]*>',g) if 'target="_blank"' not in x]: pf.append("Booksy link not opening in a new tab")
+    # what Google reads must match what visitors see
+    gb=[]
+    for m_ in re.finditer(r'<script type="application/ld\+json">(.*?)</script>',g,re.S):
+        try: gb.append(json.loads(m_.group(1)))
+        except Exception as e: pf.append(f"schema JSON invalid: {e}")
+    gv=dict((norm(q),norm(a_)) for q,a_ in re.findall(r'<summary>(.*?)</summary>\s*<p>(.*?)</p>',g,re.S))
+    gf=next((b for b in gb if b.get('@type')=='FAQPage'),{})
+    gs={norm(q['name']):norm(q['acceptedAnswer']['text']) for q in gf.get('mainEntity',[])}
+    if not gv or gv!=gs: pf.append("FAQ schema differs from the visible answers")
+    if any(k in json.dumps(gb) for k in ('aggregateRating','"review"')): pf.append("self-serving review markup")
+    for b_ in gb:
+        for o in b_.get('offers',[]):
+            sv=byname.get(o['name'])
+            if not sv or str(sv['price'])!=o['price']: pf.append(f"schema offer {o['name']} ${o['price']} disagrees with prices.json")
+    # house rules for copy
+    if slug!='haircuts' and 'Reuzel' in g: pf.append("mentions Reuzel — shave and facial products are not Reuzel")
+    if re.search(r'extraction',g,re.I): pf.append("says 'extraction' — the facial copy says deep pore cleanse")
+    if re.search(r'\b\d+\s+(Google\s+)?reviews\b',re.sub(r'<[^>]+>','',g),re.I): pf.append("shows a review count — say 'Rated 5.0 stars on Google'")
+    if '25+' in g or '25 years' in g: pf.append("repeats Sandy's years outside Meet Sandy")
+    if 'G-76DN6KF3WB' not in g: pf.append("analytics missing")
+    if 'Trouble booking online?' not in g: pf.append("booking-help line missing")
+    # hours must be the homepage's hours
+    hh=re.search(r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>',h,re.S); gh=re.search(r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>',g,re.S)
+    if not hh or not gh or hh.group(1)!=gh.group(1): pf.append("hours differ from the homepage")
+    # wedding prices are written on the homepage, not in prices.json: they must agree
+    if slug=='weddings':
+        hw=re.search(r'<div class="wed-grid">.*?<div class="wed-know">',h,re.S)
+        if not hw or hw.group(0).split('<div class="wed-know">')[0].strip() not in g: pf.append("wedding packages differ from the homepage")
+        for amt in ['$250','$595','$110','50% deposit','7 days']:
+            if amt not in g or amt not in h: pf.append(f"wedding term {amt} missing on one of the two pages")
+    for x in pf: bad(f"{slug}: {x}")
+    if not pf: ok(f"/{slug}/ prices, Book buttons, FAQ schema, hours and house rules all check out")
+dupT=[k for k in titles if list(titles.values()).count(titles[k])>1]; dupD=[k for k in descs if list(descs.values()).count(descs[k])>1]
+(ok if not dupT and not dupD else bad)("every service page has its own title and description" if not dupT and not dupD else f"duplicate titles/descriptions: {dupT+dupD}")
+
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)
 for m in passes: print(f"  ok    {m}")

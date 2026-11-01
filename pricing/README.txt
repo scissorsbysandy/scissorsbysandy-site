@@ -112,3 +112,22 @@ PREFLIGHT  (preflight.py)
 
   Preflight does NOT open a browser. Layout, overflow, contrast, tap
   targets and image sizing still need the render pass.
+
+
+SERVICE PAGES  (build_pages.py, added Oct 2026)
+  Four pages sit alongside the homepage:
+      /haircuts/   /hot-towel-shaves/   /facials-and-treatments/   /weddings/
+  They are GENERATED. Never hand-edit site/<page>/index.html.
+  build.py rebuilds them automatically after every price change.
+
+  Where each piece comes from:
+    prices, durations, descriptions, Book buttons  -> prices.json
+    styles, promo bar, hours, footer, analytics,
+    client reviews, the wedding package cards      -> site/index.html
+    page wording (intro, guide, FAQ)               -> the PAGES list in build_pages.py
+  So edit the homepage or prices.json, run build.py, and every page follows.
+
+  The preflight checks each page too: prices and durations against prices.json,
+  every Book button, FAQ schema vs visible text, hours vs the homepage, wedding
+  terms vs the homepage, sitemap entry, homepage link, and the house rules
+  (Reuzel only on haircuts, no "extractions", no review count, no years).
