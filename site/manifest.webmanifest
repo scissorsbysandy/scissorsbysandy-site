@@ -1,0 +1,44 @@
+{
+  "name": "Scissors by Sandy",
+  "short_name": "Sandy",
+  "description": "Private one-chair barber suite in Old Bridge, NJ. Book a haircut, hot towel shave or facial with Sandy.",
+  "start_url": "/?source=homescreen",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0E1A26",
+  "theme_color": "#16293C",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Services & Pricing",
+      "url": "/#services"
+    },
+    {
+      "name": "Hot Towel Shaves",
+      "url": "/hot-towel-shaves/"
+    },
+    {
+      "name": "Weddings",
+      "url": "/weddings/"
+    }
+  ]
+}
