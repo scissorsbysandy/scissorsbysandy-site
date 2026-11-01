@@ -297,7 +297,7 @@ def build():
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Sandy">
+  <meta name="apple-mobile-web-app-title" content="SBS">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="description" content="{html.escape(p['desc'])}">
   <meta property="og:type" content="website">
