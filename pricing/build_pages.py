@@ -125,7 +125,7 @@ PAGES = [
     faq=[
       ("When should I book?", "Wedding weeks fill up fast. Reach out 2 to 3 months before the date."),
       ("When should I get my wedding haircut?", "Fades look sharpest cut 1 to 3 days before; tapers settle best about a week out. I'll set your timing at the consultation."),
-      ("Can the whole wedding party come in together?", "Yes. The Wedding Party reserves the suite for the groom and four groomsmen for $595, on the day and time you choose. Additional groomsmen are $110 each, up to six of you in all."),
+      ("How does The Wedding Party work?", "I hold the suite for your party alone, on the day you choose, for about 5 to 6 hours. It's a small one-chair suite, so each of you comes in for your own time in the chair and nobody else is booked in between. It's $595 for the groom and four groomsmen, and additional groomsmen are $110 each, up to six of you in all."),
       ("Is there a deposit?", "Only for The Wedding Party, which is held with a 50% deposit, refundable up to 7 days before the date. The Groom and The Groomsmen need no deposit."),
     ],
     more=['haircuts', 'hot-towel-shaves', 'facials-and-treatments'],
