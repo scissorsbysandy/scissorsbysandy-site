@@ -50,6 +50,8 @@ def services_html():
         out.append('    </div>')
         if c.get('note'):
             out.append(f'    <p class="cat-note">{c["note"]}</p>')
+        if c.get('more'):
+            out.append(f'    <p class="cat-more"><a href="{c["more"]["href"]}">{c["more"]["label"]} &rarr;</a></p>')
     out.append('  </div>')
     return "\n".join(out)
 
@@ -116,5 +118,8 @@ if __name__=="__main__":
         print("VALIDATION FAILED:"); [print("   !",x) for x in e]; sys.exit(1)
     print("validation passed\n")
     print(patch_site()); print()
+    import build_pages
+    for f in build_pages.build(): print("rebuilt", f)
+    print()
     print(checklist())
     open(os.path.join(HERE,'CHECKLIST.txt'),'w').write(checklist()+"\n")
