@@ -327,6 +327,32 @@ for slug in PAGES:
 dupT=[k for k in titles if list(titles.values()).count(titles[k])>1]; dupD=[k for k in descs if list(descs.values()).count(descs[k])>1]
 (ok if not dupT and not dupD else bad)("every service page has its own title and description" if not dupT and not dupD else f"duplicate titles/descriptions: {dupT+dupD}")
 
+# ---------- 16. home-screen install + IndexNow (added 2026-10-31) ----------
+# The site installs to a phone's home screen like an app. If the manifest or an icon
+# goes missing, phones quietly fall back to a blurry screenshot icon. IndexNow tells
+# Bing (and ChatGPT search, which draws on Bing) about changed pages; it needs its
+# key file at the site root.
+mp=os.path.join(SITE,'manifest.webmanifest'); hp_=[]
+try:
+    mf=json.load(open(mp))
+    for k in ('name','short_name','start_url','display','icons'):
+        if not mf.get(k): hp_.append(f"manifest missing {k}")
+    for ic in mf.get('icons',[]):
+        if not os.path.exists(os.path.join(SITE,ic['src'].lstrip('/'))): hp_.append(f"icon file missing: {ic['src']}")
+    if not any(ic.get('purpose')=='maskable' for ic in mf.get('icons',[])): hp_.append("no maskable icon (Android crops it badly)")
+    for sc in mf.get('shortcuts',[]):
+        if not sc['url'].startswith('/'): hp_.append(f"shortcut leaves the site: {sc['url']}")
+except Exception as e: hp_.append(f"manifest unreadable: {e}")
+pages_all=[('home',h)]+[(sl,open(os.path.join(SITE,sl,'index.html'),encoding='utf-8').read()) for sl in PAGES if os.path.exists(os.path.join(SITE,sl,'index.html'))]
+for nm,pg in pages_all:
+    if '<link rel="manifest" href="/manifest.webmanifest">' not in pg: hp_.append(f"{nm}: no manifest link")
+keys=[f for f in os.listdir(SITE) if re.fullmatch(r'[0-9a-f]{32}\.txt',f)]
+if not keys: hp_.append("IndexNow key file missing from the site root")
+for f in keys:
+    if open(os.path.join(SITE,f)).read().strip()!=f[:-4]: hp_.append(f"IndexNow key file {f} has the wrong contents")
+for x in hp_: bad(x)
+if not hp_: ok("home-screen install (manifest, icons) and IndexNow key are in place")
+
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)
 for m in passes: print(f"  ok    {m}")

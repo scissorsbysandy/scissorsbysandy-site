@@ -294,6 +294,11 @@ def build():
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#16293C">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sandy">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="description" content="{html.escape(p['desc'])}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Scissors by Sandy">
