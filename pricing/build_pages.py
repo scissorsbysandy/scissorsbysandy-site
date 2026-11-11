@@ -209,6 +209,16 @@ BLURB = {'haircuts': "Scissor cuts, fades, crew cuts and kids' cuts, every one w
 LABEL['gift-certificates'] = "Gift Certificates"
 
 # ---------------------------------------------------------------- helpers
+
+def nav_items(current=None):
+    """The menu on every generated page: Home, each service page, Gifts, Visit.
+    The page you are on is marked aria-current. One definition so the pages never differ.
+    (The homepage menu is hand-written in site/index.html and links to its own sections.)"""
+    items = ([('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES]
+             + [('/gift-certificates/', 'Gifts'), ('/#visit', 'Visit')])
+    return '\n'.join(f'    <li><a href="{h}"{" aria-current=\"page\"" if h == current else ""}>{t}</a></li>'
+                     for h, t in items)
+
 def esc(t): return html.escape(t, quote=False)
 def text(h_): return re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', h_))).strip()
 
@@ -361,9 +371,7 @@ def build():
         ld = '\n'.join(f'<script type="application/ld+json">\n{json.dumps(x, indent=2, ensure_ascii=False)}\n</script>'
                        for x in (svc_ld, crumbs_ld, faq_ld))
         # ---- nav
-        navl = [('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES] + [('/#visit', 'Visit')]
-        nav = '\n'.join(f'    <li><a href="{h_}"{" aria-current=\"page\"" if h_ == "/"+p["slug"]+"/" else ""}>{t}</a></li>'
-                        for h_, t in navl)
+        nav = nav_items("/" + p["slug"] + "/")
         # ---- wedding packages block (wedding page only), copied from the homepage so the two never differ
         wed = ''
         if p.get('wedding'):
@@ -521,8 +529,7 @@ def build():
     gfaq = '\n'.join(f'      <details class="faq-item">\n        <summary>{esc(q)}</summary>\n'
                      f'        <p>{esc(a)}</p>\n      </details>' for q, a in g['faq'])
     gmore = '\n'.join(f'    <a href="/{s}/"><b>{esc(LABEL[s])}</b><span>{esc(BLURB[s])}</span></a>' for s in g['more'])
-    gnav = '\n'.join(f'    <li><a href="{h_}">{t}</a></li>'
-                     for h_, t in [('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES] + [('/#visit', 'Visit')])
+    gnav = nav_items('/gift-certificates/')
     shop = {"@type": "BarberShop", "@id": BASE + "/#barbershop", "name": "Scissors by Sandy", "url": BASE + "/",
             "telephone": "+18482305995",
             "address": {"@type": "PostalAddress", "streetAddress": "3813 US 9 North, Suite 101", "addressLocality": "Old Bridge",
@@ -721,8 +728,7 @@ def build():
     # ------------------------------------------------------------ 404 page
     # Netlify serves /404.html for any address that does not exist. Every link in
     # it starts with "/" because it can be shown at any depth. Never indexed.
-    nav404 = '\n'.join(f'    <li><a href="{h_}">{t}</a></li>'
-                       for h_, t in [('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES] + [('/#visit', 'Visit')])
+    nav404 = nav_items()
     page404 = f"""<!DOCTYPE html>
 <html lang="en">
 <head>

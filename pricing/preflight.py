@@ -526,8 +526,15 @@ ghh=re.search(r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>',gp,re.S); hh0=re.
 if not ghh or not hh0 or ghh.group(1)!=hh0.group(1): gf.append("gift page hours differ from the homepage")
 for amt in re.findall(r'\$(\d+)',gtxt):
     if int(amt) not in {s['price'] for s in svc}: gf.append(f"gift page quotes ${amt}, which is not a price in prices.json")
+# Added 2026-11-11 at Luis's request: the gift page is in the menu of every page
+# (on the homepage the menu's "Gift Certificates" goes to the homepage gift section).
+for nm_,pg_,_ in every[1:]:
+    mnu=re.search(r'<nav aria-label="Main">(.*?)</nav>',pg_,re.S)
+    if not mnu or 'href="/gift-certificates/"' not in mnu.group(1): gf.append(f"{nm_}: the menu has no Gifts link to the gift certificates page")
+if 'href="#gift"' not in (re.search(r'<nav aria-label="Main">(.*?)</nav>',h,re.S) or [None,''])[1]: gf.append("homepage menu lost its Gift Certificates link")
+if 'href="/gift-certificates/" aria-current="page"' not in gp: gf.append("gift page menu does not mark Gifts as the current page")
 for x in gf: bad(x)
-if not gf: ok("gift certificates: page, homepage picture, Text Sandy button, click-to-play film and tracking all in place")
+if not gf: ok("gift certificates: page, homepage picture, Text Sandy button, click-to-play film, tracking, and a Gifts link in every menu")
 
 # 17h. dated offers in the gold bar retire themselves, and may not outstay their date
 # The bar carries "OFFER-ENDS yyyy-mm-dd". From the next day visitors see the
