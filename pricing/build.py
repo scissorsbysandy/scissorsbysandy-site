@@ -51,7 +51,8 @@ def services_html():
         if c.get('note'):
             out.append(f'    <p class="cat-note">{c["note"]}</p>')
         if c.get('more'):
-            out.append(f'    <p class="cat-more"><a href="{c["more"]["href"]}">{c["more"]["label"]} &rarr;</a></p>')
+            more=c['more'] if isinstance(c['more'],list) else [c['more']]
+            out.append('    <p class="cat-more">'+' '.join(f'<a href="{m["href"]}">{m["label"]} &rarr;</a>' for m in more)+'</p>')
     out.append('  </div>')
     return "\n".join(out)
 

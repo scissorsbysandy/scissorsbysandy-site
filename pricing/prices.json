@@ -63,10 +63,10 @@
         }
       ],
       "note": "In the chair, I use Reuzel hair products.",
-      "more": {
-        "href": "/haircuts/",
-        "label": "More about haircuts"
-      }
+      "more": [
+        {"href": "/haircuts/", "label": "More about haircuts"},
+        {"href": "/kids-haircuts/", "label": "Kids' haircuts"}
+      ]
     },
     {
       "name": "Packages",
