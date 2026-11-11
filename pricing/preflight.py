@@ -135,8 +135,9 @@ else: bad("sitemap.xml missing")
 # ---------- 8. required files ----------
 need=['index.html','sitemap.xml','robots.txt','_headers','og-image.jpg',
       'favicon-32.png','favicon-192.png','apple-touch-icon.png',
-      'sbs-emblem.png','sbs-emblem.webp','barber-pole.png','barber-pole.webp',
-      'sandy-mordan.jpg','sandy-mordan.webp']
+      'sbs-emblem.png','sbs-emblem.webp','barber-pole.png','barber-pole.webp','barber-pole-sm.webp',
+      'sandy-mordan.jpg','sandy-mordan.webp',
+      'fonts/cormorant-garamond-latin.woff2','fonts/jost-latin.woff2','404.html','llms.txt']
 for f in need:
     if not os.path.exists(os.path.join(SITE,f)): bad(f"missing file: {f}")
 if all(os.path.exists(os.path.join(SITE,f)) for f in need): ok(f"all {len(need)} deploy files present")
@@ -258,10 +259,10 @@ if os.path.exists(hp):
         else f"overlapping Cache-Control rules {ov} — Netlify merges them into one doubled header")
 
 # ---------- 15. service pages (added 2026-10-31) ----------
-# Four pages built by build_pages.py. Each one repeats prices, Booksy links and FAQ
+# Pages built by build_pages.py. Each one repeats prices, Booksy links and FAQ
 # answers, so each gets the same scrutiny as the homepage. A price change that
 # skipped build.py would leave a page quoting the old price: that fails here.
-PAGES=['haircuts','hot-towel-shaves','facials-and-treatments','weddings']
+PAGES=['haircuts','kids-haircuts','hot-towel-shaves','facials-and-treatments','weddings']
 smx=open(os.path.join(SITE,'sitemap.xml')).read() if os.path.exists(os.path.join(SITE,'sitemap.xml')) else ''
 titles={}; descs={}
 for slug in PAGES:
@@ -352,6 +353,143 @@ for f in keys:
     if open(os.path.join(SITE,f)).read().strip()!=f[:-4]: hp_.append(f"IndexNow key file {f} has the wrong contents")
 for x in hp_: bad(x)
 if not hp_: ok("home-screen install (manifest, icons) and IndexNow key are in place")
+
+# ---------- 17. search and speed (added 2026-11-11) ----------
+# The SEO and speed overhaul of 2026-11-11, written down as rules so none of it
+# quietly comes undone. Before it, Google's own test (PageSpeed, phone) scored the
+# homepage 83/100 for speed with a 4.4 s largest paint, because:
+#   - a Google Fonts stylesheet held up the first paint by ~750 ms,
+#   - the two first-screen images were 2 to 3 times heavier than they needed to be,
+#   - the 178 KB analytics library downloaded alongside the first screen.
+# And on the search side the homepage title and H1 never said "barber shop" or
+# "Old Bridge", and three of the four service pages were not in Google's index.
+BASE='https://scissorsbysandy.com'
+def rd(*parts):
+    fp=os.path.join(SITE,*parts)
+    return open(fp,encoding='utf-8').read() if os.path.exists(fp) else ''
+indexable=[('home',h,BASE+'/')]+[(sl,rd(sl,'index.html'),f"{BASE}/{sl}/") for sl in PAGES]
+p404=rd('404.html')
+every=indexable+[('404',p404,None)]
+
+# 17a. what Google shows in results: one clear title and description per page
+sf=[]; seenT={}; seenD={}
+for nm,pg,url in indexable:
+    t=re.search(r'<title>(.*?)</title>',pg,re.S); d=re.search(r'<meta name="description" content="([^"]*)"',pg)
+    tt=U(t.group(1)).strip() if t else ''; dd=U(d.group(1)).strip() if d else ''
+    if not tt: sf.append(f"{nm}: no title")
+    elif len(tt)>60: sf.append(f"{nm}: title is {len(tt)} characters, Google cuts it off after about 60: '{tt}'")
+    if not dd: sf.append(f"{nm}: no meta description")
+    elif not 70<=len(dd)<=160: sf.append(f"{nm}: description is {len(dd)} characters, keep it between 70 and 160")
+    if tt in seenT: sf.append(f"{nm}: same title as {seenT[tt]}")
+    if dd in seenD: sf.append(f"{nm}: same description as {seenD[dd]}")
+    seenT[tt]=nm; seenD[dd]=nm
+    if 'Old Bridge' not in tt: sf.append(f"{nm}: title does not say Old Bridge")
+    if len(re.findall(r'<h1[ >]',pg))!=1: sf.append(f"{nm}: needs exactly one h1")
+    if len(re.findall(r'<main[ >]',pg))!=1 or pg.count('</main>')!=1: sf.append(f"{nm}: needs exactly one <main> landmark")
+    if f'<link rel="canonical" href="{url}">' not in pg: sf.append(f"{nm}: canonical should be {url}")
+    if re.search(r'<meta name="robots"[^>]*noindex',pg,re.I): sf.append(f"{nm}: carries a noindex tag, Google would drop the page")
+    if '<meta property="og:image" content="https://scissorsbysandy.com/og-image.jpg">' not in pg: sf.append(f"{nm}: no og:image (link previews would be blank)")
+    if '<html lang="en">' not in pg: sf.append(f"{nm}: <html> has no lang")
+h1=norm(re.search(r'<h1[^>]*>(.*?)</h1>',h,re.S).group(1)) if re.search(r'<h1[^>]*>(.*?)</h1>',h,re.S) else ''
+ht=U(re.search(r'<title>(.*?)</title>',h).group(1))
+if not ('Scissors by Sandy' in h1 and 'Old Bridge' in h1 and re.search(r'barber',h1,re.I)):
+    sf.append(f"homepage h1 must name the shop, say barber, and say Old Bridge; it reads '{h1}'")
+if not re.search(r'barber ?shop',ht,re.I): sf.append(f"homepage title must contain 'Barber Shop' (what people search): '{ht}'")
+for x in sf: bad(x)
+if not sf: ok(f"titles, descriptions, h1, <main> and canonical are right on all {len(indexable)} pages")
+
+# 17b. structured data ties the pages together: one shop, one @id
+sd=[]
+if bs:
+    if bs.get('@id')!=BASE+'/#barbershop': sd.append("BarberShop schema needs @id https://scissorsbysandy.com/#barbershop (the service pages point at it)")
+    if bs.get('url')!=BASE+'/': sd.append(f"BarberShop url should match the canonical {BASE}/")
+    for im in ([bs.get('logo')] if bs.get('logo') else [])+list(bs.get('image') or []):
+        if not os.path.exists(os.path.join(SITE,im.replace(BASE+'/',''))): sd.append(f"schema image missing from the site: {im}")
+ws=next((x for x in blocks if x.get('@type')=='WebSite'),None)
+if not ws or ws.get('name')!='Scissors by Sandy' or ws.get('url')!=BASE+'/': sd.append("WebSite schema missing (it tells Google the site's name)")
+for nm,pg,url in indexable[1:]:
+    gb=[json.loads(m_.group(1)) for m_ in re.finditer(r'<script type="application/ld\+json">(.*?)</script>',pg,re.S)]
+    sv_=next((x for x in gb if x.get('@type')=='Service'),None); bc=next((x for x in gb if x.get('@type')=='BreadcrumbList'),None)
+    if not sv_ or (sv_.get('provider') or {}).get('@id')!=BASE+'/#barbershop': sd.append(f"{nm}: Service schema does not point at the shop's @id")
+    if not bc or bc['itemListElement'][-1].get('item')!=url: sd.append(f"{nm}: breadcrumb schema missing or wrong")
+for x in sd: bad(x)
+if not sd: ok("schema: shop @id, WebSite name, and every service page linked back to the shop")
+
+# 17c. fonts come from this site, and nothing outside it may hold up the first paint
+sp_=[]
+for nm,pg,url in every:
+    head=pg[:pg.find('</head>')]
+    if re.search(r'fonts\.(googleapis|gstatic)\.com',pg): sp_.append(f"{nm}: loads fonts from Google again (it cost ~750 ms before the first paint)")
+    for f_ in ('/fonts/cormorant-garamond-latin.woff2','/fonts/jost-latin.woff2'):
+        if f'<link rel="preload" href="{f_}" as="font" type="font/woff2" crossorigin>' not in head: sp_.append(f"{nm}: font not preloaded: {f_}")
+        if f"url({f_})" not in pg: sp_.append(f"{nm}: @font-face for {f_} missing")
+    if 'font-display:swap' not in pg: sp_.append(f"{nm}: fonts need font-display:swap so text shows immediately")
+    if re.search(r'<link[^>]+rel="stylesheet"',head): sp_.append(f"{nm}: an external stylesheet in the <head> blocks the first paint; keep CSS inline")
+    for s_ in re.findall(r'<script[^>]+src="[^"]+"[^>]*>',pg):
+        if 'googletagmanager.com' in s_: sp_.append(f"{nm}: analytics is a <script src> tag again; it must be loaded after the page (see the GA block)")
+        elif ' async' not in s_ and ' defer' not in s_: sp_.append(f"{nm}: script without async/defer blocks the page: {s_[:70]}")
+    if 'G-76DN6KF3WB' not in pg: sp_.append(f"{nm}: analytics missing")
+    elif not re.search(r"addEventListener\('load',\s*whenIdle\)",pg) or "googletagmanager.com/gtag/js?id=G-76DN6KF3WB'" not in pg:
+        sp_.append(f"{nm}: analytics no longer waits for the page to finish loading")
+if os.path.exists(hp):
+    fr=re.search(r'^/fonts/\*\n((?:[ \t]+.*\n?)+)',hd_+'\n',re.M)
+    if not fr or not re.search(r'max-age=(\d+)',fr.group(1)) or int(re.search(r'max-age=(\d+)',fr.group(1)).group(1))<2592000:
+        sp_.append("_headers: /fonts/* needs a long Cache-Control (30 days or more) so returning visitors don't re-download fonts")
+for x in sp_: bad(x)
+if not sp_: ok("fonts self-hosted and preloaded, analytics deferred, nothing render-blocking on any page")
+
+# 17d. weight budgets for what a phone actually downloads on the first screen
+BUDGET={'barber-pole.webp':40,'barber-pole-sm.webp':22,'sbs-emblem.webp':16,'sandy-mordan.webp':32,
+        'og-image.jpg':150,'favicon-32.png':4,'fonts/cormorant-garamond-latin.woff2':45,'fonts/jost-latin.woff2':32}
+wb=[f"{f_} is {os.path.getsize(os.path.join(SITE,f_))/1024:.0f} KB, budget {kb} KB: re-export it smaller"
+    for f_,kb in BUDGET.items() if os.path.exists(os.path.join(SITE,f_)) and os.path.getsize(os.path.join(SITE,f_))>kb*1024]
+for nm,pg,url in every:
+    kb=len(pg.encode('utf-8'))/1024
+    if kb>100: wb.append(f"{nm}: the page itself is {kb:.0f} KB, budget 100 KB")
+    elif kb>85: warn(f"{nm}: page is {kb:.0f} KB, close to the 100 KB budget")
+if '<source media="(max-width:599px)" srcset="barber-pole-sm.webp" type="image/webp">' not in hero: wb.append("hero: phones must get barber-pole-sm.webp (the pole is the largest thing painted first)")
+if not re.search(r'<img class="hero-pole"[^>]*fetchpriority="high"',hero): wb.append("hero pole lost fetchpriority=high")
+unsized=[m_[:80] for pg_ in [x[1] for x in every] for m_ in re.findall(r'<img [^>]*>',pg_) if ' width=' not in m_ or ' height=' not in m_]
+if unsized: wb.append(f"images without width and height make the page jump as it loads: {unsized[:3]}")
+for x in wb: bad(x)
+if not wb: ok("first-screen images, fonts and page sizes are all within their weight budgets")
+
+# 17e. crawlers: sitemap lists exactly the real pages, robots.txt lets them in, links all lead somewhere
+cr=[]
+locs=re.findall(r'<loc>([^<]+)</loc>',smx); wantlocs=[u for _,_,u in indexable]
+if sorted(locs)!=sorted(wantlocs): cr.append(f"sitemap.xml should list exactly the {len(wantlocs)} pages; differs by {sorted(set(locs)^set(wantlocs))}")
+rb=rd('robots.txt')
+if not re.search(r'^Sitemap:\s*https://scissorsbysandy\.com/sitemap\.xml\s*$',rb,re.M): cr.append("robots.txt lost its Sitemap line")
+if re.search(r'^Disallow:\s*/\s*$',rb,re.M): cr.append("robots.txt has 'Disallow: /' which hides the whole site from search engines")
+home_ids=set(re.findall(r'\sid="([^"]+)"',h))
+for nm,pg,url in every:
+    for href in set(re.findall(r'href="(/[^"]*)"',pg)):
+        path,_,frag=href.partition('#'); path=path.split('?')[0]
+        tgt=os.path.join(SITE,path.lstrip('/'),'index.html') if path.endswith('/') else os.path.join(SITE,path.lstrip('/'))
+        if not os.path.exists(tgt): cr.append(f"{nm}: link to {href} leads nowhere")
+        elif frag and path=='/' and frag not in home_ids: cr.append(f"{nm}: link to {href} points at a section that does not exist")
+for sl in PAGES:
+    n_in=sum(1 for nm,pg,url in indexable if nm!=sl and f'href="/{sl}/"' in pg)
+    if n_in<len(indexable)-1: cr.append(f"/{sl}/ is not linked from every other page ({n_in} of {len(indexable)-1}); Google finds and values pages through links")
+for x in cr: bad(x)
+if not cr: ok(f"sitemap lists exactly {len(wantlocs)} pages, robots.txt is open, every internal link resolves, every page links to every other")
+
+# 17f. the "page not found" page and the plain-text summary for AI assistants
+ex=[]
+if not re.search(r'<meta name="robots" content="noindex">',p404): ex.append("404.html must carry noindex")
+if 'href="/"' not in p404: ex.append("404.html must link back to the homepage")
+rel=[u for u in re.findall(r'(?:href|src|srcset)="([^"]+)"',p404) if not re.match(r'(/|https?://|tel:|mailto:|#)',u)]
+if rel: ex.append(f"404.html has relative addresses that break when shown at a deeper path: {rel[:3]}")
+ll=rd('llms.txt')
+for s in svc:
+    if f"- {norm(s['name'])}: ${s['price']}, {s['minutes']} minutes." not in ll: ex.append(f"llms.txt out of date for {norm(s['name'])}: run build.py")
+hh_=re.search(r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>',h,re.S)
+for line in (hh_.group(1).split('<br>') if hh_ else []):
+    if norm(line) and f"- {norm(line)}" not in ll: ex.append(f"llms.txt hours differ from the homepage: {norm(line)}")
+if '(848) 230-5995' not in ll or '3813 US 9 North, Suite 101' not in ll: ex.append("llms.txt lost the phone or address")
+if re.search(r'\b\d+\s+(Google\s+)?reviews\b|25\+|25 years|extraction',ll,re.I): ex.append("llms.txt breaks a house rule (review count, years, or 'extraction')")
+for x in ex: bad(x)
+if not ex: ok("404 page and llms.txt are in place and agree with prices.json and the homepage hours")
 
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)
