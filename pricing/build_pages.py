@@ -2,11 +2,15 @@
 """
 Scissors by Sandy — service pages.
 
-Builds the four dedicated pages from prices.json plus the homepage:
+Builds the dedicated pages from prices.json plus the homepage:
     site/haircuts/index.html
+    site/kids-haircuts/index.html
     site/hot-towel-shaves/index.html
     site/facials-and-treatments/index.html
     site/weddings/index.html
+and two small files that are generated from the same sources so they cannot drift:
+    site/404.html     the "page not found" page (never indexed)
+    site/llms.txt     a plain-text summary of the shop for AI assistants
 
 Run automatically at the end of build.py, or on its own:  python3 build_pages.py
 
@@ -61,7 +65,30 @@ PAGES = [
       ("Do you cut children's hair?", "Yes. The Royal Roots is a wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair."),
       ("Can I add a shave or beard work to my cut?", f"Yes. My packages pair a cut with a hot towel shave or beard shaping for less than booking them separately, from {P('gentleman')} to {P('sovereign')}. You'll find them on the hot towel shaves page."),
     ],
-    more=['hot-towel-shaves', 'facials-and-treatments', 'weddings'],
+    more=['kids-haircuts', 'hot-towel-shaves', 'facials-and-treatments', 'weddings'],
+  ),
+  dict(
+    slug='kids-haircuts', guide_sub='Before the first visit', nav='Kids',
+    title="Kids' Haircuts in Old Bridge, NJ | Scissors by Sandy",
+    desc="Kids' haircuts for ages 12 and under in a private one-chair barber suite in Old Bridge, NJ. A wash and a patient, unhurried cut. By appointment.",
+    h1="Kids' Haircuts", where="Old Bridge, NJ",
+    tag="Ages 12 and under · Wash and cut",
+    intro="Kids notice when someone takes their time with them. My suite has one chair, so it's one child at a time, with no line behind us and no reason to hurry. Every cut starts with a wash and gets the same care as any other cut in my chair.",
+    groups=[("The Cut", ['royalroots'], None)],
+    guide=("Good to know", [
+        ("Ages 12 and under", f"The Royal Roots is a wash and cut for my youngest gentlemen. {M('royalroots')}, {P('royalroots')}."),
+        ("One child at a time", "It's a private one-chair suite. No waiting room, no line, and no other chairs in the room."),
+        ("By appointment", "The time you book is held for your child, so you walk in and we start."),
+        ("Easy parking", "Free parking directly outside the suite at The Shoppes at Old Bridge."),
+    ]),
+    quotes=["Danielle K.", "Pablo C."],
+    faq=[
+      ("What ages is The Royal Roots for?", f"Ages 12 and under. It's a wash and cut, {M('royalroots')}, {P('royalroots')}. From 13 up, book any cut on my haircut menu."),
+      ("Do you take walk-ins for kids' cuts?", "No. I'm by appointment only, and that's what keeps it calm. The time is held for your child, with no waiting room and no rushing."),
+      ("Do you cut a ring bearer's hair for a wedding?", f"Yes. The Royal Roots is the cut for a ring bearer, {P('royalroots')} for ages 12 and under. The groom and groomsmen packages are on the weddings page."),
+      ("Where are you, and is there parking?", "The Shoppes at Old Bridge, 3813 US 9 North, Suite 101, Old Bridge, NJ 08857. There's free parking directly outside the suite."),
+    ],
+    more=['haircuts', 'hot-towel-shaves', 'facials-and-treatments', 'weddings'],
   ),
   dict(
     slug='hot-towel-shaves', guide_sub='A quick guide', nav='Shaves',
@@ -83,11 +110,11 @@ PAGES = [
       ("I want to keep my beard. What should I book?", "The Statesman. It's full beard sculpting and detailing with clippers and a hot towel, shaped to your face, with no straight razor."),
       ("Can I get a shave and a haircut together?", f"Yes. The packages pair a cut with a shave or beard shaping for less than booking each on its own, from {P('gentleman')} for The Gentleman to {P('sovereign')} for The Sovereign."),
     ],
-    more=['haircuts', 'facials-and-treatments', 'weddings'],
+    more=['haircuts', 'kids-haircuts', 'facials-and-treatments', 'weddings'],
   ),
   dict(
     slug='facials-and-treatments', guide_sub='Thirty minutes, start to finish', nav='Treatments',
-    title="Men's Facials & Treatments in Old Bridge, NJ | Scissors by Sandy",
+    title="Men's Facials & Waxing in Old Bridge, NJ | Scissors by Sandy",
     desc="A 30-minute men's mini facial, scalp treatment and nose, ear and eyebrow waxing in a private one-chair barber suite in Old Bridge, NJ. By appointment.",
     h1="Facials & Treatments", where="Old Bridge, NJ",
     tag="Mini facial · Scalp treatment · Waxing",
@@ -106,11 +133,11 @@ PAGES = [
       ("Can I add a treatment to my haircut?", f"Yes. Book them together and they're done in one visit. The Diplomat pairs The Signature cut with a Scalp Treatment for {P('diplomat')}."),
       ("How long does waxing take?", "About ten minutes each for nose, ear or eyebrow waxing, so they fit easily into any appointment."),
     ],
-    more=['haircuts', 'hot-towel-shaves', 'weddings'],
+    more=['haircuts', 'kids-haircuts', 'hot-towel-shaves', 'weddings'],
   ),
   dict(
     slug='weddings', guide_sub='Planned with you, timed for the photos', nav='Weddings', wedding=True,
-    title="Wedding Haircuts & Groom Packages in Old Bridge, NJ | Scissors by Sandy",
+    title="Wedding Haircuts in Old Bridge, NJ | Scissors by Sandy",
     desc="Groom and groomsmen packages in a private one-chair barber suite in Old Bridge, NJ: a trial cut, a wedding-week cut and shave, and a day-before touch-up.",
     h1="Weddings", where="Old Bridge, NJ",
     tag="For the groom and his party",
@@ -128,13 +155,14 @@ PAGES = [
       ("How does The Wedding Party work?", "I hold the suite for your party alone, on the day you choose, for about 5 to 6 hours. It's a small one-chair suite, so each of you comes in for your own time in the chair and nobody else is booked in between. It's $595 for the groom and four groomsmen, and additional groomsmen are $110 each, up to six of you in all."),
       ("Is there a deposit?", "Only for The Wedding Party, which is held with a 50% deposit, refundable up to 7 days before the date. The Groom and The Groomsmen need no deposit."),
     ],
-    more=['haircuts', 'hot-towel-shaves', 'facials-and-treatments'],
+    more=['haircuts', 'kids-haircuts', 'hot-towel-shaves', 'facials-and-treatments'],
   ),
 ]
 BY = {p['slug']: p for p in PAGES}
-LABEL = {'haircuts': "Haircuts", 'hot-towel-shaves': "Hot Towel Shaves",
+LABEL = {'haircuts': "Haircuts", 'kids-haircuts': "Kids' Haircuts", 'hot-towel-shaves': "Hot Towel Shaves",
          'facials-and-treatments': "Facials & Treatments", 'weddings': "Weddings"}
 BLURB = {'haircuts': "Scissor cuts, fades, crew cuts and kids' cuts, every one with a wash.",
+         'kids-haircuts': "A wash and a patient, unhurried cut for ages 12 and under.",
          'hot-towel-shaves': "Straight razor shaves, beard shaping, and cut and shave packages.",
          'facials-and-treatments': "The 30-minute mini facial, scalp treatment and waxing.",
          'weddings': "A trial cut, a wedding-week visit and a day-before touch-up."}
@@ -187,7 +215,7 @@ EXTRA_CSS = """
   .quote-grid.two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:900px}
   @media (max-width:900px){ .quote-grid.two{grid-template-columns:1fr} }
   .visit-strip{text-align:center}
-  .more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4rem;max-width:1000px;margin:0 auto}
+  .more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.4rem;max-width:860px;margin:0 auto}
   @media (max-width:820px){ .more-grid{grid-template-columns:1fr;max-width:520px} }
   .more-grid a{display:block;text-decoration:none;border:1px solid rgba(162,126,60,.55);padding:1.4rem 1.3rem;background:#fff;transition:border-color .2s,transform .2s}
   .more-grid a:hover{border-color:var(--gold-deep);transform:translateY(-2px)}
@@ -207,10 +235,11 @@ def build():
     home = open(os.path.join(SITE, 'index.html'), encoding='utf-8').read()
     css = grab(home, r'<style>(.*?)</style>', 'stylesheet')
     promo = grab(home, r'(<div class="promo-bar">.*?</div>)', 'promo bar')
-    ga = grab(home, r'(<!-- Google Analytics 4 -->.*?</script>\s*<script>.*?</script>)', 'analytics block')
+    ga = grab(home, r'(<!-- Google Analytics 4 -->\s*<script>.*?</script>)', 'analytics block')
     hours = grab(home, r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>', 'hours')
     footer = grab(home, r'(<footer>.*?</footer>)', 'footer')
-    fonts = grab(home, r'(<link rel="preconnect" href="https://fonts\.googleapis\.com">.*?rel="stylesheet">)', 'font links')
+    fonts = '\n'.join(re.findall(r'<link rel="preload" href="/fonts/[^"]+" as="font"[^>]*>', home))
+    if fonts.count('<link') != 2: raise SystemExit("build_pages: expected two font preload links on the homepage")
     footer = footer.replace('href="#top"', 'href="/"')
     out = []
     for p in PAGES:
@@ -308,8 +337,12 @@ def build():
   <meta property="og:image" content="{BASE}/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Scissors by Sandy, Master Barber, Old Bridge NJ">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{html.escape(p['title'])}">
+  <meta name="twitter:description" content="{html.escape(p['desc'])}">
+  <meta name="twitter:image" content="{BASE}/og-image.jpg">
   <link rel="preconnect" href="https://www.googletagmanager.com">
 {fonts}
 {ld}
@@ -340,6 +373,7 @@ def build():
   <p class="book-help">Trouble booking online? Call or text Sandy at {TEL}</p>
 </header>
 
+<main id="main">
 {wed}<section id="services">
   <h2 class="sec-head">{svc_head}</h2>
   <p class="sec-sub">{svc_sub}</p>
@@ -400,6 +434,7 @@ def build():
 {more}
   </div>
 </section>
+</main>
 
 {footer}
 </body>
@@ -408,6 +443,90 @@ def build():
         d = os.path.join(SITE, p['slug']); os.makedirs(d, exist_ok=True)
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page)
         out.append(f"site/{p['slug']}/index.html")
+
+    # ------------------------------------------------------------ 404 page
+    # Netlify serves /404.html for any address that does not exist. Every link in
+    # it starts with "/" because it can be shown at any depth. Never indexed.
+    nav404 = '\n'.join(f'    <li><a href="{h_}">{t}</a></li>'
+                       for h_, t in [('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES] + [('/#visit', 'Visit')])
+    page404 = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- GENERATED by pricing/build_pages.py. Do not edit by hand. -->
+<title>Page Not Found | Scissors by Sandy</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#16293C">
+  <link rel="preconnect" href="https://www.googletagmanager.com">
+{fonts}
+<style>{css}{EXTRA_CSS}</style>
+{ga}
+</head>
+<body class="sub">
+
+<div class="topstack">
+  {promo}
+<nav aria-label="Main">
+  <a class="nav-brand gold-grad" href="/">SCISSORS BY SANDY</a>
+  <ul>
+{nav404}
+  </ul>
+</nav>
+</div>
+
+<main id="main">
+<header class="page-hero" id="top">
+  <picture><source srcset="/sbs-emblem.webp" type="image/webp"><img class="mark" src="/sbs-emblem.png" alt="Scissors by Sandy emblem" width="230" height="230" decoding="async"></picture>
+  <h1 class="gold-grad">That Page Isn&rsquo;t Here</h1>
+  <p class="page-intro">The link is out of date, or the address has a typo. Everything you need is one tap away.</p>
+  <div class="cta-row">
+    <a class="btn btn-gold" href="/">Go to the Homepage</a>
+    <a class="btn btn-line" href="/#services">Services &amp; Pricing</a>
+  </div>
+  <p class="book-help">Looking to book? Call or text Sandy at {TEL}</p>
+</header>
+</main>
+
+{footer}
+</body>
+</html>
+"""
+    open(os.path.join(SITE, '404.html'), 'w', encoding='utf-8').write(page404)
+    out.append("site/404.html")
+
+    # ------------------------------------------------------------ llms.txt
+    # A plain-text summary for AI assistants (ChatGPT, Claude, Perplexity and the
+    # like), following the llms.txt convention. Built from prices.json and the
+    # homepage hours, so an assistant never quotes a price the site doesn't.
+    L = ["# Scissors by Sandy", "",
+         "> A private one-chair barber shop in Old Bridge, New Jersey, owned and run by master barber "
+         "Sandra (Sandy) Mordan. Men's and kids' haircuts, traditional hot towel shaves, beard shaping, "
+         "facials, scalp treatments, waxing and wedding packages. By appointment only.", "",
+         "## Key facts", "",
+         "- Address: The Shoppes at Old Bridge, 3813 US 9 North, Suite 101, Old Bridge, NJ 08857",
+         "- Phone or text: (848) 230-5995",
+         f"- Book online: {PROF}",
+         "- Website: https://scissorsbysandy.com/",
+         "- Walk-ins: no, by appointment only",
+         "- Parking: free, directly outside the suite",
+         "- First responders: $5 off their total, every visit",
+         "- Gift certificates: available by call or text",
+         "- Areas served: Old Bridge, Matawan, Marlboro, Manalapan, Monroe Township, East Brunswick, Sayreville, Aberdeen and Parlin",
+         "", "## Hours", ""]
+    L += [f"- {text(x)}" for x in hours.split('<br>') if text(x)]
+    L += ["", "## Services and prices", ""]
+    for c in D['categories']:
+        L += [f"### {text(c['name'])}", ""]
+        L += [f"- {text(s['name'])}: ${s['price']}, {s['minutes']} minutes. {text(s['desc'])}" for s in c['services']]
+        L += [""]
+    L += ["## Pages", "", f"- [Home]({BASE}/): services, prices, hours, reviews and booking"]
+    L += [f"- [{LABEL[q['slug']]}]({BASE}/{q['slug']}/): {q['desc']}" for q in PAGES]
+    open(os.path.join(SITE, 'llms.txt'), 'w', encoding='utf-8').write('\n'.join(L) + '\n')
+    out.append("site/llms.txt")
     return out
 
 if __name__ == '__main__':
