@@ -137,7 +137,9 @@ need=['index.html','sitemap.xml','robots.txt','_headers','og-image.jpg',
       'favicon-32.png','favicon-192.png','apple-touch-icon.png',
       'sbs-emblem.png','sbs-emblem.webp','barber-pole.png','barber-pole.webp','barber-pole-sm.webp',
       'sandy-mordan.jpg','sandy-mordan.webp',
-      'fonts/cormorant-garamond-latin.woff2','fonts/jost-latin.woff2','404.html','llms.txt']
+      'fonts/cormorant-garamond-latin.woff2','fonts/jost-latin.woff2','404.html','llms.txt',
+      'gift-certificate-majesty.webp','gift-certificate-executive.webp','gift-certificate-sovereign.webp',
+      'gift-video-poster.webp']
 for f in need:
     if not os.path.exists(os.path.join(SITE,f)): bad(f"missing file: {f}")
 if all(os.path.exists(os.path.join(SITE,f)) for f in need): ok(f"all {len(need)} deploy files present")
@@ -367,7 +369,8 @@ BASE='https://scissorsbysandy.com'
 def rd(*parts):
     fp=os.path.join(SITE,*parts)
     return open(fp,encoding='utf-8').read() if os.path.exists(fp) else ''
-indexable=[('home',h,BASE+'/')]+[(sl,rd(sl,'index.html'),f"{BASE}/{sl}/") for sl in PAGES]
+INFO=['gift-certificates']   # generated pages that are not service menus
+indexable=[('home',h,BASE+'/')]+[(sl,rd(sl,'index.html'),f"{BASE}/{sl}/") for sl in PAGES+INFO]
 p404=rd('404.html')
 every=indexable+[('404',p404,None)]
 
@@ -440,7 +443,9 @@ if not sp_: ok("fonts self-hosted and preloaded, analytics deferred, nothing ren
 
 # 17d. weight budgets for what a phone actually downloads on the first screen
 BUDGET={'barber-pole.webp':40,'barber-pole-sm.webp':22,'sbs-emblem.webp':16,'sandy-mordan.webp':32,
-        'og-image.jpg':150,'favicon-32.png':4,'fonts/cormorant-garamond-latin.woff2':45,'fonts/jost-latin.woff2':32}
+        'og-image.jpg':150,'favicon-32.png':4,'fonts/cormorant-garamond-latin.woff2':45,'fonts/jost-latin.woff2':32,
+        'gift-certificate-majesty.webp':60,'gift-certificate-executive.webp':60,'gift-certificate-sovereign.webp':60,
+        'gift-video-poster.webp':50}
 wb=[f"{f_} is {os.path.getsize(os.path.join(SITE,f_))/1024:.0f} KB, budget {kb} KB: re-export it smaller"
     for f_,kb in BUDGET.items() if os.path.exists(os.path.join(SITE,f_)) and os.path.getsize(os.path.join(SITE,f_))>kb*1024]
 for nm,pg,url in every:
@@ -468,7 +473,7 @@ for nm,pg,url in every:
         tgt=os.path.join(SITE,path.lstrip('/'),'index.html') if path.endswith('/') else os.path.join(SITE,path.lstrip('/'))
         if not os.path.exists(tgt): cr.append(f"{nm}: link to {href} leads nowhere")
         elif frag and path=='/' and frag not in home_ids: cr.append(f"{nm}: link to {href} points at a section that does not exist")
-for sl in PAGES:
+for sl in PAGES+INFO:
     n_in=sum(1 for nm,pg,url in indexable if nm!=sl and f'href="/{sl}/"' in pg)
     if n_in<len(indexable)-1: cr.append(f"/{sl}/ is not linked from every other page ({n_in} of {len(indexable)-1}); Google finds and values pages through links")
 for x in cr: bad(x)
@@ -490,6 +495,61 @@ if '(848) 230-5995' not in ll or '3813 US 9 North, Suite 101' not in ll: ex.appe
 if re.search(r'\b\d+\s+(Google\s+)?reviews\b|25\+|25 years|extraction',ll,re.I): ex.append("llms.txt breaks a house rule (review count, years, or 'extraction')")
 for x in ex: bad(x)
 if not ex: ok("404 page and llms.txt are in place and agree with prices.json and the homepage hours")
+
+# 17g. gift certificates: the page, the homepage picture, and the one-tap text
+# Added 2026-11-11. The page exists to give the holiday posts and the commercial
+# somewhere to land, and to show the certificate. Taps on its buttons are counted
+# in Analytics as gift_click, so its worth can be judged with numbers.
+gf=[]; gp=rd('gift-certificates','index.html')
+SMS='sms:+18482305995?&amp;body='
+for nm_,pg_ in (('gift page',gp),('homepage gift section',h[h.find('<section id="gift">'):h.find('</section>',h.find('<section id="gift">'))])):
+    if SMS not in pg_ or 'data-gift="text"' not in pg_: gf.append(f"{nm_}: the Text Sandy button is missing or lost its pre-filled message")
+    if 'data-gift="call"' not in pg_: gf.append(f"{nm_}: the Call button lost its gift tracking")
+    if '/gift-certificate-majesty.webp' not in pg_: gf.append(f"{nm_}: the certificate picture is missing")
+if 'href="/gift-certificates/"' not in h[h.find('<section id="gift">'):h.find('<footer')]: gf.append("homepage gift section does not link to the gift page")
+if "gtag('event', 'gift_click'" not in h: gf.append("gift_click tracking removed from the analytics block")
+if '<iframe' in gp: gf.append("gift page embeds a video frame directly: YouTube must load only when play is pressed (it adds over 1 MB)")
+yt=re.search(r'<a class="yt"[^>]*>',gp)
+if not yt or 'target="_blank"' not in yt.group(0) or 'noopener' not in yt.group(0) or 'data-yt="' not in yt.group(0): gf.append("gift page film link is missing or not a click-to-play link")
+ggb=[json.loads(m_.group(1)) for m_ in re.finditer(r'<script type="application/ld\+json">(.*?)</script>',gp,re.S)]
+vo=next((x for x in ggb if x.get('@type')=='VideoObject'),None)
+if not vo or not os.path.exists(os.path.join(SITE,str(vo.get('thumbnailUrl','')).replace(BASE+'/',''))): gf.append("gift page VideoObject schema missing, or its thumbnail file is gone")
+gvis=dict((norm(q),norm(a_)) for q,a_ in re.findall(r'<summary>(.*?)</summary>\s*<p>(.*?)</p>',gp,re.S))
+gfq=next((x for x in ggb if x.get('@type')=='FAQPage'),{})
+if not gvis or gvis!={norm(q['name']):norm(q['acceptedAnswer']['text']) for q in gfq.get('mainEntity',[])}: gf.append("gift page FAQ schema differs from the visible answers")
+gtxt=norm(re.sub(r'<(script|style)[^>]*>.*?</\1>','',gp,flags=re.S))
+if not re.search(r'two years',gtxt,re.I) or re.search(r'one year|1 year',gtxt,re.I): gf.append("gift page must say certificates are valid two years from purchase (that is what is printed on them)")
+if re.search(r'signature',gtxt.replace('The Signature',''),re.I): gf.append("gift page uses 'signature' as an adjective; it collides with The Signature, a real service")
+if re.search(r'supporting my small business|extraction|25\+|25 years|\b\d+\s+(Google\s+)?reviews\b',gtxt,re.I): gf.append("gift page breaks a house copy rule")
+if 'Reuzel' in gp: gf.append("gift page mentions Reuzel")
+ghh=re.search(r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>',gp,re.S); hh0=re.search(r'<h3 class="visit-h">Hours</h3>\s*<p>(.*?)</p>',h,re.S)
+if not ghh or not hh0 or ghh.group(1)!=hh0.group(1): gf.append("gift page hours differ from the homepage")
+for amt in re.findall(r'\$(\d+)',gtxt):
+    if int(amt) not in {s['price'] for s in svc}: gf.append(f"gift page quotes ${amt}, which is not a price in prices.json")
+for x in gf: bad(x)
+if not gf: ok("gift certificates: page, homepage picture, Text Sandy button, click-to-play film and tracking all in place")
+
+# 17h. dated offers in the gold bar retire themselves, and may not outstay their date
+# The bar carries "OFFER-ENDS yyyy-mm-dd". From the next day visitors see the
+# standing line instead (a two-line script in the bar does it, so nothing stale
+# is ever shown even if nobody touches the site). The preflight then refuses the
+# next deploy until the expired offer is taken out, so it gets cleaned up.
+of=[]; om=re.search(r'OFFER-ENDS (\d{4}-\d{2}-\d{2})',h)
+if om:
+    end=datetime.date.fromisoformat(om.group(1)); nxt=end+datetime.timedelta(days=1)
+    if f"Date.parse('{nxt.isoformat()}T00:00:00-05:00')" not in h: of.append(f"promo bar says the offer ends {end} but its switch-off script uses a different date")
+    strip=re.search(r'<p class="responders" id="weekday" data-offer>(.*?)</p>',h,re.S)
+    if not strip or f"through {end.strftime('%B')} {end.day}" not in norm(strip.group(1)): of.append(f"the offer line in Services must say 'through {end.strftime('%B')} {end.day}'")
+    if 'class="offer-default"' not in h or '.offer-over [data-offer]{display:none}' not in h: of.append("promo bar has no standing line to fall back to when the offer ends")
+    left=(end-datetime.date.today()).days
+    if left<0: of.append(f"the offer in the gold bar ended {end}. Visitors already see the standing line, but take the offer out of the promo bar and the Services section before deploying")
+    elif left<=10: warn(f"the offer in the gold bar ends in {left} days ({end})")
+elif 'data-offer' in h: of.append("promo bar has an offer with no OFFER-ENDS date")
+bar=re.search(r'<div class="promo-bar">.*?</div>',h,re.S)
+for nm,pg,url in every[1:]:
+    if not bar or bar.group(0) not in pg: of.append(f"{nm}: promo bar differs from the homepage's: run build.py")
+for x in of: bad(x)
+if not of: ok("gold bar offer is dated, switches itself off, and is identical on every page" if om else "gold bar is identical on every page")
 
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)

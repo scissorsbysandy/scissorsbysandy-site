@@ -8,6 +8,7 @@ Builds the dedicated pages from prices.json plus the homepage:
     site/hot-towel-shaves/index.html
     site/facials-and-treatments/index.html
     site/weddings/index.html
+    site/gift-certificates/index.html   (its own layout: see GIFT below)
 and two small files that are generated from the same sources so they cannot drift:
     site/404.html     the "page not found" page (never indexed)
     site/llms.txt     a plain-text summary of the shop for AI assistants
@@ -158,6 +159,45 @@ PAGES = [
     more=['haircuts', 'kids-haircuts', 'hot-towel-shaves', 'facials-and-treatments'],
   ),
 ]
+# ---------------------------------------------------------------- gift certificates
+# Not a service page: no bookable menu. It shows the certificate, explains how to
+# get one, and carries the holiday film. Certificates are valid two years from
+# purchase (that is what is printed on them) and never show a price.
+SMS_GIFT = "sms:+18482305995?&amp;body=Hi%20Sandy%2C%20I%27d%20like%20a%20gift%20certificate%20for%20"
+YT_ID = "qBRX3ygPb3I"          # "The Gift He'll Actually Use", on the shop's YouTube channel
+YT_UPLOADED = "2026-11-06T13:31:23Z"
+GIFT = dict(
+    slug='gift-certificates',
+    title="Barber Gift Certificates, Old Bridge NJ | Scissors by Sandy",
+    desc="A haircut or hot towel shave as a gift. Personalized barber gift certificates for any service, by call or text, ready to print or forward. Old Bridge, NJ.",
+    h1="Gift Certificates", where="Old Bridge, NJ",
+    tag="Made out for the service you choose",
+    intro="A haircut or a hot towel shave is a gift that gets used. I make each certificate for the service you choose, with their name on it, ready to print or forward.",
+    steps=[
+        ("Choose the service", "Any service on my menu, or a package. Not sure? Tell me who it's for and I'll help you pick."),
+        ("Call or text me", "(848) 230-5995. Give me the name to put on it."),
+        ("Print it or forward it", "I email the certificate to you, ready to print or to forward. Printed certificates are also ready at the shop."),
+        ("They book when they're ready", "Online at scissorsbysandy.com, or by call or text. It's valid for two years from purchase."),
+    ],
+    ideas=[
+        ("A hot towel shave", f"The Majesty, {M('majesty')}, {P('majesty')}. The Royal, {M('royal')}, {P('royal')}.", 'hot-towel-shaves', "About the shaves"),
+        ("A haircut", f"The Executive {P('executive')}, The Signature {P('signature')}, The Fresh Fade {P('freshfade')}, The Regiment {P('regiment')}.", 'haircuts', "About the cuts"),
+        ("A cut and a shave", f"The packages pair the two, from {P('gentleman')} to {P('sovereign')}.", 'hot-towel-shaves', "About the packages"),
+        ("A treatment", f"Mini Facial {P('minifacial')}. Scalp Treatment {P('scalp')}.", 'facials-and-treatments', "About the treatments"),
+        ("For a young gentleman", f"The Royal Roots, ages 12 and under, {P('royalroots')}.", 'kids-haircuts', "About kids' cuts"),
+        ("For a groom", "The Groom, three visits planned around the wedding date.", 'weddings', "About weddings"),
+    ],
+    quotes=["Jon D."],
+    faq=[
+      ("Can I give any service?", "Yes. Each certificate is made out for one service from my menu, or a package, with the name of the person you're giving it to."),
+      ("How do I get one?", "Call or text me at (848) 230-5995. I'll prepare it and email it to you, ready to print or to forward. Printed certificates are also ready at the shop."),
+      ("How long is it valid?", "Two years from the purchase date."),
+      ("Is the price printed on it?", "No. The certificate names the service, never the price."),
+      ("Can I order several, for a team or for clients?", "Yes. Tell me how many you need and who they're for, and I'll prepare each one with its own name."),
+      ("How do they book?", "Online at scissorsbysandy.com, or by call or text to (848) 230-5995, whenever they're ready."),
+    ],
+    more=['haircuts', 'kids-haircuts', 'hot-towel-shaves', 'facials-and-treatments'],
+)
 BY = {p['slug']: p for p in PAGES}
 LABEL = {'haircuts': "Haircuts", 'kids-haircuts': "Kids' Haircuts", 'hot-towel-shaves': "Hot Towel Shaves",
          'facials-and-treatments': "Facials & Treatments", 'weddings': "Weddings"}
@@ -166,6 +206,7 @@ BLURB = {'haircuts': "Scissor cuts, fades, crew cuts and kids' cuts, every one w
          'hot-towel-shaves': "Straight razor shaves, beard shaping, and cut and shave packages.",
          'facials-and-treatments': "The 30-minute mini facial, scalp treatment and waxing.",
          'weddings': "A trial cut, a wedding-week visit and a day-before touch-up."}
+LABEL['gift-certificates'] = "Gift Certificates"
 
 # ---------------------------------------------------------------- helpers
 def esc(t): return html.escape(t, quote=False)
@@ -222,6 +263,33 @@ EXTRA_CSS = """
   .more-grid b{display:block;font-family:var(--serif);font-weight:600;font-size:1.2rem;letter-spacing:.08em;color:var(--ink);margin-bottom:.3rem}
   .more-grid span{font-size:.9rem;color:var(--ink-soft)}
   #more{background:var(--cream);border-top:5px solid var(--gold-deep)}
+  /* gift certificates page */
+  .cert-hero{max-width:760px;margin:0 auto}
+  .cert-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.6rem;max-width:900px;margin:2.2rem auto 0}
+  @media (max-width:700px){ .cert-pair{grid-template-columns:1fr;max-width:520px} }
+  .cert-hero img,.cert-pair img{display:block;width:100%;height:auto;border-radius:3px;box-shadow:0 12px 32px rgba(14,26,38,.30)}
+  .cert-hero figcaption,.cert-pair figcaption{text-align:center;margin-top:.9rem;font-size:.92rem;color:var(--ink-soft)}
+  .cert-note{max-width:60ch;margin:2.4rem auto 0;text-align:center;font-family:var(--serif);font-style:italic;font-size:1.1rem;color:var(--ink-soft)}
+  .guide-grid.steps{counter-reset:step}
+  .guide-grid.steps div{counter-increment:step}
+  .guide-grid.steps h3::before{content:counter(step) ". ";color:var(--gold-deep)}
+  #ideas .guide-grid{grid-template-columns:repeat(3,minmax(0,1fr));max-width:960px}
+  @media (max-width:820px){ #ideas .guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:520px){ #ideas .guide-grid{grid-template-columns:1fr} }
+  #ideas .guide-grid div{background:var(--cream);display:flex;flex-direction:column}
+  #ideas .guide-grid p{flex:1}
+  #ideas .guide-grid a{margin-top:.9rem;color:var(--gold-text);text-decoration:none;letter-spacing:.14em;text-transform:uppercase;font-size:.7rem;
+    border-bottom:1px solid rgba(162,126,60,.5);padding-bottom:2px;align-self:flex-start}
+  #ideas .guide-grid a:hover{color:var(--navy)}
+  #film{background:linear-gradient(180deg,var(--navy) 0%,var(--navy-deep) 100%);border-top:5px solid var(--gold-deep)}
+  #film .sec-head{color:var(--cream)}
+  #film .sec-sub{color:var(--gold)}
+  .yt{position:relative;display:block;max-width:860px;margin:0 auto;aspect-ratio:16/9;background:#000;border:1px solid var(--gold-deep);overflow:hidden}
+  .yt img,.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;object-fit:cover}
+  .yt-play{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;
+    background:rgba(14,26,38,.78);border:2px solid var(--gold);transition:transform .2s,background .2s}
+  .yt-play::after{content:"";position:absolute;left:33px;top:25px;border-style:solid;border-width:17px 0 17px 26px;border-color:transparent transparent transparent var(--gold)}
+  .yt:hover .yt-play,.yt:focus-visible .yt-play{transform:scale(1.06);background:rgba(14,26,38,.9)}
   @media (max-width:599px){
     .page-hero{padding:3.4rem 6vw 3.4rem}
     .page-hero h1{letter-spacing:.08em}
@@ -444,6 +512,212 @@ def build():
         open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(page)
         out.append(f"site/{p['slug']}/index.html")
 
+    # ------------------------------------------------------------ gift certificates page
+    g = GIFT; gurl = f"{BASE}/{g['slug']}/"
+    gquotes = '\n'.join(f'    <div class="quote">\n      <div class="stars">★★★★★</div>\n'
+                        f'      <blockquote>{quote(c)}</blockquote>\n      <cite>{esc(c)}</cite>\n    </div>' for c in g['quotes'])
+    gsteps = '\n'.join(f'    <div><h3>{esc(a)}</h3><p>{esc(b_)}</p></div>' for a, b_ in g['steps'])
+    gideas = '\n'.join(f'    <div><h3>{esc(a)}</h3><p>{esc(b_)}</p><a href="/{s}/">{esc(l)} &rarr;</a></div>' for a, b_, s, l in g['ideas'])
+    gfaq = '\n'.join(f'      <details class="faq-item">\n        <summary>{esc(q)}</summary>\n'
+                     f'        <p>{esc(a)}</p>\n      </details>' for q, a in g['faq'])
+    gmore = '\n'.join(f'    <a href="/{s}/"><b>{esc(LABEL[s])}</b><span>{esc(BLURB[s])}</span></a>' for s in g['more'])
+    gnav = '\n'.join(f'    <li><a href="{h_}">{t}</a></li>'
+                     for h_, t in [('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES] + [('/#visit', 'Visit')])
+    shop = {"@type": "BarberShop", "@id": BASE + "/#barbershop", "name": "Scissors by Sandy", "url": BASE + "/",
+            "telephone": "+18482305995",
+            "address": {"@type": "PostalAddress", "streetAddress": "3813 US 9 North, Suite 101", "addressLocality": "Old Bridge",
+                        "addressRegion": "NJ", "postalCode": "08857", "addressCountry": "US"}}
+    gld = '\n'.join(f'<script type="application/ld+json">\n{json.dumps(x, indent=2, ensure_ascii=False)}\n</script>' for x in (
+        {"@context": "https://schema.org", "@type": "Service", "name": "Barber Gift Certificates in Old Bridge, NJ",
+         "url": gurl, "description": g['desc'], "provider": shop},
+        {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Home", "item": BASE + "/"},
+            {"@type": "ListItem", "position": 2, "name": "Gift Certificates", "item": gurl}]},
+        {"@context": "https://schema.org", "@type": "VideoObject", "name": "The Gift He'll Actually Use: Scissors by Sandy Gift Certificates",
+         "description": "A short film about giving a hot towel shave or a haircut at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ.",
+         "thumbnailUrl": BASE + "/gift-video-poster.webp", "uploadDate": YT_UPLOADED, "duration": "PT23S",
+         "embedUrl": f"https://www.youtube.com/embed/{YT_ID}", "contentUrl": f"https://www.youtube.com/watch?v={YT_ID}"},
+        {"@context": "https://schema.org", "@type": "FAQPage",
+         "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in g['faq']]}))
+    gpage = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- GENERATED by pricing/build_pages.py from prices.json and site/index.html. Do not edit by hand. -->
+<title>{esc(g['title'])}</title>
+  <link rel="canonical" href="{gurl}">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#16293C">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SBS">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="description" content="{html.escape(g['desc'])}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Scissors by Sandy">
+  <meta property="og:url" content="{gurl}">
+  <meta property="og:title" content="{html.escape(g['title'])}">
+  <meta property="og:description" content="{html.escape(g['desc'])}">
+  <meta property="og:image" content="{BASE}/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Scissors by Sandy, Master Barber, Old Bridge NJ">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{html.escape(g['title'])}">
+  <meta name="twitter:description" content="{html.escape(g['desc'])}">
+  <meta name="twitter:image" content="{BASE}/og-image.jpg">
+  <link rel="preconnect" href="https://www.googletagmanager.com">
+{fonts}
+{gld}
+<style>{css}{EXTRA_CSS}</style>
+{ga}
+</head>
+<body class="sub">
+
+<div class="topstack">
+  {promo}
+<nav aria-label="Main">
+  <a class="nav-brand gold-grad" href="/">SCISSORS BY SANDY</a>
+  <ul>
+{gnav}
+  </ul>
+</nav>
+</div>
+
+<header class="page-hero" id="top">
+  <p class="crumbs"><a href="/">Home</a> &rsaquo; Gift Certificates</p>
+  <picture><source srcset="/sbs-emblem.webp" type="image/webp"><img class="mark" src="/sbs-emblem.png" alt="Scissors by Sandy emblem" width="230" height="230" decoding="async"></picture>
+  <h1 class="gold-grad">{esc(g['h1'])} <span class="where">in {esc(g['where'])}</span></h1>
+  <p class="tagline">{esc(g['tag'])}</p>
+  <p class="page-intro">{esc(g['intro'])}</p>
+  <div class="cta-row">
+    <a class="btn btn-gold" data-gift="text" href="{SMS_GIFT}">Text Sandy</a>
+    <a class="btn btn-line" data-gift="call" href="tel:+18482305995">Call (848) 230-5995</a>
+  </div>
+</header>
+
+<main id="main">
+<section id="certificate">
+  <h2 class="sec-head">The Certificate</h2>
+  <p class="sec-sub">One service, one name</p>
+  <figure class="cert-hero">
+    <img src="/gift-certificate-majesty.webp" alt="Scissors by Sandy gift certificate for The Majesty Hot Towel Shave" width="1200" height="742" decoding="async">
+    <figcaption>The Majesty Hot Towel Shave. Printed certificates like this one are ready at the shop.</figcaption>
+  </figure>
+  <div class="cert-pair">
+    <figure>
+      <img src="/gift-certificate-executive.webp" alt="Gift certificate for The Executive haircut, made out to Dad" width="1200" height="742" loading="lazy" decoding="async">
+      <figcaption>The Executive, made out to Dad.</figcaption>
+    </figure>
+    <figure>
+      <img src="/gift-certificate-sovereign.webp" alt="Gift certificate for The Sovereign cut and shave package, made out to Grandpa" width="1200" height="742" loading="lazy" decoding="async">
+      <figcaption>The Sovereign, a cut and shave package, made out to Grandpa.</figcaption>
+    </figure>
+  </div>
+  <p class="cert-note">These are samples. Yours carries its own number, the name you give me, and the service you choose. The price is never printed on it.</p>
+</section>
+
+<section class="guide" id="guide">
+  <h2 class="sec-head">How It Works</h2>
+  <p class="sec-sub">Four steps, one call or text</p>
+  <div class="guide-grid steps">
+{gsteps}
+  </div>
+</section>
+
+<section id="film">
+  <h2 class="sec-head">The Gift He&rsquo;ll Actually Use</h2>
+  <p class="sec-sub">A short film from the suite</p>
+  <a class="yt" href="https://www.youtube.com/watch?v={YT_ID}" target="_blank" rel="noopener" data-yt="{YT_ID}" aria-label="Play the film: The Gift He&rsquo;ll Actually Use">
+    <img src="/gift-video-poster.webp" alt="Sandy giving a hot towel shave, the opening of the Scissors by Sandy gift certificate film" width="1280" height="720" loading="lazy" decoding="async">
+    <span class="yt-play" aria-hidden="true"></span>
+  </a>
+  <script>
+  // The film loads from YouTube only when someone presses play, so the page stays light.
+  (function () {{
+    var a = document.querySelector('a.yt'); if (!a) return;
+    a.addEventListener('click', function (e) {{
+      e.preventDefault();
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + a.getAttribute('data-yt') + '?autoplay=1&rel=0&playsinline=1';
+      f.title = 'The Gift He\u2019ll Actually Use';
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      a.innerHTML = ''; a.appendChild(f); a.removeAttribute('href'); a.removeAttribute('target');
+      if (window.gtag) gtag('event', 'gift_film_play');
+    }}, {{ once: true }});
+  }})();
+  </script>
+</section>
+
+<section id="ideas">
+  <h2 class="sec-head">What to Give</h2>
+  <p class="sec-sub">A few places to start</p>
+  <div class="guide-grid">
+{gideas}
+  </div>
+</section>
+
+<section id="words">
+  <h2 class="sec-head">What Clients Say</h2>
+  <p class="sec-sub">Rated 5.0 stars on Google</p>
+  <div class="quote-grid one">
+{gquotes}
+  </div>
+  <p class="quote-note">Read every review on <a href="https://search.google.com/local/reviews?placeid=ChIJv508gQTPw4kRJdMmGQk01zw" target="_blank" rel="noopener">Google</a></p>
+</section>
+
+<section id="faq">
+  <h2 class="sec-head">Common Questions</h2>
+  <div class="faq-wrap">
+{gfaq}
+  </div>
+</section>
+
+<section id="visit" class="visit-strip">
+  <h2 class="sec-head">Visit the Shop</h2>
+  <p class="sec-sub">By appointment only</p>
+  <div class="visit-grid">
+    <div>
+      <h3 class="visit-h">Location</h3>
+      <p>The Shoppes at Old Bridge<br>3813 US 9 North, Suite 101<br>Old Bridge, NJ 08857</p>
+      <p style="margin-top:.6rem"><a href="https://www.google.com/maps/search/?api=1&amp;query=Scissors+by+Sandy+Old+Bridge+NJ&amp;query_place_id=ChIJv508gQTPw4kRJdMmGQk01zw" target="_blank" rel="noopener" style="color:var(--gold-text);letter-spacing:.12em;text-transform:uppercase;font-size:.8rem">Get Directions &rarr;</a></p>
+    </div>
+    <div>
+      <h3 class="visit-h">Hours</h3>
+      <p>{hours}</p>
+    </div>
+    <div>
+      <h3 class="visit-h">Gift Certificates</h3>
+      <p><a class="btn btn-gold" data-gift="text" href="{SMS_GIFT}" style="font-size:.72rem;padding:.75rem 1.8rem">Text Sandy</a></p>
+      <p style="margin-top:.9rem">{TEL}</p>
+      <p style="margin-top:.3rem;font-size:.85rem">Call or text, and I&rsquo;ll take it from there</p>
+    </div>
+  </div>
+</section>
+
+<section id="more">
+  <h2 class="sec-head">Also in the Chair</h2>
+  <p class="sec-sub">More from the suite</p>
+  <div class="more-grid">
+{gmore}
+  </div>
+</section>
+</main>
+
+{footer}
+</body>
+</html>
+"""
+    d = os.path.join(SITE, g['slug']); os.makedirs(d, exist_ok=True)
+    open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(gpage)
+    out.append(f"site/{g['slug']}/index.html")
+
     # ------------------------------------------------------------ 404 page
     # Netlify serves /404.html for any address that does not exist. Every link in
     # it starts with "/" because it can be shown at any depth. Never indexed.
@@ -514,7 +788,7 @@ def build():
          "- Walk-ins: no, by appointment only",
          "- Parking: free, directly outside the suite",
          "- First responders: $5 off their total, every visit",
-         "- Gift certificates: available by call or text",
+         "- Gift certificates: made out for any service, ordered by call or text, valid two years from purchase",
          "- Areas served: Old Bridge, Matawan, Marlboro, Manalapan, Monroe Township, East Brunswick, Sayreville, Aberdeen and Parlin",
          "", "## Hours", ""]
     L += [f"- {text(x)}" for x in hours.split('<br>') if text(x)]
@@ -524,7 +798,7 @@ def build():
         L += [f"- {text(s['name'])}: ${s['price']}, {s['minutes']} minutes. {text(s['desc'])}" for s in c['services']]
         L += [""]
     L += ["## Pages", "", f"- [Home]({BASE}/): services, prices, hours, reviews and booking"]
-    L += [f"- [{LABEL[q['slug']]}]({BASE}/{q['slug']}/): {q['desc']}" for q in PAGES]
+    L += [f"- [{LABEL[q['slug']]}]({BASE}/{q['slug']}/): {q['desc']}" for q in PAGES + [GIFT]]
     open(os.path.join(SITE, 'llms.txt'), 'w', encoding='utf-8').write('\n'.join(L) + '\n')
     out.append("site/llms.txt")
     return out
