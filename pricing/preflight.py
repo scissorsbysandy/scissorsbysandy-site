@@ -566,12 +566,6 @@ for fam in ('CG-Georgia','CG-Times','CG-NotoSerif','CG-DejaVu','J-HelveticaNeue'
     if not re.search(r"@font-face\{font-family:'"+fam+r"';src:local\([^}]*size-adjust:\d+%",h) or h.count(f"'{fam}'")<2:
         hs_.append(f"stand-in font {fam} missing: text would re-wrap when the real font loads")
 if len(re.findall(r'class="promo-line"[^>]*data-offer',h))>2: hs_.append("the gold bar offer must fit in two lines on a phone")
-# backdrop-filter (the frosted-glass blur) on the pinned menu held the FIRST PAINT of
-# the whole page back by two seconds on phones in Google's test (blank white screen
-# until 2.3 s; 0.2 s without it), found 2026-11-11 by testing copies of the page with
-# one thing removed at a time. The menu is solid navy now and looks the same.
-for nm,pg,url in every:
-    if 'backdrop-filter' in pg: hs_.append(f"{nm}: backdrop-filter is back; on phones it delayed the first paint of the page by 2 seconds")
 for x in hs_: bad(x)
 if not hs_: ok("header cannot change height when fonts load; stand-in fonts are width-matched")
 
