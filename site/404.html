@@ -20,12 +20,25 @@
     src:url(/fonts/cormorant-garamond-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
   @font-face{font-family:'Jost';font-style:normal;font-weight:100 900;font-display:swap;
     src:url(/fonts/jost-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  /* Stand-in fonts. Until the two real fonts arrive (a fraction of a second), the
+     browser shows a font already on the device. Cormorant and Jost are narrower
+     than those, so text wrapped onto extra lines and then snapped back, which made
+     the page jump. Each stand-in is scaled to the real font's width (measured from
+     the font files), so lines break in the same places before and after. */
+  @font-face{font-family:'CG-Georgia';src:local('Georgia');size-adjust:91%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'CG-Times';src:local('Times New Roman'),local('Liberation Serif'),local('Tinos');size-adjust:97%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'CG-NotoSerif';src:local('Noto Serif');size-adjust:86%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'CG-DejaVu';src:local('DejaVu Serif');size-adjust:79%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'J-HelveticaNeue';src:local('Helvetica Neue');size-adjust:91%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'J-Arial';src:local('Arial'),local('Liberation Sans'),local('Arimo');size-adjust:91%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'J-Roboto';src:local('Roboto');size-adjust:95%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'J-DejaVu';src:local('DejaVu Sans');size-adjust:85%;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
   :root{
     --navy:#16293C; --navy-deep:#0E1A26; --navy-lift:#2C547A;
     --gold:#F8D094; --gold-deep:#A27E3C; --gold-hi:#FFF2B8; --gold-lo:#D1A265;
     --gold-text:#7F622F; --cream:#F4EFE4; --cream-soft:#D6D6CC; --ink:#16293C; --ink-soft:#3A586E;
-    --serif:'Cormorant Garamond', Georgia, serif;
-    --sans:'Jost', 'Helvetica Neue', sans-serif;
+    --serif:'Cormorant Garamond','CG-Georgia','CG-Times','CG-NotoSerif','CG-DejaVu', Georgia, serif;
+    --sans:'Jost','J-HelveticaNeue','J-Arial','J-Roboto','J-DejaVu', 'Helvetica Neue', sans-serif;
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -46,9 +59,8 @@
   .promo-cta:hover,.promo-cta:focus-visible{border-bottom-color:var(--navy-deep)}
   /* a dated offer and the standing line it replaces: see the script in the promo bar */
   .offer-default{display:none}
-  .offer-over [data-offer]{display:none}
+  html.offer-over [data-offer]{display:none}
   .offer-over .offer-default{display:inline}
-  @media (max-width:599px){ .promo-x{display:none} }
   #weekday{scroll-margin-top:13rem}
   /* ---- end promo bar ---- */
   nav{display:flex;align-items:center;
@@ -374,13 +386,36 @@
      the emblem was clipped. These rules come last so they win. */
   .topstack{position:sticky}
   .hero{padding-top:6.4rem}
-  @media (max-width:899px){ .hero{padding-top:5rem} }
+  @media (max-width:900px){ .hero{padding-top:5rem} }
   @media (max-width:599px){ .hero{padding-top:2.6rem} }
   /* Phones and tablets: the gold offer bar scrolls away with the page and only the
      menu stays pinned, so a two- or three-line offer never eats the screen. */
-  @media (max-width:899px){
+  @media (max-width:900px){
     .topstack{display:contents}
     .topstack nav{position:sticky;top:0;z-index:50}
+  }
+  /* ---- the header's height must not depend on which font has loaded ----
+     The header sits in the page flow. If the stand-in font wraps the menu or the
+     gold bar onto one more line than the real font does, everything below jumps
+     when the real font arrives (Google measured a 0.18 layout shift on the first
+     build of this, which it rates "poor"). So nothing in the header is allowed
+     to wrap on its own: on wide screens the gold bar is one line; on phones and
+     tablets it is two fixed lines, and the menu is one row whose type scales
+     with the screen (two fixed rows on the narrowest phones). */
+  .promo-bar{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;gap:0}
+  @media (max-width:1199px){ .promo-x{display:none} }
+  @media (max-width:900px){
+    .promo-bar{display:block;padding:.5rem 3vw;font-size:min(2.75vw,.74rem);letter-spacing:.07em;line-height:1.6}
+    .promo-line:not(.offer-default),.offer-over .promo-line.offer-default{display:block;overflow:hidden}
+    .promo-sep,.promo-x1{display:none}
+    nav ul{flex-wrap:nowrap;gap:min(1.8vw,.9rem);row-gap:0;max-width:100%;overflow:hidden}
+    nav ul a{font-size:min(2.17vw,.66rem);letter-spacing:.03em}
+  }
+  @media (max-width:380px){
+    nav ul{flex-wrap:wrap;gap:.44rem;row-gap:.2rem}
+    nav ul a{font-size:.53rem}
+    nav ul::after{content:"";flex-basis:100%;order:1;height:0}
+    nav ul li:nth-child(n+6){order:2}
   }
 
   @media (min-width:901px) and (max-width:1320px){
@@ -541,10 +576,9 @@
   <div class="promo-bar">
     <script>/* OFFER-ENDS 2026-12-31. After that date the offer hides itself and the standing line shows. */
     if (Date.now() >= Date.parse('2027-01-01T00:00:00-05:00')) document.documentElement.classList.add('offer-over');</script>
-    <span data-offer><strong>Weekday Gentleman&rsquo;s Hours</strong> &middot; Complimentary hot towel finish with any haircut<span class="promo-x"> &middot; Mon, Tue &amp; Thu, 10 AM to 1 PM</span></span>
-    <a class="promo-cta" data-offer href="/#weekday">Details&nbsp;&rarr;</a>
-    <span class="offer-default"><strong>Now open Sundays</strong> &middot; 11 AM to 5 PM</span>
-    <a class="promo-cta offer-default" href="https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge" data-booksy target="_blank" rel="noopener">Book&nbsp;&rarr;</a>
+    <span class="promo-line" data-offer><strong>Weekday Gentleman&rsquo;s Hours</strong><span class="promo-sep">&ensp;&middot;&ensp;</span></span>
+    <span class="promo-line" data-offer>Complimentary hot towel finish<span class="promo-x1"> with any haircut</span><span class="promo-x"> &middot; Mon, Tue &amp; Thu, 10 AM to 1 PM</span>&emsp;<a class="promo-cta" href="/#weekday">Details&nbsp;&rarr;</a></span>
+    <span class="promo-line offer-default"><strong>Now open Sundays</strong> &middot; 11 AM to 5 PM&emsp;<a class="promo-cta" href="https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge" data-booksy target="_blank" rel="noopener">Book&nbsp;&rarr;</a></span>
   </div>
 <nav aria-label="Main">
   <a class="nav-brand gold-grad" href="/">SCISSORS BY SANDY</a>

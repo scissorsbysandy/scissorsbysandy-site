@@ -540,7 +540,7 @@ if om:
     if f"Date.parse('{nxt.isoformat()}T00:00:00-05:00')" not in h: of.append(f"promo bar says the offer ends {end} but its switch-off script uses a different date")
     strip=re.search(r'<p class="responders" id="weekday" data-offer>(.*?)</p>',h,re.S)
     if not strip or f"through {end.strftime('%B')} {end.day}" not in norm(strip.group(1)): of.append(f"the offer line in Services must say 'through {end.strftime('%B')} {end.day}'")
-    if 'class="offer-default"' not in h or '.offer-over [data-offer]{display:none}' not in h: of.append("promo bar has no standing line to fall back to when the offer ends")
+    if 'offer-default"' not in h or 'html.offer-over [data-offer]{display:none}' not in h: of.append("promo bar has no standing line to fall back to when the offer ends")
     left=(end-datetime.date.today()).days
     if left<0: of.append(f"the offer in the gold bar ended {end}. Visitors already see the standing line, but take the offer out of the promo bar and the Services section before deploying")
     elif left<=10: warn(f"the offer in the gold bar ends in {left} days ({end})")
@@ -550,6 +550,24 @@ for nm,pg,url in every[1:]:
     if not bar or bar.group(0) not in pg: of.append(f"{nm}: promo bar differs from the homepage's: run build.py")
 for x in of: bad(x)
 if not of: ok("gold bar offer is dated, switches itself off, and is identical on every page" if om else "gold bar is identical on every page")
+
+# 17i. nothing in the header may change height when the fonts arrive
+# The header is in the page flow, so a menu or gold bar that wraps differently in
+# the stand-in font shoves the whole page down and back (Google's test scored the
+# first build of this 0.18 for layout shift, "poor"; it is ~0.00 with these rules).
+hs_=[]
+for need_,why in [("  .promo-bar{flex-wrap:nowrap;white-space:nowrap;overflow:hidden;gap:0}","the gold bar must be a single unwrappable line on wide screens"),
+                  ("    nav ul{flex-wrap:nowrap;","on phones and tablets the menu must be one row that cannot wrap"),
+                  ("    nav ul li:nth-child(n+6){order:2}","on the narrowest phones the menu must break into two FIXED rows"),
+                  ("    .promo-line:not(.offer-default),.offer-over .promo-line.offer-default{display:block;overflow:hidden}","on phones the gold bar must be fixed lines"),
+                  ("  .topstack{position:sticky}","the header must be sticky (in the page flow), not floating over the hero")]:
+    if need_ not in h: hs_.append(f"header rule removed: {why}")
+for fam in ('CG-Georgia','CG-Times','CG-NotoSerif','CG-DejaVu','J-HelveticaNeue','J-Arial','J-Roboto','J-DejaVu'):
+    if not re.search(r"@font-face\{font-family:'"+fam+r"';src:local\([^}]*size-adjust:\d+%",h) or h.count(f"'{fam}'")<2:
+        hs_.append(f"stand-in font {fam} missing: text would re-wrap when the real font loads")
+if len(re.findall(r'class="promo-line"[^>]*data-offer',h))>2: hs_.append("the gold bar offer must fit in two lines on a phone")
+for x in hs_: bad(x)
+if not hs_: ok("header cannot change height when fonts load; stand-in fonts are width-matched")
 
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)
