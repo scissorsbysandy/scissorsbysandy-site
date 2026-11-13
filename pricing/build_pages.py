@@ -838,6 +838,25 @@ def build():
     L += [f"- [{LABEL[q['slug']]}]({BASE}/{q['slug']}/): {q['desc']}" for q in PAGES + [GIFT]]
     open(os.path.join(SITE, 'llms.txt'), 'w', encoding='utf-8').write('\n'.join(L) + '\n')
     out.append("site/llms.txt")
+    # ------------------------------------------------------------ photos in sitemap.xml
+    # Lists each service page's real shop photos (largest file) under that page, so they can
+    # appear in Google Images. Regenerated every build so it can never drift from the pages.
+    sp = os.path.join(SITE, 'sitemap.xml'); sm = open(sp, encoding='utf-8').read()
+    sm = re.sub(r'\s*<image:image>.*?</image:image>', '', sm, flags=re.S)
+    if 'xmlns:image=' not in sm:
+        sm = sm.replace('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+                        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+                        'xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">', 1)
+    for q in PAGES:
+        photos = list((q.get('pics') or {}).values()) + [x for x in (q.get('guide_pics') or []) if x]
+        if not photos: continue
+        loc = f"<loc>{BASE}/{q['slug']}/</loc>"
+        if loc not in sm: raise SystemExit(f"build_pages: {loc} missing from sitemap.xml")
+        tags = ''.join(f"\n    <image:image>\n      <image:loc>{BASE}/photos/{b}-{big}.webp</image:loc>\n    </image:image>"
+                       for b, big, _alt in photos)
+        sm = re.sub(r'(' + re.escape(loc) + r'.*?<priority>[^<]*</priority>)', lambda m: m.group(1) + tags, sm, count=1, flags=re.S)
+    open(sp, 'w', encoding='utf-8').write(sm)
+    out.append("site/sitemap.xml")
     return out
 
 if __name__ == '__main__':

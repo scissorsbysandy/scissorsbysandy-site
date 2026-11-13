@@ -476,8 +476,16 @@ for nm,pg,url in every:
 for sl in PAGES+INFO:
     n_in=sum(1 for nm,pg,url in indexable if nm!=sl and f'href="/{sl}/"' in pg)
     if n_in<len(indexable)-1: cr.append(f"/{sl}/ is not linked from every other page ({n_in} of {len(indexable)-1}); Google finds and values pages through links")
+# every shop photo on a page is listed under that page in the sitemap, and every listed photo file exists
+for nm,pg,url in indexable:
+    blk=re.search(re.escape(f"<loc>{url}</loc>")+r'(.*?)</url>',smx,re.S)
+    listed=set(re.findall(r'<image:loc>[^<]*/photos/([^<]+)</image:loc>',blk.group(1))) if blk else set()
+    onpage=set(re.findall(r'srcset="[^"]*/photos/[^" ]+ 480w, /photos/([^" ]+) \d+w"',pg))
+    if onpage!=listed: cr.append(f"{nm}: sitemap photo list differs from the page by {sorted(onpage^listed)}")
+for f in re.findall(r'<image:loc>https://scissorsbysandy\.com/(photos/[^<]+)</image:loc>',smx):
+    if not os.path.exists(os.path.join(SITE,f)): cr.append(f"sitemap lists {f} but the file does not exist")
 for x in cr: bad(x)
-if not cr: ok(f"sitemap lists exactly {len(wantlocs)} pages, robots.txt is open, every internal link resolves, every page links to every other")
+if not cr: ok(f"sitemap lists exactly {len(wantlocs)} pages and their photos, robots.txt is open, every internal link resolves, every page links to every other")
 
 # 17f. the "page not found" page and the plain-text summary for AI assistants
 ex=[]
