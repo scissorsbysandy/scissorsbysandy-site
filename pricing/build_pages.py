@@ -74,6 +74,7 @@ PAGES = [
       ("What makes The Executive different?", f"It's cut entirely with shears, no clippers and no guards, with every line judged by eye. That takes longer, about {M('executive')}, and the result grows out softer and sits more naturally."),
       ("Do you cut children's hair?", "Yes. The Royal Roots is a wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair."),
       ("Can I add a shave or beard work to my cut?", f"Yes. My packages pair a cut with a hot towel shave or beard shaping for less than booking them separately, from {P('gentleman')} to {P('sovereign')}. You'll find them on the hot towel shaves page."),
+      ("Do you cut curly hair?", "Yes. Curls and waves need a patient hand. I look at how your hair falls and springs before I take length off, so the shape sits right once it's dry, whether that's a scissor cut on top or a fade on the sides."),
     ],
     more=['kids-haircuts', 'hot-towel-shaves', 'facials-and-treatments', 'weddings'],
   ),
