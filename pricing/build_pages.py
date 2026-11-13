@@ -56,8 +56,8 @@ PAGES = [
     # (guide cards stay text-only on this page)
     pic_ratio=1.0,
     pics={'executive': ('scissor-cut-slicked-back-old-bridge-nj-sq', 960, "Slicked-back scissor cut, The Executive, at Scissors by Sandy in Old Bridge, NJ"),
-          'signature': ('signature-haircut-old-bridge-nj-sq', 960, "Swept-back cut with tapered sides, The Signature, cut with clippers and shears"),
-          'freshfade': ('skin-fade-beard-haircut-old-bridge-nj-sq', 960, "Skin fade with a textured top, The Fresh Fade, at Scissors by Sandy in Old Bridge, NJ"),
+          'signature': ('skin-fade-beard-haircut-old-bridge-nj-sq', 960, "Textured top blended into faded sides, The Signature, cut with clippers and shears"),
+          # The Fresh Fade: photo to come
           'regiment': ('crew-cut-regiment-old-bridge-nj-sq', 960, "Short, even crew cut, The Regiment"),
           'royalroots': ('kids-haircut-fade-old-bridge-nj-sq', 960, "Boy's haircut with a clean fade, The Royal Roots, for ages 12 and under"),
           'greyblend': ('grey-blending-men-old-bridge-nj-sq', 960, "Grey blending on a short men's cut at Scissors by Sandy")},
