@@ -127,7 +127,7 @@ PAGES = [
     ]),
     quotes=["Jon D."],
     faq=[
-      ("What's the difference between The Royal and The Majesty?", f"The Royal is a traditional straight razor shave with warm towels, premium products and a beard trim, in {M('royal')}. The Majesty takes {M('majesty')} and adds facial steam, exfoliation and a customized mini facial to finish."),
+      ("What's the difference between The Royal and The Majesty?", f"The Royal is a traditional straight razor shave with warm towels, premium products and a beard trim, in {M('royal')}. The Majesty is the longer ritual, {M('majesty')}: facial steam, exfoliation, warm aromatic towels and a straight razor shave, finished with a customized mini facial. The beard trim comes with The Royal only."),
       ("I want to keep my beard. What should I book?", "The Statesman. It's full beard sculpting and detailing with clippers and a hot towel, shaped to your face, with no straight razor."),
       ("Can I get a shave and a haircut together?", f"Yes. The packages pair a cut with a shave or beard shaping for less than booking each on its own, from {P('gentleman')} for The Gentleman to {P('sovereign')} for The Sovereign."),
     ],
