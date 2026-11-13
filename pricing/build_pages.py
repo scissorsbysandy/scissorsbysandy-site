@@ -101,15 +101,16 @@ PAGES = [
     groups=[("Shaves & Beard", ['majesty','royal','statesman'], None),
             ("Pair It With a Cut", ['sovereign','regent','ambassador','officer','gentleman'], None)],
     # real shop photos beside the service they show (files in site/photos/, 480w + larger width)
-    pics={'majesty': ('majesty-hot-towel-shave-old-bridge-nj', 960, "Sandy giving The Majesty Hot Towel Shave with a straight razor at Scissors by Sandy in Old Bridge, NJ"),
-          'royal': ('straight-razor-shave-old-bridge-nj', 960, "Straight razor shave in Sandy's private barber suite in Old Bridge, NJ"),
+    pics={'majesty': ('majesty-hot-towel-shave-old-bridge-nj', 960, "Sandy giving The Majesty Hot Towel Shave with a straight razor in her private suite in Old Bridge, NJ"),
+          'royal': ('royal-hot-towel-shave-beard-line-old-bridge-nj', 960, "Beard lines finished with a straight razor during The Royal Hot Towel Shave"),
           'statesman': ('beard-shaping-clippers-old-bridge-nj', 960, "Beard shaped with clippers during The Statesman Beard Shaping")},
-    guide_pics=[('straight-razor-beard-line-lather', 800, "Beard lines finished with a straight razor over warm lather"),
-                ('majesty-facial-steam-barber-suite', 800, "Facial steam during The Majesty in the barber suite"),
+    # same order as the guide cards below
+    guide_pics=[('majesty-facial-steam-barber-suite', 800, "Facial steam during The Majesty in the barber suite"),
+                ('close-shave-hot-towel-steam', 800, "Client relaxing under warm steam with an eye pad during a hot towel shave"),
                 ('statesman-beard-trim-clippers', 800, "Sandy shaping a full beard with clippers")],
     guide=("Which one should I book?", [
-        ("A close shave", f"The Royal. Warm towels, premium products, a straight razor shave and a beard trim. {M('royal')}."),
         ("The whole ritual", f"The Majesty. Everything in The Royal, plus facial steam, exfoliation and a customized mini facial to finish. {M('majesty')}."),
+        ("A close shave", f"The Royal. Warm towels, premium products, a straight razor shave and a beard trim. {M('royal')}."),
         ("Keeping the beard", f"The Statesman. Full beard sculpting with clippers and a hot towel, no straight razor. {M('statesman')}."),
     ]),
     quotes=["Jon D."],
