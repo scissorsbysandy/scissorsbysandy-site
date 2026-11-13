@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://scissorsbysandy.com/</loc>
     <lastmod>2026-11-13</lastmod>
@@ -11,6 +11,24 @@
     <lastmod>2026-11-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/scissor-cut-slicked-back-old-bridge-nj-sq-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/skin-fade-beard-haircut-old-bridge-nj-sq-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/skin-fade-fresh-fade-old-bridge-nj-sq-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/crew-cut-regiment-old-bridge-nj-sq-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/kids-haircut-fade-old-bridge-nj-sq-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/grey-blending-men-old-bridge-nj-sq-960.webp</image:loc>
+    </image:image>
   </url>
   <url>
     <loc>https://scissorsbysandy.com/kids-haircuts/</loc>
@@ -23,6 +41,24 @@
     <lastmod>2026-11-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/majesty-straight-razor-shave-old-bridge-nj-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/straight-razor-shave-old-bridge-nj-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/beard-shaping-clippers-old-bridge-nj-960.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/majesty-facial-steam-barber-suite-800.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/straight-razor-beard-line-lather-800.webp</image:loc>
+    </image:image>
+    <image:image>
+      <image:loc>https://scissorsbysandy.com/photos/statesman-beard-trim-clippers-800.webp</image:loc>
+    </image:image>
   </url>
   <url>
     <loc>https://scissorsbysandy.com/facials-and-treatments/</loc>
