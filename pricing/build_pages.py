@@ -815,8 +815,8 @@ def build():
     # like), following the llms.txt convention. Built from prices.json and the
     # homepage hours, so an assistant never quotes a price the site doesn't.
     L = ["# Scissors by Sandy", "",
-         "> A private one-chair barber shop in Old Bridge, New Jersey, owned and run by master barber "
-         "Sandra (Sandy) Mordan. Men's and kids' haircuts, traditional hot towel shaves, beard shaping, "
+         "> A private one-chair barber shop in Old Bridge, New Jersey, woman-owned and run by female master barber "
+         "Sandra (Sandy) Mordan. English and Spanish spoken (se habla español). Men's and kids' haircuts, traditional hot towel shaves, beard shaping, "
          "facials, scalp treatments, waxing and wedding packages. By appointment only.", "",
          "## Key facts", "",
          "- Address: The Shoppes at Old Bridge, 3813 US 9 North, Suite 101, Old Bridge, NJ 08857",
@@ -824,6 +824,8 @@ def build():
          f"- Book online: {PROF}",
          "- Website: https://scissorsbysandy.com/",
          "- Walk-ins: no, by appointment only",
+         "- Languages: English and Spanish",
+         "- Woman-owned: yes",
          "- Parking: free, directly outside the suite",
          "- First responders: $5 off their total, every visit",
          "- Gift certificates: made out for any service, ordered by call or text, valid two years from purchase",
