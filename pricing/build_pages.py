@@ -74,6 +74,7 @@ PAGES = [
       ("What makes The Executive different?", f"It's cut entirely with shears, no clippers and no guards, with every line judged by eye. That takes longer, about {M('executive')}, and the result grows out softer and sits more naturally."),
       ("Do you cut children's hair?", "Yes. The Royal Roots is a wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair."),
       ("Can I add a shave or beard work to my cut?", f"Yes. My packages pair a cut with a hot towel shave or beard shaping for less than booking them separately, from {P('gentleman')} to {P('sovereign')}. You'll find them on the hot towel shaves page."),
+      ("Do you cut curly hair?", "Yes. Curls and waves need a patient hand. I look at how your hair falls and springs before I take length off, so the shape sits right once it's dry, whether that's a scissor cut on top or a fade on the sides."),
     ],
     more=['kids-haircuts', 'hot-towel-shaves', 'facials-and-treatments', 'weddings'],
   ),
@@ -85,6 +86,8 @@ PAGES = [
     tag="Ages 12 and under · Wash and cut",
     intro="Kids notice when someone takes their time with them. My suite has one chair, so it's one child at a time, with no line behind us and no reason to hurry. Every cut starts with a wash and gets the same care as any other cut in my chair.",
     groups=[("The Cut", ['royalroots'], None)],
+    pic_ratio=1.0,
+    pics={'royalroots': ('kids-haircut-fade-old-bridge-nj-sq', 960, "Boy's haircut with a clean fade, The Royal Roots kids' cut at Scissors by Sandy in Old Bridge, NJ")},
     guide=("Good to know", [
         ("Ages 12 and under", f"The Royal Roots is a wash and cut for my youngest gentlemen. {M('royalroots')}, {P('royalroots')}."),
         ("One child at a time", "It's a private one-chair suite. No waiting room, no line, and no other chairs in the room."),
@@ -814,8 +817,8 @@ def build():
     # like), following the llms.txt convention. Built from prices.json and the
     # homepage hours, so an assistant never quotes a price the site doesn't.
     L = ["# Scissors by Sandy", "",
-         "> A private one-chair barber shop in Old Bridge, New Jersey, owned and run by master barber "
-         "Sandra (Sandy) Mordan. Men's and kids' haircuts, traditional hot towel shaves, beard shaping, "
+         "> A private one-chair barber shop in Old Bridge, New Jersey, woman-owned and run by female master barber "
+         "Sandra (Sandy) Mordan. English and Spanish spoken (se habla español). Men's and kids' haircuts, traditional hot towel shaves, beard shaping, "
          "facials, scalp treatments, waxing and wedding packages. By appointment only.", "",
          "## Key facts", "",
          "- Address: The Shoppes at Old Bridge, 3813 US 9 North, Suite 101, Old Bridge, NJ 08857",
@@ -823,6 +826,8 @@ def build():
          f"- Book online: {PROF}",
          "- Website: https://scissorsbysandy.com/",
          "- Walk-ins: no, by appointment only",
+         "- Languages: English and Spanish",
+         "- Woman-owned: yes",
          "- Parking: free, directly outside the suite",
          "- First responders: $5 off their total, every visit",
          "- Gift certificates: made out for any service, ordered by call or text, valid two years from purchase",
