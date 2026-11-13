@@ -52,6 +52,15 @@ PAGES = [
     groups=[("The Cuts", ['executive','signature','freshfade','regiment','royalroots'],
              "In the chair, I use Reuzel hair products."),
             ("Color", ['greyblend'], None)],
+    # real shop photos beside each cut, square so close-ups and wider shots look equally framed
+    # (guide cards stay text-only on this page)
+    pic_ratio=1.0,
+    pics={'executive': ('scissor-cut-slicked-back-old-bridge-nj-sq', 960, "Slicked-back scissor cut, The Executive, at Scissors by Sandy in Old Bridge, NJ"),
+          'signature': ('skin-fade-beard-haircut-old-bridge-nj-sq', 960, "Textured top blended into faded sides, The Signature, cut with clippers and shears"),
+          'freshfade': ('skin-fade-fresh-fade-old-bridge-nj-sq', 960, "Skin fade blended up to a short top, The Fresh Fade, at Scissors by Sandy in Old Bridge, NJ"),
+          'regiment': ('crew-cut-regiment-old-bridge-nj-sq', 960, "Short, even crew cut, The Regiment"),
+          'royalroots': ('kids-haircut-fade-old-bridge-nj-sq', 960, "Boy's haircut with a clean fade, The Royal Roots, for ages 12 and under"),
+          'greyblend': ('grey-blending-men-old-bridge-nj-sq', 960, "Grey blending on a short men's cut at Scissors by Sandy")},
     guide=("Which cut is yours?", [
         ("Scissors only", f"The Executive. Shaped entirely with shears, no clippers at all. Grows out softer. {M('executive')}."),
         ("Clippers and shears", f"The Signature. Both tools, blended so you can't see where one stops. {M('signature')}."),
@@ -100,9 +109,17 @@ PAGES = [
     intro="A real hot towel shave needs time, and in my suite there's nobody waiting behind you. Warm towels soften the beard, the straight razor does the rest, and you walk out feeling better than when you came in.",
     groups=[("Shaves & Beard", ['majesty','royal','statesman'], None),
             ("Pair It With a Cut", ['sovereign','regent','ambassador','officer','gentleman'], None)],
+    # real shop photos beside the service they show (files in site/photos/, 480w + larger width)
+    pics={'majesty': ('majesty-straight-razor-shave-old-bridge-nj', 960, "Sandy giving The Majesty Hot Towel Shave with a straight razor in her private suite in Old Bridge, NJ"),
+          'royal': ('straight-razor-shave-old-bridge-nj', 960, "Straight razor shave in Sandy's private barber suite in Old Bridge, NJ"),
+          'statesman': ('beard-shaping-clippers-old-bridge-nj', 960, "Beard shaped with clippers during The Statesman Beard Shaping")},
+    # same order as the guide cards below
+    guide_pics=[('majesty-facial-steam-barber-suite', 800, "Facial steam during The Majesty in the barber suite"),
+                ('straight-razor-beard-line-lather', 800, "Beard lines finished with a straight razor over warm lather"),
+                ('statesman-beard-trim-clippers', 800, "Sandy shaping a full beard with clippers")],
     guide=("Which one should I book?", [
-        ("A close shave", f"The Royal. Warm towels, premium products, a straight razor shave and a beard trim. {M('royal')}."),
         ("The whole ritual", f"The Majesty. Everything in The Royal, plus facial steam, exfoliation and a customized mini facial to finish. {M('majesty')}."),
+        ("A close shave", f"The Royal. Warm towels, premium products, a straight razor shave and a beard trim. {M('royal')}."),
         ("Keeping the beard", f"The Statesman. Full beard sculpting with clippers and a hot towel, no straight razor. {M('statesman')}."),
     ]),
     quotes=["Jon D."],
@@ -222,11 +239,19 @@ def nav_items(current=None):
 def esc(t): return html.escape(t, quote=False)
 def text(h_): return re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', h_))).strip()
 
-def item(s):
+def pic(cls, base, big, alt, ratio, sizes):
+    """Lazy-loaded responsive photo: 480w for phones/1x screens, a larger file for sharp screens."""
+    h = round(480 / ratio)
+    return (f'<img class="{cls}" src="/photos/{base}-480.webp" srcset="/photos/{base}-480.webp 480w, '
+            f'/photos/{base}-{big}.webp {big}w" sizes="{sizes}" width="480" height="{h}" '
+            f'alt="{html.escape(alt)}" loading="lazy" decoding="async">')
+
+def item(s, photo=None, ratio=3/2):
     href = (WID + s['variantId']) if s.get('variantId') else PROF
     ds = f' data-service="{s["id"]}"' if s.get('variantId') else ''
     save = f' <span class="item-save">Save ${s["save"]}</span>' if s.get('save') else ''
-    return ('      <div class="item">\n'
+    img = ('      ' + pic('item-pic sq' if ratio == 1 else 'item-pic', *photo, ratio, '(max-width:820px) 92vw, 480px') + '\n') if photo else ''
+    return ('      <div class="item">\n' + img +
             f'      <div class="item-line"><span class="item-name">{s["name"]}</span>'
             f'<span class="leader" aria-hidden="true"></span><span class="item-price">${s["price"]}</span></div>\n'
             f'      <p class="item-dur">{s["minutes"]} min{save}</p>\n'
@@ -241,6 +266,9 @@ def grab(h_, pat, what):
 
 EXTRA_CSS = """
   /* ===== service pages (generated by pricing/build_pages.py) ===== */
+  .item-pic{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;margin:0 0 1rem;border:1px solid rgba(162,126,60,.45)}
+  .item-pic.sq{aspect-ratio:1/1}
+  .guide-grid div .g-pic{display:block;width:calc(100% + 2.8rem);height:auto;max-width:none;margin:-1.5rem -1.4rem 1.1rem;aspect-ratio:4/3;object-fit:cover;border-bottom:1px solid rgba(162,126,60,.45)}
   body.sub .topstack{position:sticky;top:0}
   .crumbs{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:#c9cfd4;margin-bottom:1.6rem}
   .crumbs a{color:var(--gold);text-decoration:none}
@@ -330,7 +358,7 @@ def build():
             if note and p.get('wedding'): menu.append(f'    <p class="cat-lead">{note}</p>')
             menu.append('    <div class="cat-items">')
             for i in ids:
-                menu.append(item(SVC[i]))
+                menu.append(item(SVC[i], p.get('pics', {}).get(i), p.get('pic_ratio', 3/2)))
                 offers.append({"@type": "Offer", "name": text(SVC[i]['name']), "price": str(SVC[i]['price']),
                                "priceCurrency": "USD", "url": url})
             menu.append('    </div>')
@@ -338,7 +366,10 @@ def build():
         menu.append('  </div>')
         # ---- guide
         gt, gitems = p['guide']
-        guide = '\n'.join(f'    <div><h3>{esc(a)}</h3><p>{esc(b)}</p></div>' for a, b in gitems)
+        gp = p.get('guide_pics') or [None] * len(gitems)
+        if len(gp) != len(gitems): raise SystemExit(f"build_pages: {p['slug']} guide_pics must match its guide cards")
+        guide = '\n'.join(f'    <div>{pic("g-pic", *ph, 4/3, "(max-width:700px) 92vw, 340px") if ph else ""}<h3>{esc(a)}</h3><p>{esc(b)}</p></div>'
+                           for (a, b), ph in zip(gitems, gp))
         # ---- quotes
         qcls = 'one' if len(p['quotes']) == 1 else 'two'
         def quote(name):  # verbatim from the homepage, so a review is never reworded
