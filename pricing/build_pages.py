@@ -101,7 +101,7 @@ PAGES = [
     groups=[("Shaves & Beard", ['majesty','royal','statesman'], None),
             ("Pair It With a Cut", ['sovereign','regent','ambassador','officer','gentleman'], None)],
     # real shop photos beside the service they show (files in site/photos/, 480w + larger width)
-    pics={'majesty': ('majesty-hot-towel-shave-old-bridge-nj', 960, "Sandy giving The Majesty Hot Towel Shave with a straight razor in her private suite in Old Bridge, NJ"),
+    pics={'majesty': ('majesty-straight-razor-shave-old-bridge-nj', 960, "Sandy giving The Majesty Hot Towel Shave with a straight razor in her private suite in Old Bridge, NJ"),
           'royal': ('royal-hot-towel-shave-beard-line-old-bridge-nj', 960, "Beard lines finished with a straight razor during The Royal Hot Towel Shave"),
           'statesman': ('beard-shaping-clippers-old-bridge-nj', 960, "Beard shaped with clippers during The Statesman Beard Shaping")},
     # same order as the guide cards below
