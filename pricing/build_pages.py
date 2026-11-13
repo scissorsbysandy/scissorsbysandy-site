@@ -86,6 +86,8 @@ PAGES = [
     tag="Ages 12 and under · Wash and cut",
     intro="Kids notice when someone takes their time with them. My suite has one chair, so it's one child at a time, with no line behind us and no reason to hurry. Every cut starts with a wash and gets the same care as any other cut in my chair.",
     groups=[("The Cut", ['royalroots'], None)],
+    pic_ratio=1.0,
+    pics={'royalroots': ('kids-haircut-fade-old-bridge-nj-sq', 960, "Boy's haircut with a clean fade, The Royal Roots kids' cut at Scissors by Sandy in Old Bridge, NJ")},
     guide=("Good to know", [
         ("Ages 12 and under", f"The Royal Roots is a wash and cut for my youngest gentlemen. {M('royalroots')}, {P('royalroots')}."),
         ("One child at a time", "It's a private one-chair suite. No waiting room, no line, and no other chairs in the room."),
