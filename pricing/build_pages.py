@@ -121,7 +121,7 @@ PAGES = [
                 ('straight-razor-beard-line-lather', 800, "Beard lines finished with a straight razor over warm lather"),
                 ('statesman-beard-trim-clippers', 800, "Sandy shaping a full beard with clippers")],
     guide=("Which one should I book?", [
-        ("The whole ritual", f"The Majesty. Everything in The Royal, plus facial steam, exfoliation and a customized mini facial to finish. {M('majesty')}."),
+        ("The whole ritual", f"The Majesty. Facial steam, exfoliation, warm aromatic towels and a straight razor shave, finished with a customized mini facial. {M('majesty')}."),
         ("A close shave", f"The Royal. Warm towels, premium products, a straight razor shave and a beard trim. {M('royal')}."),
         ("Keeping the beard", f"The Statesman. Full beard sculpting with clippers and a hot towel, no straight razor. {M('statesman')}."),
     ]),
