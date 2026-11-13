@@ -52,6 +52,13 @@ PAGES = [
     groups=[("The Cuts", ['executive','signature','freshfade','regiment','royalroots'],
              "In the chair, I use Reuzel hair products."),
             ("Color", ['greyblend'], None)],
+    # real shop photos beside each cut (guide cards stay text-only on this page)
+    pics={'executive': ('scissor-cut-slicked-back-old-bridge-nj', 960, "Slicked-back scissor cut, The Executive, at Scissors by Sandy in Old Bridge, NJ"),
+          'signature': ('taper-haircut-clippers-and-shears-old-bridge-nj', 960, "Tapered sides blended into a longer top, The Signature, cut with clippers and shears"),
+          'freshfade': ('skin-fade-haircut-old-bridge-nj', 960, "Skin fade haircut, The Fresh Fade, at Scissors by Sandy in Old Bridge, NJ"),
+          'regiment': ('crew-cut-haircut-old-bridge-nj', 960, "Short, even crew cut, The Regiment"),
+          'royalroots': ('kids-haircut-fade-old-bridge-nj', 960, "Boy's haircut with a clean fade, The Royal Roots, for ages 12 and under"),
+          'greyblend': ('grey-blending-men-old-bridge-nj', 960, "Grey blending on a short men's cut at Scissors by Sandy")},
     guide=("Which cut is yours?", [
         ("Scissors only", f"The Executive. Shaped entirely with shears, no clippers at all. Grows out softer. {M('executive')}."),
         ("Clippers and shears", f"The Signature. Both tools, blended so you can't see where one stops. {M('signature')}."),
