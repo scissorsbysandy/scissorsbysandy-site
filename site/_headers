@@ -23,6 +23,7 @@
 # Private hand-off page for sending client texts from Messages. Never index it.
 /text/*
   X-Robots-Tag: noindex, nofollow
+
 # Booking page for the Square cutover. Live bookings still go through Booksy, so
 # this page is not linked and must not be indexed until the swap.
 /book.html

@@ -11,6 +11,14 @@ HERE=os.path.dirname(os.path.abspath(__file__))
 SITE=os.path.join(HERE,'..','site')
 IDX=os.path.join(SITE,'index.html')
 P=json.load(open(os.path.join(HERE,'prices.json')))
+sys.path.insert(0, HERE)
+import booking
+# Where bookings go today. Every check below asks this rather than assuming
+# Booksy, so the switch can be flipped on cutover day without preflight
+# blocking the deploy for doing exactly what it was asked to do.
+PROVIDER, SITE_PATH = booking.cfg(P)
+ON_BOOKSY = PROVIDER == 'booksy'
+def want_href(sv=None): return booking.link(P, sv)[0]
 fails=[]; warns=[]; passes=[]
 def ok(m): passes.append(m)
 def bad(m): fails.append(m)
@@ -87,12 +95,20 @@ file_prices=[str(s['price']) for s in svc]
 # ---------- 4. deep links (this one shipped broken once) ----------
 ids=[s['variantId'] for s in svc if s.get('variantId')]
 missing=[s['name'] for s in svc if not s.get('variantId')]
-found=re.findall(r'variantId=(\d+)', h)
-(ok if not missing else warn)("every service has a variantId" if not missing else f"no variantId: {missing}")
-(ok if len(set(found))==len(set(ids)) else bad)(f"{len(set(found))} unique deep links in markup" if len(set(found))==len(set(ids)) else f"deep links {len(set(found))} vs {len(set(ids))} expected")
+if ON_BOOKSY:
+    found=re.findall(r'variantId=(\d+)', h)
+    (ok if not missing else warn)("every service has a variantId" if not missing else f"no variantId: {missing}")
+    (ok if len(set(found))==len(set(ids)) else bad)(f"{len(set(found))} unique deep links in markup" if len(set(found))==len(set(ids)) else f"deep links {len(set(found))} vs {len(set(ids))} expected")
+else:
+    want={s['id'] for s in svc}
+    found=set(re.findall(re.escape(SITE_PATH)+r'\?service=([a-z0-9]+)', h))
+    (ok if found==want else bad)(f"{len(found)} services deep link into the booking page"
+        if found==want else f"booking page deep links wrong: missing={sorted(want-found)} unexpected={sorted(found-want)}")
 # the in-page SERVICE_IDS map silently overwrote hrefs once — it must agree
-m=re.search(r'var SERVICE_IDS = \{(.*?)\};', h, re.S)
-if m:
+m=re.search(r'var SERVICE_IDS = \{(.*?)\};', h, re.S) if ON_BOOKSY else None
+if not ON_BOOKSY:
+    ok("SERVICE_IDS map cleared — the page no longer rewrites links to Booksy")
+elif m:
     mapped=dict(re.findall(r'"([^"]+)":"(\d+)"', m.group(1)))
     expect={s['id']:s['variantId'] for s in svc if s.get('variantId')}
     (ok if mapped==expect else bad)("in-page SERVICE_IDS map matches prices.json"
@@ -178,10 +194,10 @@ for blk in menu.split('<div class="item">')[1:]:
     n=re.search(r'<span class="item-name">(.*?)</span>',blk); a=re.search(r'<a class="book-link"[^>]*>',blk)
     if not n or not a: wrong.append("unparseable item"); continue
     s=byname.get(U(n.group(1)))
-    ds=re.search(r'data-service="([^"]+)"',a.group(0)); vid=re.search(r'variantId=(\d+)',a.group(0))
+    ds=re.search(r'data-service="([^"]+)"',a.group(0)); hr=re.search(r'href="([^"]*)"',a.group(0))
     if not s: wrong.append(f"{U(n.group(1))}: not in prices.json"); continue
-    if not ds or ds.group(1)!=s['id'] or not vid or vid.group(1)!=s['variantId']:
-        wrong.append(f"{s['name']}: button says {ds and ds.group(1)}/{vid and vid.group(1)}, should be {s['id']}/{s['variantId']}")
+    if not ds or ds.group(1)!=s['id'] or not hr or hr.group(1)!=want_href(s):
+        wrong.append(f"{s['name']}: button points at {hr and hr.group(1)}, should be {want_href(s)}")
 (ok if not wrong and len(byname)==len(svc) else bad)(f"each of the {len(svc)} Book buttons opens its own service" if not wrong
     else f"BOOK BUTTON MISMATCH: {wrong}")
 # Reuzel is haircuts only (Luis, 2026-10-08): never let it drift near shaves or the facial
@@ -196,12 +212,28 @@ inside=[x for x in reu if hs>=0 and hs<x<he]
 # third-party cookies in frames). All booking links open booksy.com in a new tab.
 (ok if not re.search(r'<iframe[^>]*booksy',h,re.I) else bad)("no Booksy iframe" if not re.search(r'<iframe[^>]*booksy',h,re.I)
     else "BOOKSY IFRAME on the page — this caused the registration loop; open in a new tab instead")
-bl=re.findall(r'<a [^>]*href="https://booksy\.com[^"]*"[^>]*>',h)
-nt=[x[:60] for x in bl if 'target="_blank"' not in x or 'noopener' not in x]
-(ok if bl and not nt else bad)(f"all {len(bl)} Booksy links open in a new tab" if bl and not nt else f"Booksy link not opening in a new tab: {nt}")
-prof=P['booksy']['profile_url']
-badprof=[u for u in re.findall(r'href="(https://booksy\.com/en-us/[^"]+)"',h) if u!=prof]
-(ok if not badprof else bad)("general Book links all point at the Booksy profile" if not badprof else f"unexpected Booksy profile URL: {badprof}")
+if ON_BOOKSY:
+    bl=re.findall(r'<a [^>]*href="https://booksy\.com[^"]*"[^>]*>',h)
+    nt=[x[:60] for x in bl if 'target="_blank"' not in x or 'noopener' not in x]
+    (ok if bl and not nt else bad)(f"all {len(bl)} Booksy links open in a new tab" if bl and not nt else f"Booksy link not opening in a new tab: {nt}")
+    prof=P['booksy']['profile_url']
+    badprof=[u for u in re.findall(r'href="(https://booksy\.com/en-us/[^"]+)"',h) if u!=prof]
+    (ok if not badprof else bad)("general Book links all point at the Booksy profile" if not badprof else f"unexpected Booksy profile URL: {badprof}")
+else:
+    # After the cutover a single surviving Booksy link sends a client to a
+    # calendar nobody is watching, so none may remain anywhere on the site.
+    left=[]
+    for dp,_d,fs in os.walk(SITE):
+        for fn in fs:
+            if fn.endswith(('.html','.txt','.xml','.webmanifest')):
+                g=open(os.path.join(dp,fn),encoding='utf-8',errors='ignore').read()
+                if re.search(r'href="[^"]*booksy\.com',g) or 'booksy.com' in g:
+                    left.append(os.path.relpath(os.path.join(dp,fn),SITE))
+    (ok if not left else bad)("no Booksy links anywhere on the site" if not left
+        else f"BOOKSY LINKS STILL LIVE after the cutover: {sorted(set(left))}")
+    tabbed=[x[:70] for x in re.findall(r'<a [^>]*data-booksy[^>]*>',h) if 'target=' in x]
+    (ok if not tabbed else bad)("booking links stay in the same tab" if not tabbed
+        else f"booking page opened in a new tab: {tabbed}")
 
 # ---------- 12. what Google reads must match what visitors see ----------
 # Google requires FAQ and hours markup to match the visible page; a mismatch can cost
@@ -288,13 +320,15 @@ for slug in PAGES:
         if not sv: pf.append(f"unknown service {n and U(n.group(1))}"); continue
         if not pr or int(pr.group(1))!=sv['price']: pf.append(f"{sv['name']} shows ${pr and pr.group(1)}, prices.json says ${sv['price']}")
         if not du or int(du.group(1))!=sv['minutes']: pf.append(f"{sv['name']} duration wrong")
-        ds=re.search(r'data-service="([^"]+)"',a.group(0)) if a else None; vid=re.search(r'variantId=(\d+)',a.group(0)) if a else None
-        if not ds or ds.group(1)!=sv['id'] or not vid or vid.group(1)!=sv['variantId']: pf.append(f"{sv['name']} Book button opens the wrong service")
+        ds=re.search(r'data-service="([^"]+)"',a.group(0)) if a else None; hr=re.search(r'href="([^"]*)"',a.group(0)) if a else None
+        if not ds or ds.group(1)!=sv['id'] or not hr or hr.group(1)!=want_href(sv): pf.append(f"{sv['name']} Book button opens the wrong service")
     if '<div class="item">' not in g: pf.append("no services listed")
     # booking safety, same rules as the homepage
     if re.search(r'<iframe[^>]*booksy',g,re.I): pf.append("Booksy iframe")
     if [x for x in re.findall(r'<a [^>]*target="_blank"[^>]*>',g) if 'noopener' not in x]: pf.append("new-tab link without noopener")
-    if [x for x in re.findall(r'<a [^>]*href="https://booksy\.com[^"]*"[^>]*>',g) if 'target="_blank"' not in x]: pf.append("Booksy link not opening in a new tab")
+    if ON_BOOKSY:
+        if [x for x in re.findall(r'<a [^>]*href="https://booksy\.com[^"]*"[^>]*>',g) if 'target="_blank"' not in x]: pf.append("Booksy link not opening in a new tab")
+    elif 'booksy.com' in g: pf.append("still links to Booksy after the cutover")
     # what Google reads must match what visitors see
     gb=[]
     for m_ in re.finditer(r'<script type="application/ld\+json">(.*?)</script>',g,re.S):

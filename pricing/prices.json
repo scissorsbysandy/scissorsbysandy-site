@@ -12,6 +12,11 @@
     "profile_url": "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge",
     "widget_base": "https://booksy.com/widget/index.html?id=1823074&lang=en&country=us&theme=default&variantId="
   },
+  "booking": {
+    "_comment": "The one switch for the Square cutover. Leave as \"booksy\" until Jan 1 2027, then set to \"site\" and deploy. Every Book link on every page follows this.",
+    "provider": "booksy",
+    "site_path": "/book.html"
+  },
   "categories": [
     {
       "name": "Precision Haircuts",

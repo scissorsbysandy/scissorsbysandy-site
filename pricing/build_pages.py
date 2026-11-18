@@ -26,8 +26,12 @@ import json, os, re, html
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(HERE, '..', 'site')
 D = json.load(open(os.path.join(HERE, 'prices.json')))
+import booking
 WID = D['booksy']['widget_base'].replace('&', '&amp;')
 PROF = D['booksy']['profile_url']
+# Every "Book" link asks booking.py where it goes, so the cutover is one value
+# in prices.json rather than a hunt through every page.
+BOOK_GENERAL, BOOK_GENERAL_ATTRS = booking.link(D)
 BASE = 'https://scissorsbysandy.com'
 TEL = '<a href="tel:+18482305995">(848) 230-5995</a>'
 SVC = {s['id']: s for c in D['categories'] for s in c['services']}
@@ -250,7 +254,7 @@ def pic(cls, base, big, alt, ratio, sizes):
             f'alt="{html.escape(alt)}" loading="lazy" decoding="async">')
 
 def item(s, photo=None, ratio=3/2):
-    href = (WID + s['variantId']) if s.get('variantId') else PROF
+    href, href_attrs = booking.link(D, s)
     ds = f' data-service="{s["id"]}"' if s.get('variantId') else ''
     save = f' <span class="item-save">Save ${s["save"]}</span>' if s.get('save') else ''
     img = ('      ' + pic('item-pic sq' if ratio == 1 else 'item-pic', *photo, ratio, '(max-width:820px) 92vw, 480px') + '\n') if photo else ''
@@ -259,7 +263,7 @@ def item(s, photo=None, ratio=3/2):
             f'<span class="leader" aria-hidden="true"></span><span class="item-price">${s["price"]}</span></div>\n'
             f'      <p class="item-dur">{s["minutes"]} min{save}</p>\n'
             f'      <p>{s["desc"]}</p>\n'
-            f'      <a class="book-link" data-booksy{ds} href="{href}" target="_blank" rel="noopener">Book this service &rarr;</a>\n'
+            f'      <a class="book-link" data-booksy{ds} href="{href}"{href_attrs}>Book this service &rarr;</a>\n'
             '    </div>')
 
 def grab(h_, pat, what):
@@ -417,7 +421,7 @@ def build():
         more = '\n'.join(f'    <a href="/{s}/"><b>{esc(LABEL[s])}</b><span>{esc(BLURB[s])}</span></a>' for s in p['more'])
         book_btn = ('<a class="btn btn-gold" href="tel:+18482305995">Call or Text to Plan</a>\n'
                     f'    <a class="btn btn-line" href="#services">Groomsmen Services</a>') if p.get('wedding') else \
-                   (f'<a class="btn btn-gold" href="{PROF}" data-booksy target="_blank" rel="noopener">Book Online</a>\n'
+                   (f'<a class="btn btn-gold" href="{BOOK_GENERAL}" data-booksy{BOOK_GENERAL_ATTRS}>Book Online</a>\n'
                     '    <a class="btn btn-line" href="tel:+18482305995">Call or Text</a>')
         svc_head = 'Groomsmen Services' if p.get('wedding') else 'Services &amp; Pricing'
         svc_sub = 'Bookable online' if p.get('wedding') else 'Every price, every duration'
@@ -530,7 +534,7 @@ def build():
     </div>
     <div>
       <h3 class="visit-h">Book</h3>
-      <p><a class="btn btn-gold" href="{PROF}" style="font-size:.72rem;padding:.75rem 1.8rem" data-booksy target="_blank" rel="noopener">Book Online</a></p>
+      <p><a class="btn btn-gold" href="{BOOK_GENERAL}" style="font-size:.72rem;padding:.75rem 1.8rem" data-booksy{BOOK_GENERAL_ATTRS}>Book Online</a></p>
       <p style="margin-top:.9rem">{TEL}</p>
       <p style="margin-top:.3rem;font-size:.85rem">Or call / text for an appointment, or if online booking gives you trouble</p>
     </div>
@@ -823,7 +827,7 @@ def build():
          "## Key facts", "",
          "- Address: The Shoppes at Old Bridge, 3813 US 9 North, Suite 101, Old Bridge, NJ 08857",
          "- Phone or text: (848) 230-5995",
-         f"- Book online: {PROF}",
+         f"- Book online: {booking.absolute(D)}",
          "- Website: https://scissorsbysandy.com/",
          "- Walk-ins: no, by appointment only",
          "- Languages: English and Spanish",
