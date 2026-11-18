@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<!-- Not linked from the site yet. Booking still goes through Booksy until the Square
+     cutover; this page ships dark so it can be deployed and checked before the swap. -->
+<title>Book an Appointment &middot; Scissors by Sandy</title>
+<link rel="preload" href="fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;
+    src:url(fonts/cormorant-garamond-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Jost';font-style:normal;font-weight:100 900;font-display:swap;
+    src:url(fonts/jost-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{
+  --navy:#16293C; --navy-deep:#0E1A26; --navy-lift:#2C547A;
+  --gold:#F8D094; --gold-deep:#A27E3C; --gold-hi:#FFF2B8; --gold-lo:#D1A265;
+  --gold-text:#7F622F; --cream:#F4EFE4; --cream-soft:#D6D6CC;
+  --ink:#16293C; --ink-soft:#3A586E;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost','Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weight:300;
+  -webkit-font-smoothing:antialiased;line-height:1.5}
+.wrap{max-width:860px;margin:0 auto;min-height:100vh;background:var(--cream);
+  box-shadow:0 0 60px rgba(14,26,38,.08)}
+
+/* header */
+.top{background:var(--navy);padding:1.5rem 1.4rem 1.3rem;text-align:center;position:relative;overflow:hidden}
+.back-site{position:absolute;left:1rem;top:50%;transform:translateY(-50%);z-index:3;
+  color:var(--cream-soft);text-decoration:none;font-size:.62rem;letter-spacing:.16em;
+  text-transform:uppercase;opacity:.8}
+.back-site:hover{color:var(--gold);opacity:1}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-deep),transparent)}
+.brand{font-family:var(--serif);font-weight:600;color:var(--gold);
+  letter-spacing:.3em;text-transform:uppercase;font-size:clamp(.92rem,3.4vw,1.15rem)}
+.brand-sub{font-family:var(--sans);font-weight:300;color:var(--cream-soft);
+  letter-spacing:.26em;text-transform:uppercase;font-size:.6rem;margin-top:.5rem;opacity:.85}
+
+/* steps */
+.steps{display:flex;background:var(--navy-deep);padding:0}
+.step{flex:1;text-align:center;padding:.75rem .3rem;font-size:.58rem;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(214,214,204,.42);position:relative;transition:color .25s}
+.step.on{color:var(--gold)}
+.step.done{color:var(--cream-soft)}
+.step.on::after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;background:var(--gold)}
+.step i{font-style:normal;display:block;font-size:.85rem;font-family:var(--serif);margin-bottom:.15rem}
+
+/* panel */
+.panel{padding:2.2rem 1.4rem 3rem}
+.sec-head{font-family:var(--serif);font-weight:600;text-align:center;color:var(--ink);
+  font-size:clamp(1.3rem,4.6vw,1.75rem);letter-spacing:.2em;text-transform:uppercase}
+.sec-sub{text-align:center;letter-spacing:.26em;text-transform:uppercase;font-size:.62rem;
+  color:var(--gold-text);margin-top:.5rem}
+.rule{display:flex;align-items:center;gap:.9rem;max-width:420px;margin:1.3rem auto 2rem}
+.rule::before,.rule::after{content:"";flex:1;height:1px;background:var(--gold-deep);opacity:.5}
+.rule span{font-family:var(--serif);color:var(--gold-deep);font-size:.9rem}
+
+/* services */
+.cat{margin-bottom:2.2rem}
+.cat-name{font-family:var(--serif);font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  font-size:.82rem;color:var(--gold-text);margin-bottom:.9rem;padding-bottom:.5rem;
+  border-bottom:1px solid rgba(162,126,47,.3)}
+.svc{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;
+  border-bottom:1px solid rgba(22,41,60,.1);padding:.9rem .7rem;cursor:pointer;
+  font-family:var(--sans);transition:background .18s,border-color .18s}
+.svc:hover{background:rgba(248,208,148,.14);border-color:rgba(162,126,47,.35)}
+.svc-top{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.svc-name{font-family:var(--serif);font-size:1.12rem;font-weight:500;color:var(--ink)}
+.svc-price{font-family:var(--serif);font-size:1.12rem;color:var(--gold-text);white-space:nowrap}
+.svc-meta{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
+  margin-top:.25rem;opacity:.8}
+.svc-desc{font-size:.8rem;color:var(--ink-soft);margin-top:.45rem;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* calendar */
+.cal{max-width:420px;margin:0 auto}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.cal-mon{font-family:var(--serif);letter-spacing:.2em;text-transform:uppercase;font-size:.9rem;font-weight:600}
+.nav-b{background:transparent;border:1px solid var(--gold-deep);color:var(--gold-text);
+  width:34px;height:34px;cursor:pointer;font-size:.9rem;transition:all .2s}
+.nav-b:hover:not(:disabled){background:rgba(248,208,148,.2)}
+.nav-b:disabled{opacity:.25;cursor:not-allowed}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.dow div{text-align:center;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);opacity:.7}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.day{aspect-ratio:1;border:1px solid rgba(22,41,60,.12);background:#fff;cursor:pointer;
+  font-family:var(--sans);font-size:.85rem;color:var(--ink);transition:all .18s;
+  display:flex;align-items:center;justify-content:center}
+.day:hover:not(:disabled){border-color:var(--gold-deep);background:rgba(248,208,148,.18)}
+.day:disabled{background:transparent;color:rgba(22,41,60,.2);cursor:not-allowed;border-color:transparent}
+.day.sel,.day.sel:hover:not(:disabled){background:var(--navy);color:var(--gold);border-color:var(--navy)}
+.day.empty{border:none;background:transparent;cursor:default}
+.closed-note{text-align:center;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-soft);margin-top:1rem;opacity:.75}
+
+/* slots */
+.slots-wrap{margin-top:2rem}
+.slots-day{text-align:center;font-family:var(--serif);font-size:1.05rem;letter-spacing:.1em;margin-bottom:1rem}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;max-width:460px;margin:0 auto}
+.slot{padding:.6rem .3rem;background:#fff;border:1px solid rgba(22,41,60,.14);cursor:pointer;
+  font-family:var(--sans);font-size:.78rem;letter-spacing:.04em;color:var(--ink);transition:all .18s}
+.slot:hover{border-color:var(--gold-deep);background:rgba(248,208,148,.2)}
+.slot.sel,.slot.sel:hover{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+.no-slots{text-align:center;color:var(--ink-soft);font-size:.85rem;padding:2rem 0}
+
+/* form */
+.form{max-width:440px;margin:0 auto}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold-text);margin-bottom:.4rem}
+.field input,.field textarea{width:100%;padding:.75rem .85rem;border:1px solid rgba(22,41,60,.2);
+  background:#fff;font-family:var(--sans);font-size:.95rem;font-weight:300;color:var(--ink);border-radius:0}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--gold-deep);
+  box-shadow:0 0 0 3px rgba(248,208,148,.25)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.welcome{background:rgba(248,208,148,.22);border:1px solid rgba(162,126,47,.45);
+  padding:.75rem .9rem;margin-bottom:1.3rem;font-size:.82rem;color:var(--ink);
+  display:flex;justify-content:space-between;align-items:center;gap:.8rem}
+.welcome b{font-family:var(--serif);font-weight:600}
+.welcome button{background:none;border:none;color:var(--gold-text);text-decoration:underline;
+  cursor:pointer;font-family:var(--sans);font-size:.72rem;letter-spacing:.08em;white-space:nowrap;padding:0}
+.policy{font-size:.72rem;color:var(--ink-soft);text-align:center;margin-top:1.2rem;line-height:1.6}
+
+/* summary */
+.summary{background:var(--navy);color:var(--cream-soft);padding:1.3rem 1.2rem;margin-bottom:2rem}
+.summary h3{font-family:var(--serif);color:var(--gold);letter-spacing:.2em;text-transform:uppercase;
+  font-size:.7rem;font-weight:500;margin-bottom:.9rem;text-align:center}
+.sum-row{display:flex;justify-content:space-between;gap:1rem;padding:.42rem 0;font-size:.85rem}
+.sum-row span:first-child{color:rgba(214,214,204,.65);font-size:.72rem;letter-spacing:.1em;
+  text-transform:uppercase}
+.sum-row span:last-child{text-align:right;font-family:var(--serif);font-size:1rem;color:#fff}
+.sum-total{border-top:1px solid rgba(248,208,148,.3);margin-top:.6rem;padding-top:.7rem}
+.sum-total span:last-child{color:var(--gold);font-size:1.2rem}
+
+/* buttons */
+.btn{display:inline-block;padding:.9rem 2.2rem;text-decoration:none;letter-spacing:.2em;
+  text-transform:uppercase;font-size:.72rem;font-family:var(--sans);font-weight:400;
+  border:none;cursor:pointer;transition:all .25s}
+.btn-gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold) 50%,var(--gold-lo));
+  color:var(--navy-deep)}
+.btn-gold:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+.btn-gold:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:grayscale(.4)}
+.btn-line{border:1px solid var(--gold-deep);color:var(--gold-text);background:transparent}
+.btn-line:hover{background:rgba(248,208,148,.16)}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:1rem;
+  margin-top:2.2rem;max-width:460px;margin-left:auto;margin-right:auto}
+
+/* confirmation */
+.conf{text-align:center;padding:1rem 0 2rem}
+.conf-mark{width:62px;height:62px;border:1px solid var(--gold-deep);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;
+  font-family:var(--serif);font-size:1.7rem;color:var(--gold-text)}
+.conf h2{font-family:var(--serif);font-weight:600;letter-spacing:.18em;text-transform:uppercase;
+  font-size:1.35rem;margin-bottom:.7rem}
+.conf p{color:var(--ink-soft);font-size:.9rem;max-width:380px;margin:0 auto .5rem}
+
+.upcoming{background:var(--navy);color:var(--cream-soft);padding:1.4rem 1.2rem;margin-bottom:2.4rem}
+.upcoming h3{font-family:var(--serif);color:var(--gold);letter-spacing:.2em;text-transform:uppercase;
+  font-size:.7rem;font-weight:500;margin-bottom:1rem;text-align:center}
+.up-card{border-top:1px solid rgba(248,208,148,.25);padding-top:.9rem;margin-top:.9rem}
+.up-card:first-of-type{border-top:none;padding-top:0;margin-top:0}
+.up-svc{font-family:var(--serif);font-size:1.15rem;color:#fff}
+.up-when{font-size:.82rem;color:var(--gold);margin-top:.2rem;letter-spacing:.04em}
+.up-acts{display:flex;gap:.6rem;margin-top:.9rem}
+.up-acts button{flex:1;padding:.55rem .4rem;font-family:var(--sans);font-size:.62rem;
+  letter-spacing:.16em;text-transform:uppercase;cursor:pointer;border:1px solid rgba(248,208,148,.55);
+  background:transparent;color:var(--gold);transition:background .2s}
+.up-acts button:hover{background:rgba(248,208,148,.15)}
+.up-acts button.danger{border-color:rgba(255,160,150,.5);color:#FFB3AA}
+.up-acts button.danger:hover{background:rgba(255,120,110,.14)}
+.up-late{margin-top:.8rem;font-size:.75rem;color:rgba(214,214,204,.8);line-height:1.5}
+.up-late a{color:var(--gold)}
+.confirm-box{margin-top:.8rem;padding:.8rem;background:rgba(255,120,110,.1);
+  border:1px solid rgba(255,160,150,.35)}
+.confirm-box p{font-size:.8rem;color:#fff;margin-bottom:.7rem}
+.note{max-width:620px;margin:0 auto;padding:1rem 1.2rem;background:rgba(22,41,60,.05);
+  border-left:2px solid var(--gold-deep);font-size:.76rem;color:var(--ink-soft);line-height:1.6}
+.note b{color:var(--ink);font-weight:500}
+.hidden{display:none}
+@media(max-width:480px){
+  .panel{padding:1.8rem 1rem 2.4rem}
+  .two{grid-template-columns:1fr}
+  .actions{flex-direction:column-reverse}
+  .actions .btn{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back-site" href="index.html">&#8249; Site</a>
+    <div class="brand">Scissors by Sandy</div>
+    <div class="brand-sub">By Appointment Only</div>
+  </div>
+
+  <div class="steps">
+    <div class="step on" data-s="1"><i>I</i>Service</div>
+    <div class="step" data-s="2"><i>II</i>Date &amp; Time</div>
+    <div class="step" data-s="3"><i>III</i>Your Details</div>
+  </div>
+
+  <div class="panel">
+    <!-- STEP 1 -->
+    <section id="s1">
+      <div class="upcoming hidden" id="upcoming"></div>
+      <h1 class="sec-head">Choose Your Service</h1>
+      <div class="sec-sub">One chair &middot; One client at a time</div>
+      <div class="rule"><span>&#10022;</span></div>
+      <div id="cats"></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section id="s2" class="hidden">
+      <h1 class="sec-head">Pick a Time</h1>
+      <div class="sec-sub" id="s2sub"></div>
+      <div class="rule"><span>&#10022;</span></div>
+      <div class="cal">
+        <div class="cal-head">
+          <button class="nav-b" id="prevM">&#8249;</button>
+          <div class="cal-mon" id="monLabel"></div>
+          <button class="nav-b" id="nextM">&#8250;</button>
+        </div>
+        <div class="dow"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+        <div class="grid" id="grid"></div>
+        <div class="closed-note">Closed Wednesdays</div>
+      </div>
+      <div class="slots-wrap hidden" id="slotsWrap">
+        <div class="slots-day" id="slotsDay"></div>
+        <div class="slots" id="slots"></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-line" id="s2back" onclick="backFromTime()">Back</button>
+        <button class="btn btn-gold" id="toS3" disabled onclick="go(3)">Continue</button>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section id="s3" class="hidden">
+      <h1 class="sec-head">Your Details</h1>
+      <div class="sec-sub">Almost done</div>
+      <div class="rule"><span>&#10022;</span></div>
+      <div class="summary" id="sum"></div>
+      <div class="welcome hidden" id="welcome"></div>
+      <div class="form">
+        <div class="two">
+          <div class="field"><label>First Name</label><input id="fn" autocomplete="given-name"></div>
+          <div class="field"><label>Last Name</label><input id="ln" autocomplete="family-name"></div>
+        </div>
+        <div class="field"><label>Mobile Number</label><input id="ph" type="tel" autocomplete="tel" placeholder="(848) 230-5995"></div>
+        <div class="field"><label>Email</label><input id="em" type="email" autocomplete="email"></div>
+        <div class="field"><label>Anything I should know?</label><textarea id="nt" rows="2"></textarea></div>
+        <div class="actions">
+          <button class="btn btn-line" onclick="go(2)">Back</button>
+          <button class="btn btn-gold" id="confirmBtn" disabled onclick="confirmIt()">Confirm Booking</button>
+        </div>
+        <p class="policy">I ask for 24 hours&rsquo; notice if you need to change your appointment.<br>No fees, no deposit. Just a courtesy.</p>
+      </div>
+    </section>
+
+    <!-- STEP 4 -->
+    <section id="s4" class="hidden">
+      <div class="conf">
+        <div class="conf-mark">&#10003;</div>
+        <h2>You&rsquo;re Booked</h2>
+        <p id="confLine"></p>
+        <p>A confirmation is on its way, and I&rsquo;ll send a reminder the day before.</p>
+      </div>
+      <div class="summary" id="sum2"></div>
+      <div class="actions" style="justify-content:center">
+        <button class="btn btn-line" onclick="reset()">Book Another</button>
+      </div>
+    </section>
+
+    <div class="note" style="margin-top:2.5rem">
+      <b>Demo.</b> This is the real website with booking moved on-site. Services, prices and durations are live from the Square catalogue.
+      Open times are generated here using the same rules Square applies &mdash; Sandy&rsquo;s hours,
+      the service length and half-hour starts &mdash; and were checked against Square&rsquo;s own
+      availability for this week. In production each list is fetched live, so a slot
+      someone else just took disappears and double-booking is refused by Square.
+      Confirming here does not create a real appointment.
+    </div>
+  </div>
+</div>
+
+<script>
+const CATS = [{"name":"Precision Haircuts","services":[{"id":"executive","name":"The Executive","price":60,"min":45,"desc":"The house specialty. Wash and cut, shaped entirely with shears \u2014 no clippers, no guards \u2014 every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.","var":"G4JZOME4BD7FALXANU2OTDGK"},{"id":"signature","name":"The Signature","price":50,"min":40,"desc":"Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout \u2014 nobody should leave a haircut feeling roughed up.","var":"ERJFFGMXRX3B4SW6ZAKSN3X5"},{"id":"freshfade","name":"The Fresh Fade","price":50,"min":40,"desc":"Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top \u2014 a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.","var":"3HGRUTGNGEQEQMMRGLW7JYIK"},{"id":"regiment","name":"The Regiment","price":45,"min":30,"desc":"Wash and cut. The classic crew cut \u2014 clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.","var":"66ULXO2X4RNYVH4LVQH3356B"},{"id":"royalroots","name":"The Royal Roots","price":40,"min":30,"desc":"Wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair. Kids notice when someone takes their time with them.","var":"LNJVFE3TXRCNO7AAUIRF6JLA"}]},{"name":"Packages","services":[{"id":"sovereign","name":"The Sovereign","price":120,"min":90,"desc":"The Executive cut paired with The Majesty Hot Towel Shave.","var":"37CVXAVTRTNXE36X5DIO27WF"},{"id":"regent","name":"The Regent","price":115,"min":85,"desc":"The Signature cut paired with The Majesty Hot Towel Shave.","var":"ZURPZH237BD55DIIFF2YOWKA"},{"id":"ambassador","name":"The Ambassador","price":95,"min":70,"desc":"The Signature cut paired with The Royal Hot Towel Shave.","var":"L7XIHBM6KSWAJSYAONHPLVCQ"},{"id":"officer","name":"The Officer","price":90,"min":60,"desc":"The Regiment cut paired with The Royal Hot Towel Shave.","var":"IHW3FIRZIQWGBL457QOWBMXM"},{"id":"gentleman","name":"The Gentleman","price":80,"min":70,"desc":"The Signature cut paired with The Statesman Beard Shaping.","var":"GJZNO47N4FAIDXOYDBFGN46I"},{"id":"diplomat","name":"The Diplomat","price":80,"min":60,"desc":"The Signature cut paired with a Scalp Treatment.","var":"KT26RM2NE7CHNEZ6YSCPEAG3"}]},{"name":"Signature Shaves & Beard","services":[{"id":"majesty","name":"The Majesty Hot Towel Shave","price":75,"min":45,"desc":"Our most indulgent ritual. Facial steam, exfoliation, warm aromatic towels, a traditional straight-razor shave, and a customized mini facial to finish. Clients call it calming, soothing, and more than just a shave \u2014 you leave feeling brand new.","var":"HI56BUDBSE5WKJFY33OUZBVJ"},{"id":"royal","name":"The Royal Hot Towel Shave","price":55,"min":30,"desc":"A meticulously curated hot towel shave with beard trim. Warm towels and premium products prepare the skin for a traditional straight-razor shave, finished close and comfortable.","var":"CFNEMC3HO7YDHPXPKPVQ2DGA"},{"id":"statesman","name":"The Statesman Beard Shaping","price":35,"min":30,"desc":"Full beard sculpting and detailing with clippers, shaped to your face with clean, deliberate lines. Hot towel included.","var":"WDS26BGIDDD5D4E7MZTWYVYX"}]},{"name":"Treatments","services":[{"id":"minifacial","name":"Mini Facial","price":50,"min":30,"desc":"A focused facial in thirty minutes: warm steam and towels, a gentle cleanse and exfoliation, a deep pore cleanse, then a hydrating mask and moisturizer suited to your skin. Relaxing on its own or added to any cut.","var":"ZEQ3DI2J7GKK4L5CKQUCBEYP"},{"id":"scalp","name":"Scalp Treatment","price":35,"min":20,"desc":"A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.","var":"7LPRQDPYVVJWEBMXLLABCN2V"}]},{"name":"Grooming & Waxing","services":[{"id":"nosewax","name":"Nose Waxing","price":25,"min":10,"desc":"Precise removal of nasal hair for a polished look.","var":"V2W2YBV37OGAD7BILK6ZUE3J"},{"id":"earwax","name":"Ear Waxing","price":20,"min":10,"desc":"Gentle, hygienic removal of excess ear hair.","var":"RJAFT6KQBA6Z2BCO7M5ZGPOS"},{"id":"browwax","name":"Eyebrow Waxing","price":20,"min":10,"desc":"Sculpting and shaping to define your look with precision.","var":"SFAQRXJRFDUSOAOX56AFAJ34"}]},{"name":"Color","services":[{"id":"greyblend","name":"Grey Blending","price":55,"min":45,"desc":"A refined technique to create a soft, natural transition with our professional grey blending service.","var":"IMA7CYOPBBT3SEAGSN6KIYBA"}]}];
+// Sandy's hours, 0=Sun .. 6=Sat. null = closed.
+const HOURS = {0:[11,17],1:[10,19],2:[10,19],3:null,4:[10,19],5:[10,19],6:[10,17]};
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+let svc=null, day=null, slot=null, view=new Date();
+view.setDate(1);
+const today=new Date(); today.setHours(0,0,0,0);
+
+function el(id){return document.getElementById(id)}
+
+/* ---------- step 1 ---------- */
+function renderCats(){
+  el('cats').innerHTML = CATS.map(c=>
+    '<div class="cat"><div class="cat-name">'+c.name+'</div>'+
+    c.services.map(s=>
+      '<button class="svc" onclick="pick(\''+s.id+'\')">'+
+        '<div class="svc-top"><span class="svc-name">'+s.name+'</span>'+
+        '<span class="svc-price">$'+s.price+'</span></div>'+
+        '<div class="svc-meta">'+s.min+' min</div>'+
+        '<div class="svc-desc">'+s.desc+'</div>'+
+      '</button>').join('')+
+    '</div>').join('');
+}
+function backFromTime(){
+  if(arrivedByLink){ location.href='index.html'; return; }
+  go(1);
+}
+let arrivedByLink=false;
+function pick(id){
+  for(const c of CATS){const f=c.services.find(x=>x.id===id); if(f){svc=f;break}}
+  day=null; slot=null; el('slotsWrap').classList.add('hidden');
+  el('toS3').disabled=true;
+  el('s2sub').textContent=svc.name+' \u00b7 '+svc.min+' min \u00b7 $'+svc.price;
+  if(el('s2back')) el('s2back').textContent = arrivedByLink ? 'Back to Site' : 'Back';
+  renderCal(); go(2);
+}
+
+/* ---------- step 2 ---------- */
+function slotsFor(dt){
+  if(!svc) return [];
+  const h=HOURS[dt.getDay()]; if(!h) return [];
+  const out=[]; const close=h[1]*60;
+  for(let m=h[0]*60; m+svc.min<=close; m+=30) out.push(m);
+  return out;
+}
+function renderCal(){
+  el('monLabel').textContent=MONTHS[view.getMonth()]+' '+view.getFullYear();
+  const first=new Date(view.getFullYear(),view.getMonth(),1);
+  const days=new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
+  let h='';
+  for(let i=0;i<first.getDay();i++) h+='<div class="day empty"></div>';
+  for(let dnum=1;dnum<=days;dnum++){
+    const dt=new Date(view.getFullYear(),view.getMonth(),dnum);
+    const ok = dt>=today && HOURS[dt.getDay()] && slotsFor(dt).length>0;
+    const sel = day && dt.toDateString()===day.toDateString();
+    h+='<button class="day'+(sel?' sel':'')+'" '+(ok?'':'disabled')+
+       ' onclick="setDay('+dnum+')">'+dnum+'</button>';
+  }
+  el('grid').innerHTML=h;
+  const cm=new Date(); cm.setDate(1); cm.setHours(0,0,0,0);
+  el('prevM').disabled = view<=cm;
+}
+function setDay(dnum){
+  day=new Date(view.getFullYear(),view.getMonth(),dnum);
+  slot=null; el('toS3').disabled=true;
+  renderCal();
+  const list=slotsFor(day);
+  el('slotsDay').textContent=day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  el('slots').innerHTML=list.map(m=>'<button class="slot" onclick="setSlot('+m+')">'+fmt(m)+'</button>').join('')
+    || '<div class="no-slots">No openings this day.</div>';
+  el('slotsWrap').classList.remove('hidden');
+  el('slotsWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function fmt(m){const h=Math.floor(m/60),mm=m%60;const ap=h>=12?'PM':'AM';
+  let hh=h%12; if(hh===0)hh=12; return hh+':'+String(mm).padStart(2,'0')+' '+ap}
+function setSlot(m){
+  slot=m;
+  [...document.querySelectorAll('.slot')].forEach(b=>b.classList.toggle('sel',b.textContent===fmt(m)));
+  el('toS3').disabled=false;
+}
+el('prevM').onclick=()=>{view.setMonth(view.getMonth()-1);renderCal()};
+el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
+
+/* ---------- step 3 ---------- */
+function sumHTML(){
+  return '<h3>Your Appointment</h3>'+
+    '<div class="sum-row"><span>Service</span><span>'+svc.name+'</span></div>'+
+    '<div class="sum-row"><span>When</span><span>'+day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+', '+fmt(slot)+'</span></div>'+
+    '<div class="sum-row"><span>Length</span><span>'+svc.min+' minutes</span></div>'+
+    '<div class="sum-row"><span>With</span><span>Sandy Mordan</span></div>'+
+    '<div class="sum-row sum-total"><span>Total</span><span>$'+svc.price+'</span></div>';
+}
+['fn','ln','ph'].forEach(id=>el(id).addEventListener('input',check));
+function check(){
+  el('confirmBtn').disabled = !(el('fn').value.trim() && el('ln').value.trim() && el('ph').value.trim().length>=10);
+}
+const KEY='sbs_client';
+const BKEY='sbs_bookings';
+// Policy: how close to the appointment a client may still change it themselves.
+// Booksy's setting is 1 hour. Change this one number if the policy changes.
+const CUTOFF_HOURS=1;
+let rescheduleId=null;
+
+function getBookings(){
+  let a=[]; try{a=JSON.parse(localStorage.getItem(BKEY)||'[]')}catch(e){}
+  const now=Date.now();
+  return a.filter(b=>new Date(b.startISO).getTime()>now)
+          .sort((x,y)=>new Date(x.startISO)-new Date(y.startISO));
+}
+function putBookings(a){try{localStorage.setItem(BKEY,JSON.stringify(a))}catch(e){}}
+function startISO(){const d=new Date(day); d.setHours(Math.floor(slot/60),slot%60,0,0); return d.toISOString()}
+
+function renderUpcoming(){
+  const list=getBookings(), box=el('upcoming');
+  if(!list.length){box.classList.add('hidden'); return}
+  box.classList.remove('hidden');
+  box.innerHTML='<h3>Your Upcoming '+(list.length>1?'Appointments':'Appointment')+'</h3>'+
+    list.map(b=>{
+      const d=new Date(b.startISO);
+      const when=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+
+        ' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      const hrs=(d.getTime()-Date.now())/3600000;
+      const acts = hrs>CUTOFF_HOURS
+        ? '<div class="up-acts"><button onclick="doReschedule(\''+b.id+'\')">Reschedule</button>'+
+          '<button class="danger" onclick="askCancel(\''+b.id+'\')">Cancel</button></div>'
+        : '<div class="up-late">Within '+CUTOFF_HOURS+' hour of your appointment, please call or text Sandy at '+
+          '<a href="tel:+18482305995">(848) 230-5995</a>.</div>';
+      return '<div class="up-card" id="card-'+b.id+'"><div class="up-svc">'+b.svcName+'</div>'+
+             '<div class="up-when">'+when+'</div>'+acts+'</div>';
+    }).join('');
+}
+function askCancel(id){
+  const c=el('card-'+id); if(!c) return;
+  c.querySelector('.up-acts').outerHTML=
+    '<div class="confirm-box"><p>Cancel this appointment? I ask for 24 hours\u2019 notice as a courtesy, '+
+    'and there is never a fee.</p><div class="up-acts">'+
+    '<button onclick="renderUpcoming()">Keep It</button>'+
+    '<button class="danger" onclick="doCancel(\''+id+'\')">Yes, Cancel</button></div></div>';
+}
+function doCancel(id){
+  putBookings(getBookings().filter(b=>b.id!==id));
+  renderUpcoming();
+}
+function doReschedule(id){
+  const b=getBookings().find(x=>x.id===id); if(!b) return;
+  rescheduleId=id; pick(b.svcId);
+}
+
+function saveMe(){
+  try{localStorage.setItem(KEY,JSON.stringify({
+    fn:el('fn').value.trim(),ln:el('ln').value.trim(),
+    ph:el('ph').value.trim(),em:el('em').value.trim()}))}catch(e){}
+}
+function loadMe(){
+  let d=null; try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(!d||!d.fn) return false;
+  el('fn').value=d.fn; el('ln').value=d.ln||''; el('ph').value=d.ph||''; el('em').value=d.em||'';
+  el('welcome').innerHTML='<span>Welcome back, <b>'+d.fn+'</b>. Your details are filled in.</span>'+
+    '<button onclick="forgetMe()">Not you?</button>';
+  el('welcome').classList.remove('hidden');
+  check(); return true;
+}
+function forgetMe(){
+  try{localStorage.removeItem(KEY)}catch(e){}
+  ['fn','ln','ph','em','nt'].forEach(i=>el(i).value='');
+  el('welcome').classList.add('hidden'); check(); el('fn').focus();
+}
+function confirmIt(){
+  saveMe();
+  const all=getBookings().filter(b=>b.id!==rescheduleId);
+  all.push({id:'b'+Date.now(),svcId:svc.id,svcName:svc.name,price:svc.price,
+            min:svc.min,startISO:startISO()});
+  putBookings(all); rescheduleId=null;
+  el('confLine').textContent=svc.name+' with Sandy on '+
+    day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';
+  el('sum2').innerHTML=sumHTML();
+  go(4);
+}
+function reset(){svc=null;day=null;slot=null;el('nt').value='';go(1)}
+
+/* ---------- nav ---------- */
+function go(n){
+  [1,2,3,4].forEach(i=>el('s'+i).classList.toggle('hidden',i!==n));
+  if(n===1) renderUpcoming();
+  if(n===3){el('sum').innerHTML=sumHTML(); loadMe();}
+  document.querySelectorAll('.step').forEach(s=>{
+    const i=+s.dataset.s;
+    s.classList.toggle('on',i===n||(n===4&&i===3));
+    s.classList.toggle('done',i<n);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+renderCats(); renderUpcoming();
+// Arriving from a "Book this service" link: skip the service list.
+(function deepLink(){
+  var slug=(location.hash||'').replace('#','').trim();
+  if(!slug) return;
+  for(var i=0;i<CATS.length;i++){
+    if(CATS[i].services.some(function(x){return x.id===slug})){ arrivedByLink=true; pick(slug); return; }
+  }
+})();
+window.addEventListener('hashchange',function(){
+  var slug=(location.hash||'').replace('#','').trim();
+  if(slug) for(var i=0;i<CATS.length;i++)
+    if(CATS[i].services.some(function(x){return x.id===slug})) return pick(slug);
+});
+</script>
+</body>
+</html>
