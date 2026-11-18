@@ -5,7 +5,7 @@
     "effective_date": "2026-10-01",
     "version": 3,
     "currency": "USD",
-    "notes": "First responders get an additional $5 off their total, every visit.",
+    "notes": "First responders get $5 off their total, every visit.",
     "combo_padding_note": "Booksy applies the trailing 10-min padding to combos automatically from the last component service. Do NOT add extra minutes into the combo duration — that double-pads and wastes 10 min of chair time per package. Combo duration = sum of components, nothing more."
   },
   "booksy": {
