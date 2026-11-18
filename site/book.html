@@ -195,6 +195,15 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
   border-left:2px solid var(--gold-deep);font-size:.76rem;color:var(--ink-soft);line-height:1.6}
 .note b{color:var(--ink);font-weight:500}
 .hidden{display:none}
+/* Booksy puts "+ Add another service" beside the chosen services rather than
+   making a client find their way back. Same idea here, on the step where
+   changing the visit still changes which times are offered. */
+.add-more{display:inline-flex;align-items:center;gap:.4rem;margin:.9rem auto 0;
+  background:transparent;border:1px solid var(--gold-deep);color:var(--gold-text);
+  font-family:var(--sans);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:.6rem 1.1rem;border-radius:2px;cursor:pointer;line-height:1}
+.add-more:hover{background:rgba(248,208,148,.18)}
+.add-more b{font-size:1rem;font-weight:400;line-height:0}
 .sum-ava{width:1.55rem;height:1.55rem;border-radius:50%;object-fit:cover;
   vertical-align:-.42rem;margin-right:.45rem;border:1px solid var(--gold-deep)}
 @media(max-width:480px){
@@ -242,6 +251,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
     <section id="s2" class="hidden">
       <h1 class="sec-head">Pick a Time</h1>
       <div class="sec-sub" id="s2sub"></div>
+      <div style="text-align:center"><button class="add-more" id="addMore" onclick="addService()"><b>+</b> <span id="addMoreLabel">Add another service</span></button></div>
       <div class="rule"><span>&#10022;</span></div>
       <div class="cal">
         <div class="cal-head">
@@ -404,11 +414,16 @@ function backFromTime(){
   go(1);
 }
 
+/** Back to the menu to add to the visit, keeping what is already chosen. */
+function addService(){ go(1); window.scrollTo({top:0,behavior:'smooth'}); }
+
 function toTime(){
   if(!picked.length) return;
   day=null; slot=null; el('slotsWrap').classList.add('hidden');
   el('toS3').disabled=true;
   el('s2sub').textContent=visitLabel();
+  if(el('addMoreLabel')) el('addMoreLabel').textContent =
+    picked.length>1 ? 'Add another service' : 'Add a second service';
   if(el('s2back')) el('s2back').textContent = 'Back';
   renderCal(); go(2); loadMonth();
 }
