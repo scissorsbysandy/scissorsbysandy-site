@@ -218,6 +218,74 @@ async function createBooking(p) {
   return { id: booking.id, status: booking.status, startAt: booking.start_at };
 }
 
+/* ---------- changing a booking ------------------------------------------ */
+
+async function getBooking(bookingId) {
+  const { booking } = await square('/v2/bookings/' + encodeURIComponent(bookingId));
+  if (!booking) throw Object.assign(new Error('That appointment could not be found'), { status: 400 });
+  return booking;
+}
+
+/**
+ * The booking id is the only thing the page holds, so on its own it would let
+ * anyone who got hold of one cancel a stranger's appointment. Require that the
+ * phone number given matches the one on the booking before changing anything.
+ */
+async function assertOwner(booking, phone) {
+  const e164 = toE164(phone);
+  if (!e164) throw Object.assign(new Error('That phone number does not look right'), { status: 400 });
+  if (!booking.customer_id) {
+    throw Object.assign(new Error('Please call or text Sandy to change this one'), { status: 403 });
+  }
+  const { customer } = await square('/v2/customers/' + encodeURIComponent(booking.customer_id));
+  if (!customer || customer.phone_number !== e164) {
+    throw Object.assign(new Error('That appointment is not under this phone number'), { status: 403 });
+  }
+}
+
+async function cancelBooking({ bookingId, phone }) {
+  const booking = await getBooking(bookingId);
+  await assertOwner(booking, phone);
+
+  if (booking.status === 'CANCELLED_BY_CUSTOMER' || booking.status === 'CANCELLED_BY_SELLER') {
+    return { id: booking.id, status: booking.status };            // already gone; not an error
+  }
+
+  const { booking: out } = await square(
+    '/v2/bookings/' + encodeURIComponent(bookingId) + '/cancel',
+    { method: 'POST', body: { idempotency_key: crypto.randomUUID(), booking_version: booking.version } },
+  );
+  return { id: out.id, status: out.status };
+}
+
+/**
+ * Move an existing booking rather than booking a second one and deleting the
+ * first. Square updates it in place, so there is never a moment where Sandy's
+ * calendar holds both the old time and the new one.
+ */
+async function rescheduleBooking({ bookingId, phone, service, startAt }) {
+  const booking = await getBooking(bookingId);
+  await assertOwner(booking, phone);
+  const { teamMemberId } = await setup();
+  const version = await serviceVersion(service);
+
+  const { booking: out } = await square('/v2/bookings/' + encodeURIComponent(bookingId), {
+    method: 'PUT',
+    body: {
+      booking: {
+        version: booking.version,
+        start_at: startAt,
+        appointment_segments: [{
+          team_member_id: teamMemberId,
+          service_variation_id: service,
+          service_variation_version: version,
+        }],
+      },
+    },
+  });
+  return { id: out.id, status: out.status, startAt: out.start_at };
+}
+
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -236,9 +304,28 @@ export default async (request) => {
 
     if (request.method === 'POST') {
       const body = await request.json();
-      for (const f of ['service', 'startAt', 'firstName', 'phone']) {
-        if (!body[f]) return json(400, { error: `${f} is required` });
+      const action = body.action || 'book';
+      const need = (fields) => {
+        for (const f of fields) if (!body[f]) return `${f} is required`;
+        return null;
+      };
+
+      if (action === 'cancel') {
+        const missing = need(['bookingId', 'phone']);
+        if (missing) return json(400, { error: missing });
+        return json(200, { booking: await cancelBooking(body) });
       }
+
+      if (action === 'reschedule') {
+        const missing = need(['bookingId', 'phone', 'service', 'startAt']);
+        if (missing) return json(400, { error: missing });
+        return json(200, { booking: await rescheduleBooking(body) });
+      }
+
+      if (action !== 'book') return json(400, { error: 'Unknown action' });
+
+      const missing = need(['service', 'startAt', 'firstName', 'phone']);
+      if (missing) return json(400, { error: missing });
       return json(200, { booking: await createBooking(body) });
     }
 
@@ -247,9 +334,9 @@ export default async (request) => {
     // Never hand Square's raw error to a client standing in the shop, but do
     // log it so a failed booking can be traced.
     console.error('square function failed:', err.message, err.squareErrors || '');
-    const status = err.status === 400 ? 400 : 502;
+    const status = (err.status === 400 || err.status === 403) ? err.status : 502;
     return json(status, {
-      error: status === 400 ? err.message : 'Could not reach the booking calendar',
+      error: status === 502 ? 'Could not reach the booking calendar' : err.message,
     });
   }
 };

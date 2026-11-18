@@ -483,7 +483,36 @@ function askCancel(id){
     '<button onclick="renderUpcoming()">Keep It</button>'+
     '<button class="danger" onclick="doCancel(\''+id+'\')">Yes, Cancel</button></div></div>';
 }
-function doCancel(id){
+// The phone number is how Square checks the appointment is really theirs.
+// Use whatever is typed, otherwise fall back to the details saved on booking.
+function savedPhone(){
+  const typed=(el('ph')&&el('ph').value||'').trim();
+  if(typed) return typed;
+  try{return (JSON.parse(localStorage.getItem(KEY)||'null')||{}).ph||''}catch(e){return ''}
+}
+async function doCancel(id){
+  const c=el('card-'+id); if(!c) return;
+  const box=c.querySelector('.confirm-box');
+  const phone=savedPhone();
+  if(!phone){
+    box.innerHTML='<p>Please call or text Sandy at <a href="tel:+18482305995">(848) 230-5995</a> '+
+      'to cancel this one.</p>';
+    return;
+  }
+  box.innerHTML='<p>Cancelling\u2026</p>';
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'cancel',bookingId:id,phone:phone})});
+    const data=await r.json().catch(function(){return{}});
+    if(!r.ok) throw new Error(data.error||'That did not go through');
+  }catch(e){
+    // Say plainly it is still booked. A client who thinks they cancelled and
+    // did not is how Sandy ends up waiting for someone who never comes.
+    box.innerHTML='<p>'+e.message+'. This appointment is <strong>still booked</strong>. '+
+      'Please try again, or call or text Sandy at <a href="tel:+18482305995">(848) 230-5995</a>.</p>'+
+      '<div class="up-acts"><button onclick="renderUpcoming()">Back</button></div>';
+    return;
+  }
   putBookings(getBookings().filter(b=>b.id!==id));
   renderUpcoming();
 }
@@ -513,22 +542,31 @@ function forgetMe(){
 }
 async function confirmIt(){
   const btn=el('confirmBtn'), label=btn.textContent;
-  btn.disabled=true; btn.textContent='Booking\u2026'; el('confErr').textContent='';
+  btn.disabled=true; btn.textContent=rescheduleId?'Moving\u2026':'Booking\u2026';
+  el('confErr').textContent='';
   let booked;
   try{
+    // Rescheduling moves the appointment Square already holds. Booking a new
+    // one and dropping the old locally would leave both on Sandy's calendar.
+    const payload = rescheduleId
+      ? {action:'reschedule', bookingId:rescheduleId, service:svc.var,
+         startAt:startISO(), phone:el('ph').value.trim()}
+      : {service:svc.var, startAt:startISO(),
+         firstName:el('fn').value.trim(), lastName:el('ln').value.trim(),
+         phone:el('ph').value.trim(), email:el('em').value.trim(),
+         note:el('nt').value.trim()};
     const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({service:svc.var,startAt:startISO(),
-        firstName:el('fn').value.trim(), lastName:el('ln').value.trim(),
-        phone:el('ph').value.trim(), email:el('em').value.trim(),
-        note:el('nt').value.trim()})});
+      body:JSON.stringify(payload)});
     const data=await r.json().catch(function(){return{}});
     if(!r.ok||!data.booking) throw new Error(data.error||'That did not go through');
     booked=data.booking;
   }catch(e){
     // Say plainly that nothing was booked. A confirmation nobody can honour is
     // worse than an error.
-    el('confErr').textContent=e.message+'. Nothing has been booked, so nothing is '+
-      'held for you. Please try again, or call or text Sandy at (848) 230-5995.';
+    el('confErr').textContent=e.message+(rescheduleId
+      ? '. Your appointment has not moved and is still booked at the original time.'
+      : '. Nothing has been booked, so nothing is held for you.')+
+      ' Please try again, or call or text Sandy at (848) 230-5995.';
     btn.disabled=false; btn.textContent=label;
     return;
   }
