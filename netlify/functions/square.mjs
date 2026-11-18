@@ -103,7 +103,38 @@ async function serviceVersion(serviceId) {
 
 /* ---------- availability ------------------------------------------------ */
 
-async function availability(serviceId, fromISO, toISO) {
+/**
+ * A visit is usually more than one service: a cut and a beard, a shave and a
+ * scalp treatment. Accept either one id or a list, and keep the order the
+ * client chose, because Square books the segments in sequence.
+ */
+const MAX_SERVICES = 6;
+
+function asServices(value) {
+  const list = (Array.isArray(value) ? value : String(value || '').split(','))
+    .map(v => String(v).trim())
+    .filter(Boolean);
+  if (!list.length) throw Object.assign(new Error('Please choose at least one service'), { status: 400 });
+  if (list.length > MAX_SERVICES) {
+    throw Object.assign(
+      new Error(`That is more than ${MAX_SERVICES} services. Please call or text Sandy to book a visit this long`),
+      { status: 400 });
+  }
+  return list;
+}
+
+/** One Square segment per chosen service, versions fetched together. */
+async function buildSegments(serviceIds) {
+  const { teamMemberId } = await setup();
+  const versions = await Promise.all(serviceIds.map(serviceVersion));
+  return serviceIds.map((id, i) => ({
+    team_member_id: teamMemberId,
+    service_variation_id: id,
+    service_variation_version: versions[i],
+  }));
+}
+
+async function availability(serviceIds, fromISO, toISO) {
   const { locationId, teamMemberId } = await setup();
   const { availabilities = [] } = await square('/v2/bookings/availability/search', {
     method: 'POST',
@@ -112,10 +143,13 @@ async function availability(serviceId, fromISO, toISO) {
         filter: {
           start_at_range: { start_at: fromISO, end_at: toISO },
           location_id: locationId,
-          segment_filters: [{
-            service_variation_id: serviceId,
+          // One filter per service. Square then only returns times where the
+          // whole visit fits, rather than times where the first service fits
+          // and the client gets turned away for the rest.
+          segment_filters: serviceIds.map(id => ({
+            service_variation_id: id,
             team_member_id_filter: { any: [teamMemberId] },
-          }],
+          })),
         },
       },
     },
@@ -194,8 +228,9 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
 /* ---------- create the booking ------------------------------------------ */
 
 async function createBooking(p) {
-  const { locationId, teamMemberId } = await setup();
-  const version = await serviceVersion(p.service);
+  const { locationId } = await setup();
+  const serviceIds = asServices(p.services ?? p.service);
+  const segments = await buildSegments(serviceIds);
   const customerId = await findOrCreateCustomer(p);
 
   const { booking } = await square('/v2/bookings', {
@@ -207,11 +242,7 @@ async function createBooking(p) {
         start_at: p.startAt,
         customer_id: customerId,
         ...(p.note ? { customer_note: String(p.note).slice(0, 1500) } : {}),
-        appointment_segments: [{
-          team_member_id: teamMemberId,
-          service_variation_id: p.service,
-          service_variation_version: version,
-        }],
+        appointment_segments: segments,
       },
     },
   });
@@ -263,11 +294,10 @@ async function cancelBooking({ bookingId, phone }) {
  * first. Square updates it in place, so there is never a moment where Sandy's
  * calendar holds both the old time and the new one.
  */
-async function rescheduleBooking({ bookingId, phone, service, startAt }) {
+async function rescheduleBooking({ bookingId, phone, service, services, startAt }) {
   const booking = await getBooking(bookingId);
   await assertOwner(booking, phone);
-  const { teamMemberId } = await setup();
-  const version = await serviceVersion(service);
+  const segments = await buildSegments(asServices(services ?? service));
 
   const { booking: out } = await square('/v2/bookings/' + encodeURIComponent(bookingId), {
     method: 'PUT',
@@ -275,11 +305,7 @@ async function rescheduleBooking({ bookingId, phone, service, startAt }) {
       booking: {
         version: booking.version,
         start_at: startAt,
-        appointment_segments: [{
-          team_member_id: teamMemberId,
-          service_variation_id: service,
-          service_variation_version: version,
-        }],
+        appointment_segments: segments,
       },
     },
   });
@@ -295,11 +321,11 @@ export default async (request) => {
     const url = new URL(request.url);
 
     if (request.method === 'GET' && url.searchParams.get('action') === 'availability') {
-      const service = url.searchParams.get('service');
+      const services = url.searchParams.get('services') || url.searchParams.get('service');
       const from = url.searchParams.get('from');
       const to = url.searchParams.get('to');
-      if (!service || !from || !to) return json(400, { error: 'service, from and to are all required' });
-      return json(200, { slots: await availability(service, from, to) });
+      if (!services || !from || !to) return json(400, { error: 'services, from and to are all required' });
+      return json(200, { slots: await availability(asServices(services), from, to) });
     }
 
     if (request.method === 'POST') {
@@ -317,14 +343,14 @@ export default async (request) => {
       }
 
       if (action === 'reschedule') {
-        const missing = need(['bookingId', 'phone', 'service', 'startAt']);
+        const missing = need(['bookingId', 'phone', 'startAt']);
         if (missing) return json(400, { error: missing });
         return json(200, { booking: await rescheduleBooking(body) });
       }
 
       if (action !== 'book') return json(400, { error: 'Unknown action' });
 
-      const missing = need(['service', 'startAt', 'firstName', 'phone']);
+      const missing = need(['startAt', 'firstName', 'phone']);
       if (missing) return json(400, { error: missing });
       return json(200, { booking: await createBooking(body) });
     }

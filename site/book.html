@@ -69,6 +69,19 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
   border-bottom:1px solid rgba(22,41,60,.1);padding:.9rem .7rem;cursor:pointer;
   font-family:var(--sans);transition:background .18s,border-color .18s}
 .svc:hover{background:rgba(248,208,148,.14);border-color:rgba(162,126,47,.35)}
+.svc.on{background:rgba(248,208,148,.2);border-color:var(--gold-lo)}
+.svc-num{display:inline-flex;align-items:center;justify-content:center;width:1.25rem;height:1.25rem;
+  border-radius:50%;background:var(--gold-deep);color:var(--cream);font-family:var(--sans);
+  font-size:.64rem;font-weight:600;margin-right:.45rem;vertical-align:.08em}
+/* Running total for a visit of several services. Fixed so it stays reachable
+   on a phone however far down the menu the client has scrolled. */
+.pick-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--navy);
+  color:var(--cream-soft);padding:.8rem 1.1rem;display:flex;align-items:center;
+  justify-content:space-between;gap:1rem;box-shadow:0 -6px 22px rgba(0,0,0,.3)}
+.pick-sum{font-size:.78rem;letter-spacing:.07em;line-height:1.35}
+.pick-sum b{color:var(--gold);font-family:var(--serif);font-weight:500}
+.pick-bar .btn{margin:0;white-space:nowrap}
+.pad-bar{padding-bottom:5.5rem}
 .svc-top{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
 .svc-name{font-family:var(--serif);font-size:1.12rem;font-weight:500;color:var(--ink)}
 .svc-price{font-family:var(--serif);font-size:1.12rem;color:var(--gold-text);white-space:nowrap}
@@ -204,7 +217,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
   </div>
 
   <div class="steps">
-    <div class="step on" data-s="1"><i>I</i>Service</div>
+    <div class="step on" data-s="1"><i>I</i>Services</div>
     <div class="step" data-s="2"><i>II</i>Date &amp; Time</div>
     <div class="step" data-s="3"><i>III</i>Your Details</div>
   </div>
@@ -213,10 +226,14 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
     <!-- STEP 1 -->
     <section id="s1">
       <div class="upcoming hidden" id="upcoming"></div>
-      <h1 class="sec-head">Choose Your Service</h1>
-      <div class="sec-sub">One chair &middot; One client at a time</div>
+      <h1 class="sec-head">Choose Your Services</h1>
+      <div class="sec-sub">Add as many as you like &middot; One chair at a time</div>
       <div class="rule"><span>&#10022;</span></div>
       <div id="cats"></div>
+      <div class="pick-bar hidden" id="pickBar">
+        <div class="pick-sum" id="pickSum"></div>
+        <button class="btn btn-gold" onclick="toTime()">Continue</button>
+      </div>
     </section>
 
     <!-- STEP 2 -->
@@ -303,37 +320,93 @@ const CATS = [{"name":"Precision Haircuts","services":[{"id":"executive","name":
    openings. */
 const HOURS = {0:[11,17],1:[10,19],2:[10,19],3:null,4:[10,19],5:[10,19],6:[10,17]};
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-let svc=null, day=null, slot=null, view=new Date();
+let picked=[], day=null, slot=null, view=new Date();
 view.setDate(1);
 const today=new Date(); today.setHours(0,0,0,0);
 
 function el(id){return document.getElementById(id)}
 
 /* ---------- step 1 ---------- */
+/* Most visits are more than one service: a cut and a beard, a shave and a
+   scalp treatment. Services are added in the order the client taps them,
+   because that is the order Sandy works through them. */
+const MAX_PICK=6;
+
+function findSvc(id){for(const c of CATS){const f=c.services.find(x=>x.id===id); if(f) return f} return null}
+function totalMin(){return picked.reduce((n,s)=>n+s.min,0)}
+function totalPrice(){return picked.reduce((n,s)=>n+s.price,0)}
+function pickedVars(){return picked.map(s=>s.var)}
+function visitLabel(){
+  return (picked.length===1 ? picked[0].name : picked.length+' services')+
+    ' · '+totalMin()+' min · $'+totalPrice();
+}
+
 function renderCats(){
   el('cats').innerHTML = CATS.map(c=>
     '<div class="cat"><div class="cat-name">'+c.name+'</div>'+
     c.services.map(s=>
-      '<button class="svc" onclick="pick(\''+s.id+'\')">'+
-        '<div class="svc-top"><span class="svc-name">'+s.name+'</span>'+
+      '<button class="svc" id="svc-'+s.id+'" onclick="toggle(\''+s.id+'\')">'+
+        '<div class="svc-top"><span class="svc-name">'+
+          '<span class="svc-num hidden" id="num-'+s.id+'"></span>'+s.name+'</span>'+
         '<span class="svc-price">$'+s.price+'</span></div>'+
         '<div class="svc-meta">'+s.min+' min</div>'+
         '<div class="svc-desc">'+s.desc+'</div>'+
       '</button>').join('')+
     '</div>').join('');
+  renderPicked();
 }
+
+function toggle(id){
+  const i=picked.findIndex(s=>s.id===id);
+  if(i>=0){ picked.splice(i,1); }
+  else{
+    const f=findSvc(id); if(!f) return;
+    if(picked.length>=MAX_PICK){
+      el('pickSum').innerHTML='<b>That is a long visit.</b> Please call or text Sandy to book more.';
+      return;
+    }
+    picked.push(f);
+  }
+  // Changing the visit changes how long it runs, so times already fetched were
+  // for a different length and must not be reused.
+  day=null; slot=null; AVAIL=null; availKey=null; availState='idle';
+  renderPicked();
+}
+
+function renderPicked(){
+  for(const c of CATS) for(const s of c.services){
+    const b=el('svc-'+s.id); if(!b) continue;
+    const i=picked.findIndex(x=>x.id===s.id);
+    const n=el('num-'+s.id);
+    b.classList.toggle('on', i>=0);
+    if(n){ n.classList.toggle('hidden', i<0); n.textContent = i>=0 ? (i+1) : ''; }
+  }
+  const bar=el('pickBar'), s1=el('s1');
+  if(!picked.length){ bar.classList.add('hidden'); s1.classList.remove('pad-bar'); return; }
+  bar.classList.remove('hidden'); s1.classList.add('pad-bar');
+  el('pickSum').innerHTML='<b>'+picked.length+(picked.length>1?' services':' service')+
+    '</b> · '+totalMin()+' min · $'+totalPrice();
+}
+
 function backFromTime(){
   if(arrivedByLink){ location.href='index.html'; return; }
   go(1);
 }
 let arrivedByLink=false;
-function pick(id){
-  for(const c of CATS){const f=c.services.find(x=>x.id===id); if(f){svc=f;break}}
+
+function toTime(){
+  if(!picked.length) return;
   day=null; slot=null; el('slotsWrap').classList.add('hidden');
   el('toS3').disabled=true;
-  el('s2sub').textContent=svc.name+' \u00b7 '+svc.min+' min \u00b7 $'+svc.price;
+  el('s2sub').textContent=visitLabel();
   if(el('s2back')) el('s2back').textContent = arrivedByLink ? 'Back to Site' : 'Back';
   renderCal(); go(2); loadMonth();
+}
+
+/** A link from the main site asks for one named service; start the visit with it. */
+function pick(id){
+  const f=findSvc(id); if(!f) return;
+  picked=[f]; renderPicked(); toTime();
 }
 
 /* ---------- step 2 ---------- */
@@ -350,15 +423,15 @@ function dkey(dt){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2
   '-'+String(dt.getDate()).padStart(2,'0')}
 
 async function loadMonth(){
-  if(!svc) return;
-  const key=svc.var+'|'+view.getFullYear()+'-'+view.getMonth();
+  if(!picked.length) return;
+  const key=pickedVars().join(',')+'|'+view.getFullYear()+'-'+view.getMonth();
   if(key===availKey&&availState==='ready') return;
   availKey=key; availState='loading'; AVAIL=null; renderCal();
   const first=new Date(view.getFullYear(),view.getMonth(),1);
   const from=new Date(Math.max(first.getTime(),Date.now())); // never ask about the past
   const to=new Date(view.getFullYear(),view.getMonth()+1,1);
   try{
-    const r=await fetch(API+'?action=availability&service='+encodeURIComponent(svc.var)+
+    const r=await fetch(API+'?action=availability&services='+encodeURIComponent(pickedVars().join(','))+
       '&from='+encodeURIComponent(from.toISOString())+
       '&to='+encodeURIComponent(to.toISOString()));
     if(!r.ok) throw new Error('lookup failed');
@@ -380,7 +453,7 @@ async function loadMonth(){
 }
 
 function slotsFor(dt){
-  if(!svc||!AVAIL) return [];
+  if(!picked.length||!AVAIL) return [];
   return AVAIL[dkey(dt)]||[];
 }
 function renderCal(){
@@ -430,11 +503,12 @@ el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);day=null;slot=null;
 /* ---------- step 3 ---------- */
 function sumHTML(){
   return '<h3>Your Appointment</h3>'+
-    '<div class="sum-row"><span>Service</span><span>'+svc.name+'</span></div>'+
+    picked.map((x,i)=>'<div class="sum-row"><span>'+
+      (picked.length>1?'Service '+(i+1):'Service')+'</span><span>'+x.name+'</span></div>').join('')+
     '<div class="sum-row"><span>When</span><span>'+day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+', '+fmt(slot)+'</span></div>'+
-    '<div class="sum-row"><span>Length</span><span>'+svc.min+' minutes</span></div>'+
+    '<div class="sum-row"><span>Length</span><span>'+totalMin()+' minutes</span></div>'+
     '<div class="sum-row"><span>With</span><span>Sandy Mordan</span></div>'+
-    '<div class="sum-row sum-total"><span>Total</span><span>$'+svc.price+'</span></div>';
+    '<div class="sum-row sum-total"><span>Total</span><span>$'+totalPrice()+'</span></div>';
 }
 ['fn','ln','ph'].forEach(id=>el(id).addEventListener('input',check));
 function check(){
@@ -471,7 +545,9 @@ function renderUpcoming(){
           '<button class="danger" onclick="askCancel(\''+b.id+'\')">Cancel</button></div>'
         : '<div class="up-late">Within '+CUTOFF_HOURS+' hour of your appointment, please call or text Sandy at '+
           '<a href="tel:+18482305995">(848) 230-5995</a>.</div>';
-      return '<div class="up-card" id="card-'+b.id+'"><div class="up-svc">'+b.svcName+'</div>'+
+      // Records saved before visits could hold several services kept one name.
+      const names=(b.svcNames&&b.svcNames.length)?b.svcNames.join(', '):(b.svcName||'Appointment');
+      return '<div class="up-card" id="card-'+b.id+'"><div class="up-svc">'+names+'</div>'+
              '<div class="up-when">'+when+'</div>'+acts+'</div>';
     }).join('');
 }
@@ -518,7 +594,21 @@ async function doCancel(id){
 }
 function doReschedule(id){
   const b=getBookings().find(x=>x.id===id); if(!b) return;
-  rescheduleId=id; pick(b.svcId);
+  const ids=(b.svcIds&&b.svcIds.length)?b.svcIds:(b.svcId?[b.svcId]:[]);
+  const again=ids.map(findSvc).filter(Boolean);
+  if(!again.length){
+    // The menu changed under this booking; sending them round the loop would
+    // only lose the appointment they already have.
+    alertLine(id,'Please call or text Sandy at (848) 230-5995 to move this one.');
+    return;
+  }
+  rescheduleId=id; picked=again;
+  AVAIL=null; availKey=null; availState='idle';
+  renderPicked(); toTime();
+}
+function alertLine(id,msg){
+  const c=el('card-'+id); if(!c) return;
+  const acts=c.querySelector('.up-acts'); if(acts) acts.outerHTML='<div class="up-late">'+msg+'</div>';
 }
 
 function saveMe(){
@@ -549,9 +639,9 @@ async function confirmIt(){
     // Rescheduling moves the appointment Square already holds. Booking a new
     // one and dropping the old locally would leave both on Sandy's calendar.
     const payload = rescheduleId
-      ? {action:'reschedule', bookingId:rescheduleId, service:svc.var,
+      ? {action:'reschedule', bookingId:rescheduleId, services:pickedVars(),
          startAt:startISO(), phone:el('ph').value.trim()}
-      : {service:svc.var, startAt:startISO(),
+      : {services:pickedVars(), startAt:startISO(),
          firstName:el('fn').value.trim(), lastName:el('ln').value.trim(),
          phone:el('ph').value.trim(), email:el('em').value.trim(),
          note:el('nt').value.trim()};
@@ -573,15 +663,16 @@ async function confirmIt(){
   btn.textContent=label;
   saveMe();
   const all=getBookings().filter(b=>b.id!==rescheduleId);
-  all.push({id:booked.id,svcId:svc.id,svcName:svc.name,price:svc.price,
-            min:svc.min,startISO:startISO()});
+  all.push({id:booked.id, svcIds:picked.map(x=>x.id),
+            svcNames:picked.map(x=>x.name), price:totalPrice(),
+            min:totalMin(), startISO:startISO()});
   putBookings(all); rescheduleId=null;
-  el('confLine').textContent=svc.name+' with Sandy on '+
+  el('confLine').textContent=picked.map(x=>x.name).join(', ')+' with Sandy on '+
     day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';
   el('sum2').innerHTML=sumHTML();
   go(4);
 }
-function reset(){svc=null;day=null;slot=null;el('nt').value='';go(1)}
+function reset(){picked=[];day=null;slot=null;el('nt').value='';renderPicked();go(1)}
 
 /* ---------- nav ---------- */
 function go(n){
