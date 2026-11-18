@@ -397,17 +397,19 @@ function renderPicked(){
 }
 
 function backFromTime(){
-  if(arrivedByLink){ location.href='index.html'; return; }
+  // Always step back to the services, never off the page. A client who came
+  // from a "Book this service" link still needs the menu to add a beard trim
+  // to their haircut; leaving for the site strands them. The header keeps a
+  // link back to the site for anyone who actually wants out.
   go(1);
 }
-let arrivedByLink=false;
 
 function toTime(){
   if(!picked.length) return;
   day=null; slot=null; el('slotsWrap').classList.add('hidden');
   el('toS3').disabled=true;
   el('s2sub').textContent=visitLabel();
-  if(el('s2back')) el('s2back').textContent = arrivedByLink ? 'Back to Site' : 'Back';
+  if(el('s2back')) el('s2back').textContent = 'Back';
   renderCal(); go(2); loadMonth();
 }
 
@@ -716,7 +718,7 @@ function linkedSlug(){
 }
 (function deepLink(){
   var slug=linkedSlug();
-  if(slug && findSvc(slug)){ arrivedByLink=true; pick(slug); }
+  if(slug && findSvc(slug)) pick(slug);
 })();
 window.addEventListener('hashchange',function(){
   var slug=(location.hash||'').replace('#','').trim();
