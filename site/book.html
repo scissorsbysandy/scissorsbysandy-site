@@ -336,6 +336,12 @@ function findSvc(id){for(const c of CATS){const f=c.services.find(x=>x.id===id);
 function totalMin(){return picked.reduce((n,s)=>n+s.min,0)}
 function totalPrice(){return picked.reduce((n,s)=>n+s.price,0)}
 function pickedVars(){return picked.map(s=>s.var)}
+/** "A", "A and B", "A, B and C" - a visit read aloud, not a list of line items. */
+function listNames(a){
+  if(!a||!a.length) return '';
+  if(a.length===1) return a[0];
+  return a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+}
 function visitLabel(){
   return (picked.length===1 ? picked[0].name : picked.length+' services')+
     ' · '+totalMin()+' min · $'+totalPrice();
@@ -503,8 +509,8 @@ el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);day=null;slot=null;
 /* ---------- step 3 ---------- */
 function sumHTML(){
   return '<h3>Your Appointment</h3>'+
-    picked.map((x,i)=>'<div class="sum-row"><span>'+
-      (picked.length>1?'Service '+(i+1):'Service')+'</span><span>'+x.name+'</span></div>').join('')+
+    '<div class="sum-row"><span>'+(picked.length>1?'Visit':'Service')+'</span><span>'+
+      picked.map(x=>x.name).join('<br>')+'</span></div>'+
     '<div class="sum-row"><span>When</span><span>'+day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+', '+fmt(slot)+'</span></div>'+
     '<div class="sum-row"><span>Length</span><span>'+totalMin()+' minutes</span></div>'+
     '<div class="sum-row"><span>With</span><span>Sandy Mordan</span></div>'+
@@ -546,7 +552,7 @@ function renderUpcoming(){
         : '<div class="up-late">Within '+CUTOFF_HOURS+' hour of your appointment, please call or text Sandy at '+
           '<a href="tel:+18482305995">(848) 230-5995</a>.</div>';
       // Records saved before visits could hold several services kept one name.
-      const names=(b.svcNames&&b.svcNames.length)?b.svcNames.join(', '):(b.svcName||'Appointment');
+      const names=(b.svcNames&&b.svcNames.length)?listNames(b.svcNames):(b.svcName||'Appointment');
       return '<div class="up-card" id="card-'+b.id+'"><div class="up-svc">'+names+'</div>'+
              '<div class="up-when">'+when+'</div>'+acts+'</div>';
     }).join('');
@@ -667,7 +673,7 @@ async function confirmIt(){
             svcNames:picked.map(x=>x.name), price:totalPrice(),
             min:totalMin(), startISO:startISO()});
   putBookings(all); rescheduleId=null;
-  el('confLine').textContent=picked.map(x=>x.name).join(', ')+' with Sandy on '+
+  el('confLine').textContent=listNames(picked.map(x=>x.name))+' with Sandy on '+
     day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';
   el('sum2').innerHTML=sumHTML();
   go(4);
