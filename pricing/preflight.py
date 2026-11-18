@@ -487,6 +487,31 @@ for f in re.findall(r'<image:loc>https://scissorsbysandy\.com/(photos/[^<]+)</im
 for x in cr: bad(x)
 if not cr: ok(f"sitemap lists exactly {len(wantlocs)} pages and their photos, robots.txt is open, every internal link resolves, every page links to every other")
 
+# 17e-bis. EVERY reference of every kind resolves (added 2026-11-18)
+# The demo's fonts silently stopped loading because the rewrite handled href= and
+# src= but not CSS url(). Checking one known path would not have caught it: only
+# walking every reference does. 17e already walks href="/..."; this walks src,
+# srcset and url() too, on every page, so a mistyped image or a new @font-face
+# cannot ship unnoticed.
+REF=re.compile(r'(?:href|src)="([^"#][^"]*)"|srcset="([^"]+)"|url\((["\']?)([^)"\']+)\3\)')
+rf=[]; nref=0
+for nm,pg,url in every:
+    for m_ in REF.finditer(pg):
+        got=[m_.group(1)] if m_.group(1) else (
+             [x.strip().split()[0] for x in m_.group(2).split(',') if x.strip()] if m_.group(2)
+             else [m_.group(4)])
+        for r in got:
+            if re.match(r'(https?:|data:|tel:|mailto:|sms:|#|//)', r): continue
+            nref+=1
+            base=SITE if nm in ('home','404') else os.path.join(SITE,nm)
+            tgt=os.path.normpath(os.path.join(base, r.split('?')[0].split('#')[0].lstrip('/'))) \
+                if r.startswith('/') else os.path.normpath(os.path.join(base, r.split('?')[0].split('#')[0]))
+            if r.startswith('/'): tgt=os.path.normpath(os.path.join(SITE, r.split('?')[0].split('#')[0].lstrip('/')))
+            if os.path.isdir(tgt): tgt=os.path.join(tgt,'index.html')
+            if not os.path.exists(tgt): rf.append(f"{nm}: {r} leads nowhere")
+for x in rf: bad(x)
+if not rf: ok(f"every one of the {nref} file references on the site resolves (links, images, srcset and CSS url())")
+
 # 17f. the "page not found" page and the plain-text summary for AI assistants
 ex=[]
 if not re.search(r'<meta name="robots" content="noindex">',p404): ex.append("404.html must carry noindex")
