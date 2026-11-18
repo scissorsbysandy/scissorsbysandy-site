@@ -50,11 +50,11 @@
     "addressCountry": "US"
   },
   "sameAs": [
+    "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge",
     "https://www.instagram.com/scissorsbysandy",
     "https://www.facebook.com/scissorsbysandy",
     "https://www.youtube.com/channel/UCs3elqmKeaxniwOlPW2utqg",
     "https://www.yelp.com/biz/scissors-by-sandy-old-bridge",
-    "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge",
     "https://www.linkedin.com/company/scissorsbysandy"
   ],
   "potentialAction": {
@@ -1180,13 +1180,15 @@
 
   <script>
   (function () {
-    // Booking always opens in a NEW TAB (first-party context on booksy.com).
-    // Never embed in an iframe: browsers block third-party cookies/storage there,
-    // which breaks Booksy login/registration and traps clients in a sign-up loop.
-    // Per-service deep links must use the WIDGET url -- the public profile page
-    // ignores the variantId parameter.
+    // Every booking link is tagged data-booksy and gets its destination from
+    // prices.json via pricing/build.py, so one switch moves the whole site.
+    // While bookings are external they open in a NEW TAB and must never be
+    // embedded in an iframe: browsers block third-party cookies there, which
+    // broke login and trapped clients in a sign-up loop. Our own booking page
+    // stays in the same tab.
     var WIDGET  = "https://booksy.com/widget/index.html?id=1823074&lang=en&country=us&theme=default&variantId=";
     var PROFILE = "https://booksy.com/en-us/1823074_scissors-by-sandy_barber-shop_28627_old-bridge";
+    var BOOKING = "booksy", SITE_PATH = "/book.html";
     var SERVICE_IDS = {
       "executive":"21617218","signature":"21617223","freshfade":"21617225","regiment":"22331829",
       "royalroots":"21617226","sovereign":"22331854","regent":"22331856","ambassador":"22331859",
@@ -1195,16 +1197,18 @@
       "nosewax":"21629583","earwax":"21629569","browwax":"21629592","greyblend":"21630689"
     };
     function urlFor(slug){
+      if (BOOKING === "site") return SITE_PATH + (slug ? "?service=" + encodeURIComponent(slug) : "");
       var id = slug && SERVICE_IDS[slug];
       return id ? WIDGET + encodeURIComponent(id) : PROFILE;
     }
     function sync(){
       var links = document.querySelectorAll("[data-booksy]");
+      var away = BOOKING !== "site";          // our own page should not open a new tab
       for (var i=0;i<links.length;i++){
         var a=links[i];
         a.setAttribute("href", urlFor(a.getAttribute("data-service")||""));
-        a.setAttribute("target","_blank");
-        a.setAttribute("rel","noopener");
+        if (away){ a.setAttribute("target","_blank"); a.setAttribute("rel","noopener"); }
+        else { a.removeAttribute("target"); a.removeAttribute("rel"); }
       }
     }
     if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",sync);
