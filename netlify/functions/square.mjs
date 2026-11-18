@@ -138,15 +138,45 @@ function toE164(raw) {
   return null;                                                  // refuse to guess
 }
 
+/**
+ * Compare names loosely enough to survive casing, accents and punctuation
+ * ("O'Neil" / "oneil", "jayden" / "Jayden") without matching different people.
+ */
+function normName(s) {
+  return String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z]/g, '');
+}
+
 async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
   const e164 = toE164(phone);
   if (!e164) throw Object.assign(new Error('That phone number does not look right'), { status: 400 });
 
+  // Ask for the whole household, not just the first hit: five of the imported
+  // numbers are shared by two clients (a parent and a child, a shop and its
+  // owner), so a one-result search would book one person under another's name.
   const { customers = [] } = await square('/v2/customers/search', {
     method: 'POST',
-    body: { query: { filter: { phone_number: { exact: e164 } } }, limit: 1 },
+    body: { query: { filter: { phone_number: { exact: e164 } } }, limit: 20 },
   });
-  if (customers.length) return customers[0].id;
+
+  // One record on the number: reuse it even if the name is spelled differently
+  // ("Mike" for Michael). Being strict here would create a second record for a
+  // regular every time they shorten their own name.
+  if (customers.length === 1) return customers[0].id;
+
+  // More than one: the name has to agree before an existing record is reused.
+  if (customers.length > 1) {
+    const fn = normName(firstName);
+    const ln = normName(lastName);
+    // Oldest first, so a client with history wins over a stray newer record.
+    const byAge = [...customers].sort((a, b) =>
+      String(a.created_at || '').localeCompare(String(b.created_at || '')));
+    const full  = byAge.filter(c => normName(c.given_name) === fn && normName(c.family_name) === ln);
+    const first = byAge.filter(c => normName(c.given_name) === fn);
+    const pick  = full[0] || first[0];
+    if (pick) return pick.id;
+    // Nobody on this number by that name, so this is a new member of the
+    // household and gets their own record rather than borrowing a relative's.
+  }
 
   const { customer } = await square('/v2/customers', {
     method: 'POST',
