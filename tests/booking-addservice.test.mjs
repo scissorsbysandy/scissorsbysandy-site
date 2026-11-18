@@ -36,11 +36,11 @@ check('it reads right for one service',
 await page.locator('#addMore').click(); await page.waitForTimeout(400);
 check('it opens the services', await page.locator('#s1').isVisible());
 check('the first service is still chosen', (await page.evaluate(()=>picked.map(s=>s.id))).join()==='executive');
-check('and shows as added', await page.locator('button.svc.on').count()===1);
+check('and shows as added', await page.locator('.svc.on').count()===1);
 
 // add a second, come back
 const before=(await page.locator('.slot').count());
-await page.locator('button.svc').nth(5).click(); await page.waitForTimeout(200);
+await page.locator('.svc').nth(5).click(); await page.waitForTimeout(200);
 await page.locator('#pickBar .btn').click(); await page.waitForTimeout(900);
 check('back on the calendar with both', /2 services/i.test(await page.locator('#s2sub').innerText()),
       await page.locator('#s2sub').innerText());
