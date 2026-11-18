@@ -705,17 +705,22 @@ function go(n){
 }
 renderCats(); renderUpcoming();
 // Arriving from a "Book this service" link: skip the service list.
-(function deepLink(){
-  var slug=(location.hash||'').replace('#','').trim();
-  if(!slug) return;
-  for(var i=0;i<CATS.length;i++){
-    if(CATS[i].services.some(function(x){return x.id===slug})){ arrivedByLink=true; pick(slug); return; }
+// The links the site generates carry ?service=<id>; a #<id> hash is accepted
+// too, because that is what this page originally read and links outlive pages.
+function linkedSlug(){
+  var q='';
+  try{ q=(new URLSearchParams(location.search||'')).get('service')||''; }catch(e){
+    var m=(location.search||'').match(/[?&]service=([^&]*)/); q=m?decodeURIComponent(m[1]):'';
   }
+  return (q||(location.hash||'').replace('#','')).trim();
+}
+(function deepLink(){
+  var slug=linkedSlug();
+  if(slug && findSvc(slug)){ arrivedByLink=true; pick(slug); }
 })();
 window.addEventListener('hashchange',function(){
   var slug=(location.hash||'').replace('#','').trim();
-  if(slug) for(var i=0;i<CATS.length;i++)
-    if(CATS[i].services.some(function(x){return x.id===slug})) return pick(slug);
+  if(slug && findSvc(slug)) pick(slug);
 });
 </script>
 </body>
