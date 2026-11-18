@@ -188,6 +188,11 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
   .actions{flex-direction:column-reverse}
   .actions .btn{width:100%;text-align:center}
 }
+.cal-status{text-align:center;font-size:.8rem;letter-spacing:.06em;color:var(--ink-soft);
+  min-height:1.1rem;padding:.35rem 0}
+.conf-err{color:#8C2F23;background:#F6E7E4;border:1px solid #E0BDB6;border-radius:4px;
+  font-size:.86rem;line-height:1.45;margin-top:.75rem;padding:.6rem .75rem}
+.conf-err:empty{display:none}
 </style>
 </head>
 <body>
@@ -227,7 +232,8 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
         </div>
         <div class="dow"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
         <div class="grid" id="grid"></div>
-        <div class="closed-note">Closed Wednesdays</div>
+        <div class="cal-status" id="calStatus"></div>
+        <div class="closed-note">Only the times Sandy is free are shown.</div>
       </div>
       <div class="slots-wrap hidden" id="slotsWrap">
         <div class="slots-day" id="slotsDay"></div>
@@ -258,6 +264,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
           <button class="btn btn-line" onclick="go(2)">Back</button>
           <button class="btn btn-gold" id="confirmBtn" disabled onclick="confirmIt()">Confirm Booking</button>
         </div>
+        <div class="conf-err" id="confErr" role="alert"></div>
         <p class="policy">I ask for 24 hours&rsquo; notice if you need to change your appointment.<br>No fees, no deposit. Just a courtesy.</p>
       </div>
     </section>
@@ -290,6 +297,10 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 <script>
 const CATS = [{"name":"Precision Haircuts","services":[{"id":"executive","name":"The Executive","price":60,"min":45,"desc":"The house specialty. Wash and cut, shaped entirely with shears \u2014 no clippers, no guards \u2014 every line judged by eye and cut by hand. It takes longer, and it should: the result grows out softer, sits more naturally, and never leaves a hard shelf across the back.","var":"G4JZOME4BD7FALXANU2OTDGK"},{"id":"signature","name":"The Signature","price":50,"min":40,"desc":"Wash and cut. Electric clippers and traditional shears working together, seamlessly blended. A gentle hand throughout \u2014 nobody should leave a haircut feeling roughed up.","var":"ERJFFGMXRX3B4SW6ZAKSN3X5"},{"id":"freshfade","name":"The Fresh Fade","price":50,"min":40,"desc":"Wash and cut. A clippers-only skin fade, blended by hand from a bare skin line up through the longer hair on top \u2014 a graduated blend rather than one uniform length, with sharp edges and a clean modern finish.","var":"3HGRUTGNGEQEQMMRGLW7JYIK"},{"id":"regiment","name":"The Regiment","price":45,"min":30,"desc":"Wash and cut. The classic crew cut \u2014 clippers only, short through the back and sides with a bit more length left on top. A uniform short length rather than a skin fade, so it keeps its shape as it grows. Easy to maintain, endlessly versatile, always a neat and clean finish.","var":"66ULXO2X4RNYVH4LVQH3356B"},{"id":"royalroots","name":"The Royal Roots","price":40,"min":30,"desc":"Wash and cut for my youngest gentlemen, ages 12 and under. Patient, unhurried, and taken as seriously as any cut in the chair. Kids notice when someone takes their time with them.","var":"LNJVFE3TXRCNO7AAUIRF6JLA"}]},{"name":"Packages","services":[{"id":"sovereign","name":"The Sovereign","price":120,"min":90,"desc":"The Executive cut paired with The Majesty Hot Towel Shave.","var":"37CVXAVTRTNXE36X5DIO27WF"},{"id":"regent","name":"The Regent","price":115,"min":85,"desc":"The Signature cut paired with The Majesty Hot Towel Shave.","var":"ZURPZH237BD55DIIFF2YOWKA"},{"id":"ambassador","name":"The Ambassador","price":95,"min":70,"desc":"The Signature cut paired with The Royal Hot Towel Shave.","var":"L7XIHBM6KSWAJSYAONHPLVCQ"},{"id":"officer","name":"The Officer","price":90,"min":60,"desc":"The Regiment cut paired with The Royal Hot Towel Shave.","var":"IHW3FIRZIQWGBL457QOWBMXM"},{"id":"gentleman","name":"The Gentleman","price":80,"min":70,"desc":"The Signature cut paired with The Statesman Beard Shaping.","var":"GJZNO47N4FAIDXOYDBFGN46I"},{"id":"diplomat","name":"The Diplomat","price":80,"min":60,"desc":"The Signature cut paired with a Scalp Treatment.","var":"KT26RM2NE7CHNEZ6YSCPEAG3"}]},{"name":"Signature Shaves & Beard","services":[{"id":"majesty","name":"The Majesty Hot Towel Shave","price":75,"min":45,"desc":"Our most indulgent ritual. Facial steam, exfoliation, warm aromatic towels, a traditional straight-razor shave, and a customized mini facial to finish. Clients call it calming, soothing, and more than just a shave \u2014 you leave feeling brand new.","var":"HI56BUDBSE5WKJFY33OUZBVJ"},{"id":"royal","name":"The Royal Hot Towel Shave","price":55,"min":30,"desc":"A meticulously curated hot towel shave with beard trim. Warm towels and premium products prepare the skin for a traditional straight-razor shave, finished close and comfortable.","var":"CFNEMC3HO7YDHPXPKPVQ2DGA"},{"id":"statesman","name":"The Statesman Beard Shaping","price":35,"min":30,"desc":"Full beard sculpting and detailing with clippers, shaped to your face with clean, deliberate lines. Hot towel included.","var":"WDS26BGIDDD5D4E7MZTWYVYX"}]},{"name":"Treatments","services":[{"id":"minifacial","name":"Mini Facial","price":50,"min":30,"desc":"A focused facial in thirty minutes: warm steam and towels, a gentle cleanse and exfoliation, a deep pore cleanse, then a hydrating mask and moisturizer suited to your skin. Relaxing on its own or added to any cut.","var":"ZEQ3DI2J7GKK4L5CKQUCBEYP"},{"id":"scalp","name":"Scalp Treatment","price":35,"min":20,"desc":"A cleansing, nourishing therapy that soothes the scalp and promotes healthier hair growth. Deeply relaxing on its own or paired with any cut.","var":"7LPRQDPYVVJWEBMXLLABCN2V"}]},{"name":"Grooming & Waxing","services":[{"id":"nosewax","name":"Nose Waxing","price":25,"min":10,"desc":"Precise removal of nasal hair for a polished look.","var":"V2W2YBV37OGAD7BILK6ZUE3J"},{"id":"earwax","name":"Ear Waxing","price":20,"min":10,"desc":"Gentle, hygienic removal of excess ear hair.","var":"RJAFT6KQBA6Z2BCO7M5ZGPOS"},{"id":"browwax","name":"Eyebrow Waxing","price":20,"min":10,"desc":"Sculpting and shaping to define your look with precision.","var":"SFAQRXJRFDUSOAOX56AFAJ34"}]},{"name":"Color","services":[{"id":"greyblend","name":"Grey Blending","price":55,"min":45,"desc":"A refined technique to create a soft, natural transition with our professional grey blending service.","var":"IMA7CYOPBBT3SEAGSN6KIYBA"}]}];
 // Sandy's hours, 0=Sun .. 6=Sat. null = closed.
+/* Kept for reference only. Opening times are NOT taken from here any more:
+   Sandy opens some Wednesdays and closes some ordinary days, and only her
+   Square calendar knows which. Gating the calendar on this table hid real
+   openings. */
 const HOURS = {0:[11,17],1:[10,19],2:[10,19],3:null,4:[10,19],5:[10,19],6:[10,17]};
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let svc=null, day=null, slot=null, view=new Date();
@@ -322,26 +333,69 @@ function pick(id){
   el('toS3').disabled=true;
   el('s2sub').textContent=svc.name+' \u00b7 '+svc.min+' min \u00b7 $'+svc.price;
   if(el('s2back')) el('s2back').textContent = arrivedByLink ? 'Back to Site' : 'Back';
-  renderCal(); go(2);
+  renderCal(); go(2); loadMonth();
 }
 
 /* ---------- step 2 ---------- */
+/* Openings come from Sandy's real Square calendar, never from HOURS. A fixed
+   table cannot know what is already booked, and would offer taken slots. HOURS
+   is kept only to grey out the days the shop is normally shut before the
+   calendar has answered. */
+const API='/api/square';
+let AVAIL=null;        // 'YYYY-MM-DD' -> [minutes past midnight]
+let availKey=null;     // which service+month AVAIL belongs to
+let availState='idle'; // idle | loading | ready | error
+
+function dkey(dt){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+
+  '-'+String(dt.getDate()).padStart(2,'0')}
+
+async function loadMonth(){
+  if(!svc) return;
+  const key=svc.var+'|'+view.getFullYear()+'-'+view.getMonth();
+  if(key===availKey&&availState==='ready') return;
+  availKey=key; availState='loading'; AVAIL=null; renderCal();
+  const first=new Date(view.getFullYear(),view.getMonth(),1);
+  const from=new Date(Math.max(first.getTime(),Date.now())); // never ask about the past
+  const to=new Date(view.getFullYear(),view.getMonth()+1,1);
+  try{
+    const r=await fetch(API+'?action=availability&service='+encodeURIComponent(svc.var)+
+      '&from='+encodeURIComponent(from.toISOString())+
+      '&to='+encodeURIComponent(to.toISOString()));
+    if(!r.ok) throw new Error('lookup failed');
+    const data=await r.json();
+    const map={};
+    for(const iso of (data.slots||[])){
+      const d=new Date(iso);
+      (map[dkey(d)]=map[dkey(d)]||[]).push(d.getHours()*60+d.getMinutes());
+    }
+    for(const k in map) map[k].sort(function(a,b){return a-b});
+    if(availKey!==key) return;          // a later request already won
+    AVAIL=map; availState='ready';
+  }catch(e){
+    if(availKey!==key) return;
+    AVAIL=null; availState='error';
+  }
+  renderCal();
+  if(day) setDay(day.getDate());
+}
+
 function slotsFor(dt){
-  if(!svc) return [];
-  const h=HOURS[dt.getDay()]; if(!h) return [];
-  const out=[]; const close=h[1]*60;
-  for(let m=h[0]*60; m+svc.min<=close; m+=30) out.push(m);
-  return out;
+  if(!svc||!AVAIL) return [];
+  return AVAIL[dkey(dt)]||[];
 }
 function renderCal(){
   el('monLabel').textContent=MONTHS[view.getMonth()]+' '+view.getFullYear();
+  if(el('calStatus')) el('calStatus').textContent =
+      availState==='loading' ? 'Checking Sandy\u2019s calendar\u2026'
+    : availState==='error'   ? 'I could not reach the calendar just now. Please call or text Sandy at (848) 230-5995.'
+    : '';
   const first=new Date(view.getFullYear(),view.getMonth(),1);
   const days=new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
   let h='';
   for(let i=0;i<first.getDay();i++) h+='<div class="day empty"></div>';
   for(let dnum=1;dnum<=days;dnum++){
     const dt=new Date(view.getFullYear(),view.getMonth(),dnum);
-    const ok = dt>=today && HOURS[dt.getDay()] && slotsFor(dt).length>0;
+    const ok = dt>=today && availState==='ready' && slotsFor(dt).length>0;
     const sel = day && dt.toDateString()===day.toDateString();
     h+='<button class="day'+(sel?' sel':'')+'" '+(ok?'':'disabled')+
        ' onclick="setDay('+dnum+')">'+dnum+'</button>';
@@ -368,8 +422,10 @@ function setSlot(m){
   [...document.querySelectorAll('.slot')].forEach(b=>b.classList.toggle('sel',b.textContent===fmt(m)));
   el('toS3').disabled=false;
 }
-el('prevM').onclick=()=>{view.setMonth(view.getMonth()-1);renderCal()};
-el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);renderCal()};
+el('prevM').onclick=()=>{view.setMonth(view.getMonth()-1);day=null;slot=null;
+  el('slotsWrap').classList.add('hidden');el('toS3').disabled=true;renderCal();loadMonth()};
+el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);day=null;slot=null;
+  el('slotsWrap').classList.add('hidden');el('toS3').disabled=true;renderCal();loadMonth()};
 
 /* ---------- step 3 ---------- */
 function sumHTML(){
@@ -455,10 +511,31 @@ function forgetMe(){
   ['fn','ln','ph','em','nt'].forEach(i=>el(i).value='');
   el('welcome').classList.add('hidden'); check(); el('fn').focus();
 }
-function confirmIt(){
+async function confirmIt(){
+  const btn=el('confirmBtn'), label=btn.textContent;
+  btn.disabled=true; btn.textContent='Booking\u2026'; el('confErr').textContent='';
+  let booked;
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({service:svc.var,startAt:startISO(),
+        firstName:el('fn').value.trim(), lastName:el('ln').value.trim(),
+        phone:el('ph').value.trim(), email:el('em').value.trim(),
+        note:el('nt').value.trim()})});
+    const data=await r.json().catch(function(){return{}});
+    if(!r.ok||!data.booking) throw new Error(data.error||'That did not go through');
+    booked=data.booking;
+  }catch(e){
+    // Say plainly that nothing was booked. A confirmation nobody can honour is
+    // worse than an error.
+    el('confErr').textContent=e.message+'. Nothing has been booked, so nothing is '+
+      'held for you. Please try again, or call or text Sandy at (848) 230-5995.';
+    btn.disabled=false; btn.textContent=label;
+    return;
+  }
+  btn.textContent=label;
   saveMe();
   const all=getBookings().filter(b=>b.id!==rescheduleId);
-  all.push({id:'b'+Date.now(),svcId:svc.id,svcName:svc.name,price:svc.price,
+  all.push({id:booked.id,svcId:svc.id,svcName:svc.name,price:svc.price,
             min:svc.min,startISO:startISO()});
   putBookings(all); rescheduleId=null;
   el('confLine').textContent=svc.name+' with Sandy on '+
