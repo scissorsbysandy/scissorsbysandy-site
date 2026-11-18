@@ -36,7 +36,7 @@ await page.goto(PAGE); await page.waitForTimeout(400);
 let bad=0;
 const check=(l,c,d='')=>{ if(!c){bad++;console.log(`FAIL  ${l}`);if(d)console.log('        '+d)} else console.log(`PASS  ${l}`) };
 
-const svcBtns = page.locator('button.svc');
+const svcBtns = page.locator('.svc');
 const nameOf  = async (i)=> (await svcBtns.nth(i).locator('.svc-name').innerText()).trim();
 const priceOf = async (i)=> parseInt((await svcBtns.nth(i).locator('.svc-price').innerText()).replace(/\D/g,''),10);
 const minOf   = async (i)=> parseInt((await svcBtns.nth(i).locator('.svc-meta').innerText()).replace(/\D/g,''),10);
@@ -55,18 +55,21 @@ const sum=(await page.locator('#pickSum').innerText()).replace(/\s+/g,' ');
 check('the bar counts both services', /2 services/i.test(sum), sum);
 check('the bar adds the minutes', sum.includes(String(m0+m1)+' min'), sum+` (expected ${m0+m1} min)`);
 check('the bar adds the price', sum.includes('$'+(p0+p1)), sum+` (expected $${p0+p1})`);
-check('both rows show as added', await page.locator('button.svc.on').count()===2);
-check('the rows are numbered in order',
-      (await page.locator('button.svc.on .svc-num').allInnerTexts()).join(',')==='1,2');
+check('both rows show as added', await page.locator('.svc.on').count()===2);
+check('each chosen row shows a quantity of one',
+      (await page.locator('.svc.on .qty .n').allInnerTexts()).join(',')==='1,1',
+      (await page.locator('.svc.on .qty .n').allInnerTexts()).join(','));
 
 if(SHOTS) await page.screenshot({path:SHOTS+'/multi-1-services.png', fullPage:false});
 
-// tapping again removes it
-await svcBtns.nth(0).click(); await page.waitForTimeout(120);
-check('tapping a chosen service removes it', await page.locator('button.svc.on').count()===1);
-check('and the remaining one renumbers to 1',
-      (await page.locator('button.svc.on .svc-num').first().innerText()).trim()==='1');
-await svcBtns.nth(0).click(); await page.waitForTimeout(120);   // put it back (goes to the end)
+// tapping a chosen service adds another of it
+await svcBtns.nth(0).click(); await page.waitForTimeout(150);
+check('tapping a chosen service adds another', (await page.locator('#n-'+(await svcBtns.nth(0).getAttribute('id')).replace('svc-','')).innerText()).trim()==='2');
+check('and it is still two rows, not three', await page.locator('.svc.on').count()===2);
+// the minus takes one away again
+await page.locator('.svc.on .qty button').first().click(); await page.waitForTimeout(150);
+check('the minus removes one', (await page.locator('.svc.on .qty .n').allInnerTexts()).join(',')==='1,1',
+      (await page.locator('.svc.on .qty .n').allInnerTexts()).join(','));
 
 await page.locator('#pickBar .btn').click(); await page.waitForTimeout(600);
 const lastGet = gets[gets.length-1] || '';

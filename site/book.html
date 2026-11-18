@@ -66,13 +66,20 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
   font-size:.82rem;color:var(--gold-text);margin-bottom:.9rem;padding-bottom:.5rem;
   border-bottom:1px solid rgba(162,126,47,.3)}
 .svc{display:block;width:100%;text-align:left;background:transparent;border:1px solid transparent;
+  -webkit-tap-highlight-color:transparent;
   border-bottom:1px solid rgba(22,41,60,.1);padding:.9rem .7rem;cursor:pointer;
   font-family:var(--sans);transition:background .18s,border-color .18s}
 .svc:hover{background:rgba(248,208,148,.14);border-color:rgba(162,126,47,.35)}
 .svc.on{background:rgba(248,208,148,.2);border-color:var(--gold-lo)}
-.svc-num{display:inline-flex;align-items:center;justify-content:center;width:1.25rem;height:1.25rem;
-  border-radius:50%;background:var(--gold-deep);color:var(--cream);font-family:var(--sans);
-  font-size:.64rem;font-weight:600;margin-right:.45rem;vertical-align:.08em}
+/* How many of this service are in the visit. A parent bringing two boys for
+   the same cut is a regular occurrence, and Square books it as two segments. */
+.qty{display:inline-flex;align-items:center;gap:.1rem;border:1px solid var(--gold-deep);
+  border-radius:999px;overflow:hidden;margin-left:.6rem;vertical-align:.1em}
+.qty button{background:transparent;border:0;color:var(--gold-text);font-family:var(--sans);
+  font-size:.95rem;line-height:1;width:1.75rem;height:1.6rem;cursor:pointer;padding:0}
+.qty button:hover{background:rgba(248,208,148,.3)}
+.qty .n{min-width:1.1rem;text-align:center;font-family:var(--sans);font-size:.72rem;
+  font-weight:600;color:var(--gold-text)}
 /* Running total for a visit of several services. Fixed so it stays reachable
    on a phone however far down the menu the client has scrolled. */
 .pick-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--navy);
@@ -349,6 +356,10 @@ function totalMin(){return picked.reduce((n,s)=>n+s.min,0)}
 function totalPrice(){return picked.reduce((n,s)=>n+s.price,0)}
 function pickedVars(){return picked.map(s=>s.var)}
 /** "A", "A and B", "A, B and C" - a visit read aloud, not a list of line items. */
+/** ["The Royal Roots \u00d7 2", "The Signature"] - what the client is getting. */
+function visitNames(){
+  return grouped().map(g => g.qty>1 ? g.svc.name+' \u00d7 '+g.qty : g.svc.name);
+}
 function listNames(a){
   if(!a||!a.length) return '';
   if(a.length===1) return a[0];
@@ -363,41 +374,67 @@ function renderCats(){
   el('cats').innerHTML = CATS.map(c=>
     '<div class="cat"><div class="cat-name">'+c.name+'</div>'+
     c.services.map(s=>
-      '<button class="svc" id="svc-'+s.id+'" onclick="toggle(\''+s.id+'\')">'+
-        '<div class="svc-top"><span class="svc-name">'+
-          '<span class="svc-num hidden" id="num-'+s.id+'"></span>'+s.name+'</span>'+
+      '<div class="svc" id="svc-'+s.id+'" role="button" tabindex="0" '+
+           'onclick="addOne(\''+s.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addOne(\''+s.id+'\')}">'+
+        '<div class="svc-top"><span class="svc-name">'+s.name+
+          '<span class="qty hidden" id="qty-'+s.id+'" onclick="event.stopPropagation()">'+
+            '<button type="button" aria-label="One fewer '+s.name+'" onclick="removeOne(\''+s.id+'\')">&minus;</button>'+
+            '<span class="n" id="n-'+s.id+'">1</span>'+
+            '<button type="button" aria-label="One more '+s.name+'" onclick="addOne(\''+s.id+'\')">+</button>'+
+          '</span></span>'+
         '<span class="svc-price">$'+s.price+'</span></div>'+
         '<div class="svc-meta">'+s.min+' min</div>'+
         '<div class="svc-desc">'+s.desc+'</div>'+
-      '</button>').join('')+
+      '</div>').join('')+
     '</div>').join('');
   renderPicked();
 }
 
-function toggle(id){
-  const i=picked.findIndex(s=>s.id===id);
-  if(i>=0){ picked.splice(i,1); }
-  else{
-    const f=findSvc(id); if(!f) return;
-    if(picked.length>=MAX_PICK){
-      el('pickSum').innerHTML='<b>That is a long visit.</b> Please call or text Sandy to book more.';
-      return;
-    }
-    picked.push(f);
+function qtyOf(id){ return picked.filter(x=>x.id===id).length }
+
+/** Count of distinct services, each with how many are in the visit, in the
+    order they were first chosen. Square books them in this order. */
+function grouped(){
+  const out=[];
+  for(const s of picked){
+    const f=out.find(x=>x.svc.id===s.id);
+    if(f) f.qty++; else out.push({svc:s, qty:1});
   }
-  // Changing the visit changes how long it runs, so times already fetched were
-  // for a different length and must not be reused.
+  return out;
+}
+
+function visitChanged(){
+  // A different visit is a different length, so times already fetched were for
+  // something else and must not be reused.
   day=null; slot=null; AVAIL=null; availKey=null; availState='idle';
   renderPicked();
 }
 
+function addOne(id){
+  const f=findSvc(id); if(!f) return;
+  if(picked.length>=MAX_PICK){
+    el('pickSum').innerHTML='<b>That is a long visit.</b> Please call or text Sandy to book more.';
+    return;
+  }
+  picked.push(f);
+  visitChanged();
+}
+
+function removeOne(id){
+  const last=picked.map(x=>x.id).lastIndexOf(id);
+  if(last<0) return;
+  picked.splice(last,1);
+  visitChanged();
+}
+
 function renderPicked(){
-  for(const c of CATS) for(const s of c.services){
-    const b=el('svc-'+s.id); if(!b) continue;
-    const i=picked.findIndex(x=>x.id===s.id);
-    const n=el('num-'+s.id);
-    b.classList.toggle('on', i>=0);
-    if(n){ n.classList.toggle('hidden', i<0); n.textContent = i>=0 ? (i+1) : ''; }
+  for(const c of CATS) for(const sv of c.services){
+    const row=el('svc-'+sv.id); if(!row) continue;
+    const n=qtyOf(sv.id), box=el('qty-'+sv.id), num=el('n-'+sv.id);
+    row.classList.toggle('on', n>0);
+    row.setAttribute('aria-pressed', n>0 ? 'true' : 'false');
+    if(box) box.classList.toggle('hidden', n===0);
+    if(num) num.textContent = n;
   }
   const bar=el('pickBar'), s1=el('s1');
   if(!picked.length){ bar.classList.add('hidden'); s1.classList.remove('pad-bar'); return; }
@@ -535,7 +572,7 @@ el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);day=null;slot=null;
 function sumHTML(){
   return '<h3>Your Appointment</h3>'+
     '<div class="sum-row"><span>'+(picked.length>1?'Visit':'Service')+'</span><span>'+
-      picked.map(x=>x.name).join('<br>')+'</span></div>'+
+      visitNames().join('<br>')+'</span></div>'+
     '<div class="sum-row"><span>When</span><span>'+day.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+', '+fmtRange(slot,totalMin())+'</span></div>'+
     '<div class="sum-row"><span>Length</span><span>'+totalMin()+' minutes</span></div>'+
     '<div class="sum-row"><span>With</span><span>'+
@@ -698,10 +735,10 @@ async function confirmIt(){
   saveMe();
   const all=getBookings().filter(b=>b.id!==rescheduleId);
   all.push({id:booked.id, svcIds:picked.map(x=>x.id),
-            svcNames:picked.map(x=>x.name), price:totalPrice(),
+            svcNames:visitNames(), price:totalPrice(),
             min:totalMin(), startISO:startISO()});
   putBookings(all); rescheduleId=null;
-  el('confLine').textContent=listNames(picked.map(x=>x.name))+' with Sandy on '+
+  el('confLine').textContent=listNames(visitNames())+' with Sandy on '+
     day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';
   el('sum2').innerHTML=sumHTML();
   go(4);
