@@ -512,6 +512,58 @@ for nm,pg,url in every:
 for x in rf: bad(x)
 if not rf: ok(f"every one of the {nref} file references on the site resolves (links, images, srcset and CSS url())")
 
+# 17e-ter. the Square booking page (ships dark until the Booksy -> Square cutover)
+bk=[]
+BOOK=os.path.join(SITE,'book.html')
+if not os.path.exists(BOOK):
+    bad("site/book.html is missing")
+else:
+    bp=open(BOOK,encoding='utf-8').read()
+    hdrs=open(os.path.join(SITE,'_headers'),encoding='utf-8').read()
+    meta_noindex = bool(re.search(r'<meta name="robots" content="noindex', bp))
+    hdr_noindex  = bool(re.search(r'^/book\.html\s*\n\s*X-Robots-Tag:\s*noindex', hdrs, re.M))
+    # is anything on the real site pointing at it yet?
+    linked=[nm for nm,pg,_ in indexable if re.search(r'href="/?book\.html', pg)]
+    if linked:
+        # cutover has happened: the page must now be indexable and Booksy must be gone
+        if meta_noindex: bk.append("book.html is linked from "+", ".join(linked)+" but still carries meta robots noindex")
+        if hdr_noindex:  bk.append("book.html is linked but _headers still sends X-Robots-Tag: noindex for it")
+        if any('booksy.com' in pg for _,pg,_ in indexable):
+            bk.append("book.html is linked but Booksy links are still on the site; finish the swap")
+    else:
+        # pre-cutover: unlinked, and must stay out of the index
+        if not meta_noindex: bk.append("book.html is not linked yet, so it needs meta robots noindex")
+        if not hdr_noindex:  bk.append("book.html is not linked yet, so _headers needs an X-Robots-Tag noindex rule for it")
+    # its own references must resolve
+    for m_ in re.finditer(r'(?:href|src)="([^"#][^"]*)"', bp):
+        r=m_.group(1)
+        if re.match(r'(https?:|data:|tel:|mailto:|sms:|#|//)', r): continue
+        tgt=os.path.normpath(os.path.join(SITE, r.split('?')[0].split('#')[0].lstrip('/')))
+        if os.path.isdir(tgt): tgt=os.path.join(tgt,'index.html')
+        if not os.path.exists(tgt): bk.append(f"book.html: {r} leads nowhere")
+    # the menu it books from must still agree with prices.json, exactly and in order
+    mm=re.search(r'const CATS\s*=\s*(\[[\s\S]*?\]);', bp)
+    if not mm: bk.append("book.html: service menu (CATS) not found")
+    else:
+        try: cats=json.loads(mm.group(1))
+        except Exception as e: cats=None; bk.append(f"book.html: service menu is not valid JSON ({e})")
+        if cats:
+            got=[(c['name'],s_['name'],s_['price'],s_['min']) for c in cats for s_ in c['services']]
+            want=[(html.unescape(c['name']),html.unescape(s_['name']),s_['price'],s_['minutes'])
+                  for c in P['categories'] for s_ in c['services']]
+            if got!=want:
+                for i in range(max(len(got),len(want))):
+                    g=got[i] if i<len(got) else None; w=want[i] if i<len(want) else None
+                    if g!=w: bk.append(f"book.html service {i}: page has {g}, prices.json has {w}")
+            ids=[s_.get('var','') for c in cats for s_ in c['services']]
+            missing=[n for (_,n,_,_),v in zip(got,ids) if not v]
+            if missing: bk.append("book.html: no Square id on "+", ".join(missing))
+            if len(set(ids))!=len(ids): bk.append("book.html: two services share a Square id")
+            odd=[v for v in ids if v and not re.fullmatch(r'[A-Z0-9]{20,32}', v)]
+            if odd: bk.append("book.html: Square id not in Square's format: "+", ".join(odd))
+for x in bk: bad(x)
+if not bk: ok("booking page: menu matches prices.json, every service has its own Square id, refs resolve, and it stays out of the index until it is linked")
+
 # 17f. the "page not found" page and the plain-text summary for AI assistants
 ex=[]
 if not re.search(r'<meta name="robots" content="noindex">',p404): ex.append("404.html must carry noindex")
