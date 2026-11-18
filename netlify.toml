@@ -1,5 +1,6 @@
 [build]
   publish = "site"
   # 1. date-stamp the sitemap for the day this deploy goes live
-  # 2. run every preflight check; any failure stops the deploy
-  command = "python3 pricing/stamp_sitemap.py && python3 pricing/preflight.py"
+  # 2. write the own-domain booking links into site/_redirects
+  # 3. run every preflight check; any failure stops the deploy
+  command = "python3 pricing/stamp_sitemap.py && python3 pricing/build_redirects.py && python3 pricing/preflight.py"
