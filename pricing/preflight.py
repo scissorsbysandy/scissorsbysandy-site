@@ -429,6 +429,28 @@ for nm,pg,url in indexable[1:]:
 for x in sd: bad(x)
 if not sd: ok("schema: shop @id, WebSite name, and every service page linked back to the shop")
 
+# 17b-bis. the generated pages are actually in step with the homepage (added 2026-11-19)
+# build_pages.py copies the homepage's stylesheet and footer into every generated
+# page, so one edit is meant to reach all of them. If that script stops part way
+# the pages silently keep yesterday's footer and nobody notices. It did exactly
+# that: a service page quoted a review that had been taken off the homepage, the
+# script exited 1, and seven pages shipped with a footer missing a social icon.
+st=[]
+hcss=re.search(r'<style>(.*?)</style>', h, re.S)
+hfoot=re.search(r'(<footer>.*?</footer>)', h, re.S)
+if not hcss or not hfoot: st.append("homepage has no <style> block or no <footer> to copy from")
+else:
+    want_foot=hfoot.group(1).replace('href="#top"','href="/"')
+    for nm,pg,_u in every[1:]:
+        if nm=='book': continue              # hand-written, not generated from the homepage
+        pcss=re.search(r'<style>(.*?)</style>', pg, re.S)
+        if not pcss or hcss.group(1) not in pcss.group(1):
+            st.append(f"{nm}: stylesheet is out of step with the homepage; run build_pages.py")
+        if want_foot not in pg:
+            st.append(f"{nm}: footer is out of step with the homepage; run build_pages.py")
+for x in st: bad(x)
+if not st: ok(f"all {len(every)-1} generated pages carry the homepage's current stylesheet and footer")
+
 # 17c. fonts come from this site, and nothing outside it may hold up the first paint
 sp_=[]
 for nm,pg,url in every:
