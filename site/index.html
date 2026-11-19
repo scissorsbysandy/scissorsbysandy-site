@@ -648,6 +648,16 @@
   color:var(--cream-soft);font-size:1.35rem;line-height:1;cursor:pointer;padding:.15rem .4rem}
 .a2hs-ios{margin-top:.8rem;color:var(--cream-soft);font-size:.74rem;line-height:1.6}
 .a2hs-ios i{font-style:normal;color:var(--gold)}
+/* Collapsed: a small tab tucked under the header, clear of the page. It offers
+   itself, then gets out of the way rather than sitting on the content. */
+.a2hs.mini{left:auto;right:.8rem;bottom:auto;top:var(--a2hs-dock,96px);
+  width:auto;max-width:min(68vw,260px);padding:.42rem .9rem .42rem .5rem;
+  border-radius:999px;cursor:pointer;transform:translateY(-180%)}
+.a2hs.mini.on{transform:translateY(0)}
+.a2hs.mini .a2hs-x,.a2hs.mini p,.a2hs.mini .a2hs-ios,.a2hs.mini .a2hs-go{display:none}
+.a2hs.mini .a2hs-r{gap:.5rem}
+.a2hs.mini .a2hs-r img{width:24px;height:24px;border-radius:7px}
+.a2hs.mini .a2hs-h{font-size:.76rem;white-space:nowrap}
 </style>
 <script type="application/ld+json">
 {
@@ -1255,37 +1265,61 @@
     var card = document.getElementById('a2hs');
     if (!card) return;
     var btn = document.getElementById('a2hsGo'), ios = document.getElementById('a2hsIos');
-    var KEY = 'sbs.a2hs', deferred = null, wanted = false, shown = false;
-    // Already installed: never ask again.
+    var KEY = 'sbs.a2hs', deferred = null, shown = false, timer = null;
+    // Installed already: never ask again. That is the only thing that stops it.
     var installed = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
                     || window.navigator.standalone === true;
     var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     function store(k, v) { try { localStorage.setItem(KEY + k, v); } catch (e) {} }
     function read(k) { try { return localStorage.getItem(KEY + k); } catch (e) { return null; } }
+    // The tab docks under the header, and the header's height changes as the
+    // promo bar scrolls away, so the gap is measured rather than guessed.
+    function dock() {
+      var n = document.querySelector('nav[aria-label="Main"]');
+      if (!n) return;
+      card.style.setProperty('--a2hs-dock',
+        Math.max(8, Math.round(n.getBoundingClientRect().bottom) + 10) + 'px');
+    }
+    window.addEventListener('scroll', dock, { passive: true });
+    window.addEventListener('resize', dock);
     // Chrome fires this only when the site really is installable. Holding on to
     // it is the only way to open the install sheet from our own button.
     window.addEventListener('beforeinstallprompt', function (e) {
-      e.preventDefault(); deferred = e; if (wanted) show(true);
+      e.preventDefault(); deferred = e; show();
     });
     window.addEventListener('appinstalled', function () { store('.done', '1'); hide(); });
-    function show(force) {
-      if (shown || installed) return;
-      // A dismissal silences the automatic prompt, but not a deliberate scan of
-      // the QR code: someone who scans a card asking them to add the site means it.
-      if (!force && read('.done') === '1') return;
+    function show() {
+      if (installed || read('.done') === '1') return;
       if (isIOS) { ios.hidden = false; }
       else if (deferred) { btn.hidden = false; }
-      else { return; }               // nothing we can offer on this browser
-      shown = true; card.hidden = false;
+      else { return; }               // nothing this browser can be offered
+      dock();
+      card.classList.remove('mini');
+      card.hidden = false;
       requestAnimationFrame(function () { card.classList.add('on'); });
-      if (window.gtag) gtag('event', 'a2hs_shown', { platform: isIOS ? 'ios' : 'android' });
+      if (!shown && window.gtag) gtag('event', 'a2hs_shown', { platform: isIOS ? 'ios' : 'android' });
+      shown = true;
+      clearTimeout(timer);
+      timer = setTimeout(collapse, 12000);
     }
+    function collapse() { dock(); card.classList.add('mini'); }
     function hide() { card.classList.remove('on'); setTimeout(function () { card.hidden = true; }, 350); }
-    document.getElementById('a2hsX').addEventListener('click', function () {
-      store('.done', '1'); hide();
-      if (window.gtag) gtag('event', 'a2hs_dismissed');
+    // Tapping the collapsed tab opens it again.
+    card.addEventListener('click', function (e) {
+      if (!card.classList.contains('mini')) return;
+      e.preventDefault();
+      card.classList.remove('mini');
+      clearTimeout(timer); timer = setTimeout(collapse, 12000);
+      if (window.gtag) gtag('event', 'a2hs_reopened');
     });
-    btn.addEventListener('click', function () {
+    // The close button folds it away rather than killing it: it is never meant
+    // to block anything, and it is still there if they want it later.
+    document.getElementById('a2hsX').addEventListener('click', function (e) {
+      e.stopPropagation(); clearTimeout(timer); collapse();
+      if (window.gtag) gtag('event', 'a2hs_collapsed');
+    });
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
       if (!deferred) return;
       deferred.prompt();
       if (window.gtag) gtag('event', 'a2hs_clicked');
@@ -1302,14 +1336,8 @@
         navigator.serviceWorker.register('/sw.js').catch(function () {});
       });
     }
-    // Straight from the QR code: ask at once. Otherwise wait for a second visit,
-    // so a first-time stranger is not pestered before they know who she is.
-    if (/[?&]add=home\b/.test(location.search)) { wanted = true; show(true); }
-    else {
-      var v = (parseInt(read('.visits'), 10) || 0) + 1;
-      store('.visits', v);
-      if (v >= 2) setTimeout(show, 9000);
-    }
+    // Every visit, first one included, until it is installed.
+    setTimeout(show, 1500);
   })();
   </script>
 </body>
