@@ -401,6 +401,17 @@ if not re.search(r'barber ?shop',ht,re.I): sf.append(f"homepage title must conta
 for x in sf: bad(x)
 if not sf: ok(f"titles, descriptions, h1, <main> and canonical are right on all {len(indexable)} pages")
 
+# 17a-bis. the client quotes fill their grid (added 2026-11-19)
+# The grid is three across, two on a tablet and one on a phone. Any count that
+# does not divide by six leaves a card stranded on the last row. A seventh was
+# added once and looked right on a desktop while sitting at half width, with
+# two words to a line, on the phones most clients actually use.
+nq = len(re.findall(r'<div class="quote">', h))
+if nq == 0: bad("the homepage has no client quotes")
+elif nq % 6: bad(f"the homepage shows {nq} client quotes; it needs a multiple of 6 "
+                 f"(6, 12, ...) or the last row has a gap at some screen width")
+else: ok(f"{nq} client quotes, which fills the grid at every width")
+
 # 17b. structured data ties the pages together: one shop, one @id
 sd=[]
 if bs:
