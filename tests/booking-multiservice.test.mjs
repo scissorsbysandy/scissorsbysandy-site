@@ -62,14 +62,18 @@ check('each chosen row shows a quantity of one',
 
 if(SHOTS) await page.screenshot({path:SHOTS+'/multi-1-services.png', fullPage:false});
 
-// tapping a chosen service adds another of it
+// tapping a chosen service takes it back off
 await svcBtns.nth(0).click(); await page.waitForTimeout(150);
-check('tapping a chosen service adds another', (await page.locator('#n-'+(await svcBtns.nth(0).getAttribute('id')).replace('svc-','')).innerText()).trim()==='2');
-check('and it is still two rows, not three', await page.locator('.svc.on').count()===2);
-// the minus takes one away again
-await page.locator('.svc.on .qty button').first().click(); await page.waitForTimeout(150);
-check('the minus removes one', (await page.locator('.svc.on .qty .n').allInnerTexts()).join(',')==='1,1',
-      (await page.locator('.svc.on .qty .n').allInnerTexts()).join(','));
+check('tapping a chosen service removes it', await page.locator('.svc.on').count()===1);
+// the plus is how a second of the same service is added
+const keptId=(await page.locator('.svc.on').first().getAttribute('id')).replace('svc-','');
+await page.locator('#qty-'+keptId+' button').last().click(); await page.waitForTimeout(150);
+check('the plus adds another of the same service',
+      (await page.locator('#n-'+keptId).innerText()).trim()==='2');
+check('and it stays one row', await page.locator('.svc.on').count()===1);
+await page.locator('#qty-'+keptId+' button').first().click(); await page.waitForTimeout(150);
+check('the minus takes one back off', (await page.locator('#n-'+keptId).innerText()).trim()==='1');
+await svcBtns.nth(0).click(); await page.waitForTimeout(150);   // put the other one back
 
 await page.locator('#pickBar .btn').click(); await page.waitForTimeout(600);
 const lastGet = gets[gets.length-1] || '';

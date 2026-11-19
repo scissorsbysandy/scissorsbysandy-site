@@ -36,7 +36,7 @@ check('one child is booked', one.min===30 && one.price===40, JSON.stringify(one)
 
 // mum taps the same cut again for the second boy
 await page.locator('#addMore').click(); await page.waitForTimeout(400);
-await page.locator('#svc-royalroots').click(); await page.waitForTimeout(250);
+await page.locator('#qty-royalroots button').last().click(); await page.waitForTimeout(250);
 check('the row shows two', (await page.locator('#n-royalroots').innerText()).trim()==='2');
 check('only one row is highlighted', await page.locator('.svc.on').count()===1);
 const two=await page.evaluate(()=>({n:picked.length,min:totalMin(),price:totalPrice()}));
@@ -70,8 +70,15 @@ check('the confirmation says two', /Royal Roots\s*×\s*2/.test(conf), conf.slice
 // and the minus still undoes it
 await page.locator('.btn-line',{hasText:'Book Another'}).first().click(); await page.waitForTimeout(400);
 await page.locator('#svc-royalroots').click(); await page.waitForTimeout(150);
+await page.locator('#qty-royalroots button').last().click(); await page.waitForTimeout(150);
+check('a tap then the plus gives two', (await page.locator('#n-royalroots').innerText()).trim()==='2');
+// a tap on a row holding two clears the service, it does not peel one off
+await page.locator('#svc-royalroots').click(); await page.waitForTimeout(200);
+check('tapping a row holding two clears the whole service', await page.locator('.svc.on').count()===0);
+check('and the bar goes with it', !(await page.locator('#pickBar').isVisible()));
+// build it back up to check the minus on its own
 await page.locator('#svc-royalroots').click(); await page.waitForTimeout(150);
-check('two taps give two', (await page.locator('#n-royalroots').innerText()).trim()==='2');
+await page.locator('#qty-royalroots button').last().click(); await page.waitForTimeout(150);
 await page.locator('#qty-royalroots button').first().click(); await page.waitForTimeout(200);
 check('minus takes one back off', (await page.locator('#n-royalroots').innerText()).trim()==='1');
 await page.locator('#qty-royalroots button').first().click(); await page.waitForTimeout(200);
