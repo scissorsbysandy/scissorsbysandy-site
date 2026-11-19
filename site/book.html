@@ -375,7 +375,7 @@ function renderCats(){
     '<div class="cat"><div class="cat-name">'+c.name+'</div>'+
     c.services.map(s=>
       '<div class="svc" id="svc-'+s.id+'" role="button" tabindex="0" '+
-           'onclick="addOne(\''+s.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();addOne(\''+s.id+'\')}">'+
+           'onclick="toggleRow(\''+s.id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleRow(\''+s.id+'\')}">'+
         '<div class="svc-top"><span class="svc-name">'+s.name+
           '<span class="qty hidden" id="qty-'+s.id+'" onclick="event.stopPropagation()">'+
             '<button type="button" aria-label="One fewer '+s.name+'" onclick="removeOne(\''+s.id+'\')">&minus;</button>'+
@@ -408,6 +408,19 @@ function visitChanged(){
   // something else and must not be reused.
   day=null; slot=null; AVAIL=null; availKey=null; availState='idle';
   renderPicked();
+}
+
+/** Tapping the row is on or off. Adding a second of the same service - two
+    children, one haircut - is the stepper's plus, so a tap can never
+    silently add something the client did not mean to buy. */
+function toggleRow(id){
+  if(qtyOf(id)>0) removeAll(id); else addOne(id);
+}
+
+function removeAll(id){
+  if(!qtyOf(id)) return;
+  picked = picked.filter(x=>x.id!==id);
+  visitChanged();
 }
 
 function addOne(id){
