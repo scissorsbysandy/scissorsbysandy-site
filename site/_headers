@@ -8,6 +8,11 @@
   Cache-Control: public, max-age=86400, must-revalidate
 /*.jpg
   Cache-Control: public, max-age=86400, must-revalidate
+# The service worker must never be held in cache, or a fix to it would sit
+# unused on returning phones. Netlify's default already does this; saying it
+# here means a later change to the rules above cannot quietly break it.
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
 # Font files never change under the same name (a new version gets a new
 # filename), so browsers may keep them for a year.
 /fonts/*
