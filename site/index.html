@@ -626,6 +626,26 @@
   .wed-know p{font-size:.9rem;line-height:1.65;color:#d6d6cc;margin:0}
   .wed-cta{text-align:center;margin-top:2.6rem}
   @media (max-width:479px){ .wed-cta .btn{display:block;letter-spacing:.08em;font-size:.72rem;padding:.9rem .6rem} .wed-intro{font-size:1.1rem} }
+
+/* Add to Home Screen card. Shown from the QR code (?add=home) or on a repeat
+   visit. Android gets Chrome's real install prompt; iPhone has no such thing,
+   so it gets the two taps written out, which is the part people never find. */
+.a2hs{position:fixed;left:50%;bottom:1rem;width:min(92vw,420px);z-index:90;
+  transform:translateX(-50%) translateY(140%);transition:transform .35s ease;
+  background:var(--navy);border:1px solid var(--gold-deep);border-radius:14px;
+  padding:1rem;box-shadow:0 18px 50px rgba(14,26,38,.45)}
+.a2hs.on{transform:translateX(-50%) translateY(0)}
+.a2hs-r{display:flex;gap:.8rem;align-items:center}
+.a2hs-r img{border-radius:10px;flex:none}
+.a2hs-h{font-family:var(--serif);color:var(--gold);font-size:1.02rem;letter-spacing:.04em}
+.a2hs p{color:var(--cream-soft);font-size:.74rem;line-height:1.45;margin:.25rem 0 0}
+.a2hs-go{margin-top:.9rem;width:100%;background:var(--gold);color:var(--navy);border:0;
+  border-radius:8px;font-family:var(--sans);font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;font-size:.7rem;padding:.8rem;cursor:pointer}
+.a2hs-x{position:absolute;top:.3rem;right:.45rem;background:none;border:0;
+  color:var(--cream-soft);font-size:1.35rem;line-height:1;cursor:pointer;padding:.15rem .4rem}
+.a2hs-ios{margin-top:.8rem;color:var(--cream-soft);font-size:.74rem;line-height:1.6}
+.a2hs-ios i{font-style:normal;color:var(--gold)}
 </style>
 <script type="application/ld+json">
 {
@@ -1163,6 +1183,22 @@
 </section>
 </main>
 
+<!-- Add to Home Screen -->
+<div class="a2hs" id="a2hs" role="dialog" aria-label="Add Scissors by Sandy to your home screen" hidden>
+  <button class="a2hs-x" id="a2hsX" type="button" aria-label="Close">&times;</button>
+  <div class="a2hs-r">
+    <img src="/icon-192.png" alt="" width="52" height="52" decoding="async">
+    <div>
+      <span class="a2hs-h">Keep me one tap away</span>
+      <p id="a2hsMsg">Put Scissors by Sandy on your home screen and booking is a couple of taps.</p>
+    </div>
+  </div>
+  <button class="a2hs-go" id="a2hsGo" type="button" hidden>Add to Home Screen</button>
+  <div class="a2hs-ios" id="a2hsIos" hidden>
+    Tap the <i>Share</i> icon (the square with an arrow coming out of it), then <i>Add to Home Screen</i>.
+  </div>
+</div>
+
 <footer>
   <div class="fb gold-grad">S · B · S</div>
   <div class="social-icons">
@@ -1209,6 +1245,68 @@
     }
     if (document.readyState==="loading") document.addEventListener("DOMContentLoaded",sync);
     else sync();
+  })();
+  </script>
+  <script>
+  (function () {
+    var card = document.getElementById('a2hs');
+    if (!card) return;
+    var btn = document.getElementById('a2hsGo'), ios = document.getElementById('a2hsIos');
+    var KEY = 'sbs.a2hs', deferred = null, wanted = false, shown = false;
+    // Already installed: never ask again.
+    var installed = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+                    || window.navigator.standalone === true;
+    var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+    function store(k, v) { try { localStorage.setItem(KEY + k, v); } catch (e) {} }
+    function read(k) { try { return localStorage.getItem(KEY + k); } catch (e) { return null; } }
+    // Chrome fires this only when the site really is installable. Holding on to
+    // it is the only way to open the install sheet from our own button.
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault(); deferred = e; if (wanted) show(true);
+    });
+    window.addEventListener('appinstalled', function () { store('.done', '1'); hide(); });
+    function show(force) {
+      if (shown || installed) return;
+      // A dismissal silences the automatic prompt, but not a deliberate scan of
+      // the QR code: someone who scans a card asking them to add the site means it.
+      if (!force && read('.done') === '1') return;
+      if (isIOS) { ios.hidden = false; }
+      else if (deferred) { btn.hidden = false; }
+      else { return; }               // nothing we can offer on this browser
+      shown = true; card.hidden = false;
+      requestAnimationFrame(function () { card.classList.add('on'); });
+      if (window.gtag) gtag('event', 'a2hs_shown', { platform: isIOS ? 'ios' : 'android' });
+    }
+    function hide() { card.classList.remove('on'); setTimeout(function () { card.hidden = true; }, 350); }
+    document.getElementById('a2hsX').addEventListener('click', function () {
+      store('.done', '1'); hide();
+      if (window.gtag) gtag('event', 'a2hs_dismissed');
+    });
+    btn.addEventListener('click', function () {
+      if (!deferred) return;
+      deferred.prompt();
+      if (window.gtag) gtag('event', 'a2hs_clicked');
+      deferred.userChoice.then(function (c) {
+        if (window.gtag) gtag('event', 'a2hs_result', { outcome: c && c.outcome });
+        deferred = null; hide();
+      });
+    });
+    // Chrome will not offer the install prompt without a service worker that
+    // has a fetch handler, so the one we register is what makes the button on
+    // Android possible at all. It is network first: never serves a stale price.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () {});
+      });
+    }
+    // Straight from the QR code: ask at once. Otherwise wait for a second visit,
+    // so a first-time stranger is not pestered before they know who she is.
+    if (/[?&]add=home\b/.test(location.search)) { wanted = true; show(true); }
+    else {
+      var v = (parseInt(read('.visits'), 10) || 0) + 1;
+      store('.visits', v);
+      if (v >= 2) setTimeout(show, 9000);
+    }
   })();
   </script>
 </body>
