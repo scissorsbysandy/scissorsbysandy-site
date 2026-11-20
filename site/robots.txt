@@ -1,4 +1,52 @@
+# Scissors by Sandy — a one-chair barber suite in Old Bridge, NJ.
+# Everything here is public: prices, hours, services, how to book.
+# There is nothing on this site we would rather a crawler did not read.
+
 User-agent: *
+Allow: /
+
+# Named explicitly, not because the rule above does not already allow them,
+# but so that a future edit cannot shut them out by accident. These are the
+# crawlers that decide whether the shop can be cited when someone asks an
+# assistant where to get a haircut in Old Bridge.
+
+# Assistant search and citation
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Amzn-SearchBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# Fetched when a person asks an assistant about a specific page
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Training. Allowed on purpose: a barber shop wants to be known about.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://scissorsbysandy.com/sitemap.xml
