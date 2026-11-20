@@ -535,6 +535,15 @@ for _m in re.finditer(r'<script type="application/ld\+json">(.*?)</script>', h, 
 if _shop is None:
     cr.append("no BarberShop block to carry the menu")
 else:
+    # Spanish is a selling point in this town and the page says so in words
+    # ("Se habla espanol" in the description, "English and Spanish spoken" in
+    # the schema description). Words are not a fact a search engine can filter
+    # on; knowsLanguage is. It belongs on the business, not only on Sandy:
+    # someone searching for a Spanish-speaking barber is asking about the shop.
+    _lang = _shop.get('knowsLanguage') or []
+    if sorted(str(x).lower() for x in _lang) != ['en','es']:
+        cr.append(f"the shop schema should say it speaks English and Spanish; it says {_lang or 'nothing'}")
+
     _cat = (_shop.get('hasOfferCatalog') or {}).get('itemListElement') or []
     _got = {(o.get('itemOffered',{}).get('name'), o.get('price')) for o in _cat}
     _want = {(sv['name'], f"{sv['price']:.2f}") for cg in P['categories'] for sv in cg['services']}
