@@ -730,15 +730,18 @@ else:
             if frag not in bp: bk.append(f"book.html is live but has no {label}: {why}")
         # The worst thing this page could say once it takes real money.
         if "does not create a real appointment" in bp or "<b>Demo.</b>" in bp:
-            bk.append("book.html is live but still carries the demo note telling people a booking "
-                      "here is not real; run build.py to take it out")
+            bk.append("book.html carries a demo note telling people a booking here is not real. "
+                      "It is, and always was — two test appointments went into the calendar to "
+                      "prove it. Take the note out.")
     else:
         # pre-cutover: unlinked, and must stay out of the index
         if not meta_noindex: bk.append("book.html is not linked yet, so it needs meta robots noindex")
         if not hdr_noindex:  bk.append("book.html is not linked yet, so _headers needs an X-Robots-Tag noindex rule for it")
-        if "does not create a real appointment" not in bp:
-            bk.append("book.html is still the rehearsal page but has lost the demo note that tells "
-                      "a tester the booking is not real; run build.py to put it back")
+    # The note claiming a booking here is not real must never return, in either
+    # mode: it was false the whole time, and on the live page it would talk
+    # paying clients out of believing their own appointment.
+    if "does not create a real appointment" in bp or "<b>Demo.</b>" in bp:
+        bk.append("book.html says a booking here is not real. It is.")
     # its own references must resolve
     for m_ in re.finditer(r'(?:href|src)="([^"#][^"]*)"', bp):
         r=m_.group(1)

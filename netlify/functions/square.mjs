@@ -185,6 +185,34 @@ function normName(s) {
   return String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z]/g, '');
 }
 
+/**
+ * Reuse a client's existing record, and quietly fill in what it is missing.
+ *
+ * The records imported from Booksy carry a phone number and little else. Square
+ * had no address to send to, so a returning client got texts and no email, and
+ * the address they had just typed into the form was thrown away on the way past.
+ * Anything they give us that the record does not already hold is written back.
+ *
+ * Never overwrites: a value already on the record is the one Sandy or the client
+ * put there. And a failure here is swallowed, because a booking must not fail
+ * over a detail that could not be saved.
+ */
+async function reuseCustomer(c, { firstName, lastName, email }) {
+  const patch = {};
+  if (email && !c.email_address) patch.email_address = email;
+  if (firstName && !c.given_name) patch.given_name = firstName;
+  if (lastName && !c.family_name) patch.family_name = lastName;
+  if (Object.keys(patch).length) {
+    try {
+      await square('/v2/customers/' + encodeURIComponent(c.id), {
+        method: 'PUT',
+        body: { ...patch, version: c.version },
+      });
+    } catch { /* the booking matters more than the backfill */ }
+  }
+  return c.id;
+}
+
 async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
   const e164 = toE164(phone);
   if (!e164) throw Object.assign(new Error('That phone number does not look right'), { status: 400 });
@@ -200,7 +228,7 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
   // One record on the number: reuse it even if the name is spelled differently
   // ("Mike" for Michael). Being strict here would create a second record for a
   // regular every time they shorten their own name.
-  if (customers.length === 1) return customers[0].id;
+  if (customers.length === 1) return reuseCustomer(customers[0], { firstName, lastName, email });
 
   // More than one: the name has to agree before an existing record is reused.
   if (customers.length > 1) {
@@ -212,7 +240,7 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
     const full  = byAge.filter(c => normName(c.given_name) === fn && normName(c.family_name) === ln);
     const first = byAge.filter(c => normName(c.given_name) === fn);
     const pick  = full[0] || first[0];
-    if (pick) return pick.id;
+    if (pick) return reuseCustomer(pick, { firstName, lastName, email });
     // Nobody on this number by that name, so this is a new member of the
     // household and gets their own record rather than borrowing a relative's.
   }
