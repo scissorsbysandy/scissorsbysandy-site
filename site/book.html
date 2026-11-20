@@ -6,7 +6,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <!-- Not linked from the site yet. Booking still goes through Booksy until the Square
      cutover; this page ships dark so it can be deployed and checked before the swap. -->
-<title>Book an Appointment &middot; Scissors by Sandy</title>
+<title>Book an Appointment in Old Bridge, NJ | Scissors by Sandy</title>
+<meta name="description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, pick a time, and you are booked.">
+<link rel="canonical" href="https://scissorsbysandy.com/book.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Scissors by Sandy">
+<meta property="og:url" content="https://scissorsbysandy.com/book.html">
+<meta property="og:title" content="Book an Appointment &middot; Scissors by Sandy">
+<meta property="og:description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, pick a time, and you are booked.">
+<meta property="og:image" content="https://scissorsbysandy.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Scissors by Sandy — Master Barber, Old Bridge NJ">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Book an Appointment &middot; Scissors by Sandy">
+<meta name="twitter:description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, pick a time, and you are booked.">
+<meta name="twitter:image" content="https://scissorsbysandy.com/og-image.jpg">
 <link rel="preload" href="fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
@@ -230,7 +246,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 <div class="wrap">
   <div class="top">
     <a class="back-site" href="index.html">&#8249; Site</a>
-    <div class="brand">Scissors by Sandy</div>
+    <h1 class="brand">Scissors by Sandy</h1>
     <div class="brand-sub">By Appointment Only</div>
   </div>
 
@@ -240,11 +256,11 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
     <div class="step" data-s="3"><i>III</i>Your Details</div>
   </div>
 
-  <div class="panel">
+  <main class="panel">
     <!-- STEP 1 -->
     <section id="s1">
       <div class="upcoming hidden" id="upcoming"></div>
-      <h1 class="sec-head">Choose Your Services</h1>
+      <h2 class="sec-head">Choose Your Services</h2>
       <div class="sec-sub">Add as many as you like &middot; One chair at a time</div>
       <div class="rule"><span>&#10022;</span></div>
       <div id="cats"></div>
@@ -256,7 +272,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 
     <!-- STEP 2 -->
     <section id="s2" class="hidden">
-      <h1 class="sec-head">Pick a Time</h1>
+      <h2 class="sec-head">Pick a Time</h2>
       <div class="sec-sub" id="s2sub"></div>
       <div style="text-align:center"><button class="add-more" id="addMore" onclick="addService()"><b>+</b> <span id="addMoreLabel">Add another service</span></button></div>
       <div class="rule"><span>&#10022;</span></div>
@@ -283,7 +299,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 
     <!-- STEP 3 -->
     <section id="s3" class="hidden">
-      <h1 class="sec-head">Your Details</h1>
+      <h2 class="sec-head">Your Details</h2>
       <div class="sec-sub">Almost done</div>
       <div class="rule"><span>&#10022;</span></div>
       <div class="summary" id="sum"></div>
@@ -327,7 +343,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
       someone else just took disappears and double-booking is refused by Square.
       Confirming here does not create a real appointment.
     </div>
-  </div>
+  </main>
 </div>
 
 <script>
@@ -789,6 +805,47 @@ window.addEventListener('hashchange',function(){
   var slug=(location.hash||'').replace('#','').trim();
   if(slug && findSvc(slug)) pick(slug);
 });
+</script>
+<!-- Google Analytics 4 -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-76DN6KF3WB', { anonymize_ip: true });
+  // The analytics library is 178 KB. It is fetched only once the page itself has
+  // finished loading, so it never competes with the fonts and the first screen.
+  // Anything recorded before it arrives waits in dataLayer and is sent then.
+  (function () {
+    var started = false;
+    function start() {
+      if (started) return; started = true;
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-76DN6KF3WB';
+      document.head.appendChild(s);
+    }
+    function whenIdle() { (window.requestIdleCallback || function (f) { setTimeout(f, 200); })(start, { timeout: 2000 }); }
+    if (document.readyState === 'complete') whenIdle(); else window.addEventListener('load', whenIdle);
+  })();
+  // The booking funnel: which step people reach, and where they stop. Step 4 is a
+  // completed booking. These wrap the page's own functions rather than living
+  // inside them, so the booking flow cannot be broken by a tracking change.
+  (function () {
+    var _go = window.go;
+    if (typeof _go === 'function') window.go = function (n) {
+      var r = _go.apply(this, arguments);
+      try { gtag('event', 'booking_step', { step: n, booked: n === 4 }); } catch (e) {}
+      return r;
+    };
+    var _ci = window.confirmIt;
+    if (typeof _ci === 'function') window.confirmIt = function () {
+      try { gtag('event', 'booking_submit', { services: (typeof pickedVars === 'function' ? pickedVars().length : 0) }); } catch (e) {}
+      return _ci.apply(this, arguments);
+    };
+    document.querySelectorAll('a[href^="tel:"]').forEach(function (a) {
+      a.addEventListener('click', function () { gtag('event', 'phone_click'); });
+    });
+  })();
 </script>
 </body>
 </html>

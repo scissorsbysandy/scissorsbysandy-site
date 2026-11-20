@@ -4,7 +4,7 @@ Scissors by Sandy — pre-deploy preflight.
 Every check below exists because something actually went wrong once.
 Run before ANY deploy.  Exit 0 = safe to ship.
 """
-import json, re, os, sys, html, datetime
+import json, re, os, sys, html, datetime, struct
 from html.parser import HTMLParser
 
 HERE=os.path.dirname(os.path.abspath(__file__))
@@ -405,6 +405,12 @@ def rd(*parts):
     return open(fp,encoding='utf-8').read() if os.path.exists(fp) else ''
 INFO=['gift-certificates']   # generated pages that are not service menus
 indexable=[('home',h,BASE+'/')]+[(sl,rd(sl,'index.html'),f"{BASE}/{sl}/") for sl in PAGES+INFO]
+# While bookings go to Booksy the booking page is a private rehearsal, so it is not
+# one of the site's indexable pages. The moment the provider flips it becomes the
+# page that takes the money, and every check below has to cover it — including the
+# sitemap, which must list it then and must NOT list it now. Deriving this from the
+# switch is what keeps the cutover one line instead of sixty-two edits.
+if not ON_BOOKSY: indexable.append(('book', rd('book.html'), BASE+'/book.html'))
 p404=rd('404.html')
 every=indexable+[('404',p404,None)]
 
@@ -445,6 +451,7 @@ if bs:
 ws=next((x for x in blocks if x.get('@type')=='WebSite'),None)
 if not ws or ws.get('name')!='Scissors by Sandy' or ws.get('url')!=BASE+'/': sd.append("WebSite schema missing (it tells Google the site's name)")
 for nm,pg,url in indexable[1:]:
+    if nm=='book': continue   # a checkout flow, not a service menu page
     gb=[json.loads(m_.group(1)) for m_ in re.finditer(r'<script type="application/ld\+json">(.*?)</script>',pg,re.S)]
     sv_=next((x for x in gb if x.get('@type')=='Service'),None); bc=next((x for x in gb if x.get('@type')=='BreadcrumbList'),None)
     if not sv_ or (sv_.get('provider') or {}).get('@id')!=BASE+'/#barbershop': sd.append(f"{nm}: Service schema does not point at the shop's @id")
@@ -458,8 +465,9 @@ for nm,pg,url in every:
     head=pg[:pg.find('</head>')]
     if re.search(r'fonts\.(googleapis|gstatic)\.com',pg): sp_.append(f"{nm}: loads fonts from Google again (it cost ~750 ms before the first paint)")
     for f_ in ('/fonts/cormorant-garamond-latin.woff2','/fonts/jost-latin.woff2'):
-        if f'<link rel="preload" href="{f_}" as="font" type="font/woff2" crossorigin>' not in head: sp_.append(f"{nm}: font not preloaded: {f_}")
-        if f"url({f_})" not in pg: sp_.append(f"{nm}: @font-face for {f_} missing")
+        pl=f'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>'
+        if pl%f_ not in head and pl%f_.lstrip('/') not in head: sp_.append(f"{nm}: font not preloaded: {f_}")
+        if f"url({f_})" not in pg and f"url({f_.lstrip('/')})" not in pg: sp_.append(f"{nm}: @font-face for {f_} missing")
     if 'font-display:swap' not in pg: sp_.append(f"{nm}: fonts need font-display:swap so text shows immediately")
     if re.search(r'<link[^>]+rel="stylesheet"',head): sp_.append(f"{nm}: an external stylesheet in the <head> blocks the first paint; keep CSS inline")
     for s_ in re.findall(r'<script[^>]+src="[^"]+"[^>]*>',pg):
@@ -493,6 +501,79 @@ if unsized: wb.append(f"images without width and height make the page jump as it
 for x in wb: bad(x)
 if not wb: ok("first-screen images, fonts and page sizes are all within their weight budgets")
 
+# 17d-bis. the width and height on the tag must match the file on disk (added 2026-11-19)
+# 17d above checks the attributes are PRESENT. Photos get replaced under the same
+# filename (see the note in _headers), so a re-export at different dimensions leaves
+# every tag quietly lying about its own size and the page jumps as it loads anyway.
+# Stdlib only: preflight is the Netlify build command and must not need Pillow.
+def imgsize(fp):
+    """(width,height) of a PNG, JPEG or WebP. None if the format is not recognised."""
+    try:
+        with open(fp,'rb') as f_: b=f_.read(32768)
+    except OSError: return None
+    if b[:8]==b'\x89PNG\r\n\x1a\n' and b[12:16]==b'IHDR':
+        return struct.unpack('>II', b[16:24])
+    if b[:2]==b'\xff\xd8':
+        i=2
+        while i < len(b)-9:
+            if b[i]!=0xFF: i+=1; continue
+            m_=b[i+1]
+            if m_ in (0xD8,0x01) or 0xD0<=m_<=0xD7: i+=2; continue
+            ln=struct.unpack('>H', b[i+2:i+4])[0]
+            if m_ in (0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF):
+                hgt,wid=struct.unpack('>HH', b[i+5:i+9]); return (wid,hgt)
+            i+=2+ln
+        return None
+    if b[:4]==b'RIFF' and b[8:12]==b'WEBP':
+        c=b[12:16]
+        if c==b'VP8X':
+            return (int.from_bytes(b[24:27],'little')+1, int.from_bytes(b[27:30],'little')+1)
+        if c==b'VP8 ':
+            return (int.from_bytes(b[26:28],'little')&0x3FFF, int.from_bytes(b[28:30],'little')&0x3FFF)
+        if c==b'VP8L':
+            n_=int.from_bytes(b[21:25],'little')
+            return ((n_&0x3FFF)+1, ((n_>>14)&0x3FFF)+1)
+    return None
+
+def _localfile(ref):
+    ref=ref.split('?')[0].split('#')[0]
+    if ref.startswith(('http','data:','//')): return None
+    fp=os.path.join(SITE, ref.lstrip('/'))
+    return fp if os.path.exists(fp) else None
+
+dim=[]
+for nm,pg,_u in every:
+    for tag in re.findall(r'<img [^>]*>',pg):
+        src=re.search(r'\ssrc="([^"]+)"',tag)
+        aw=re.search(r'\swidth="(\d+)"',tag); ah=re.search(r'\sheight="(\d+)"',tag)
+        if not (src and aw and ah): continue
+        fp=_localfile(src.group(1))
+        if not fp: continue
+        real=imgsize(fp)
+        if not real: continue
+        if real!=(int(aw.group(1)),int(ah.group(1))):
+            dim.append(f"{nm}: {src.group(1)} is {real[0]}x{real[1]} on disk but its tag says "
+                       f"{aw.group(1)}x{ah.group(1)} — re-export it or correct the tag, or the page jumps as it loads")
+# A <picture> swaps FORMAT at the same shape. A phone-sized crop may be smaller, but
+# a different aspect ratio would reshape the photo the moment the browser picks webp.
+for nm,pg,_u in every:
+    for pic in re.findall(r'<picture>.*?</picture>',pg,re.S):
+        im=re.search(r'<img [^>]*\ssrc="([^"]+)"',pic)
+        bf=_localfile(im.group(1)) if im else None
+        bs=imgsize(bf) if bf else None
+        if not bs: continue
+        for ss in re.findall(r'<source [^>]*srcset="([^"]+)"',pic):
+            f2=ss.split(',')[0].strip().split(' ')[0]
+            fp2=_localfile(f2)
+            s2=imgsize(fp2) if fp2 else None
+            if not s2: continue
+            if abs(s2[0]/s2[1] - bs[0]/bs[1]) > 0.02:
+                dim.append(f"{nm}: {f2} is {s2[0]}x{s2[1]}, a different shape from the "
+                           f"{im.group(1)} ({bs[0]}x{bs[1]}) it stands in for — the photo would "
+                           f"reshape as soon as the browser picks webp")
+for x in dim: bad(x)
+if not dim: ok("every image's width and height match the file on disk, and each <picture> source keeps its shape")
+
 # 17e. crawlers: sitemap lists exactly the real pages, robots.txt lets them in, links all lead somewhere
 cr=[]
 locs=re.findall(r'<loc>([^<]+)</loc>',smx); wantlocs=[u for _,_,u in indexable]
@@ -507,9 +588,13 @@ for nm,pg,url in every:
         tgt=os.path.join(SITE,path.lstrip('/'),'index.html') if path.endswith('/') else os.path.join(SITE,path.lstrip('/'))
         if not os.path.exists(tgt): cr.append(f"{nm}: link to {href} leads nowhere")
         elif frag and path=='/' and frag not in home_ids: cr.append(f"{nm}: link to {href} points at a section that does not exist")
+# The booking page is a checkout flow and deliberately carries no main nav (a
+# nav on a checkout page leaks people back out of it), so it is left out of the
+# "every page links to every other" rule on both sides of the count.
+nav_pages=[x for x in indexable if x[0]!='book']
 for sl in PAGES+INFO:
-    n_in=sum(1 for nm,pg,url in indexable if nm!=sl and f'href="/{sl}/"' in pg)
-    if n_in<len(indexable)-1: cr.append(f"/{sl}/ is not linked from every other page ({n_in} of {len(indexable)-1}); Google finds and values pages through links")
+    n_in=sum(1 for nm,pg,url in nav_pages if nm!=sl and f'href="/{sl}/"' in pg)
+    if n_in<len(nav_pages)-1: cr.append(f"/{sl}/ is not linked from every other page ({n_in} of {len(nav_pages)-1}); Google finds and values pages through links")
 # every shop photo on a page is listed under that page in the sitemap, and every listed photo file exists
 for nm,pg,url in indexable:
     blk=re.search(re.escape(f"<loc>{url}</loc>")+r'(.*?)</url>',smx,re.S)
@@ -537,7 +622,7 @@ for nm,pg,url in every:
         for r in got:
             if re.match(r'(https?:|data:|tel:|mailto:|sms:|#|//)', r): continue
             nref+=1
-            base=SITE if nm in ('home','404') else os.path.join(SITE,nm)
+            base=SITE if nm in ('home','404','book') else os.path.join(SITE,nm)
             tgt=os.path.normpath(os.path.join(base, r.split('?')[0].split('#')[0].lstrip('/'))) \
                 if r.startswith('/') else os.path.normpath(os.path.join(base, r.split('?')[0].split('#')[0]))
             if r.startswith('/'): tgt=os.path.normpath(os.path.join(SITE, r.split('?')[0].split('#')[0].lstrip('/')))
@@ -557,17 +642,41 @@ else:
     meta_noindex = bool(re.search(r'<meta name="robots" content="noindex', bp))
     hdr_noindex  = bool(re.search(r'^/book\.html\s*\n\s*X-Robots-Tag:\s*noindex', hdrs, re.M))
     # is anything on the real site pointing at it yet?
-    linked=[nm for nm,pg,_ in indexable if re.search(r'href="/?book\.html', pg)]
+    # Once book.html is itself an indexable page, a link it makes to itself (a step
+    # anchor, a "start over" button) must not be mistaken for the rest of the site
+    # having switched over to it.
+    linked=[nm for nm,pg,_ in indexable if nm!='book' and re.search(r'href="/?book\.html', pg)]
     if linked:
         # cutover has happened: the page must now be indexable and Booksy must be gone
         if meta_noindex: bk.append("book.html is linked from "+", ".join(linked)+" but still carries meta robots noindex")
         if hdr_noindex:  bk.append("book.html is linked but _headers still sends X-Robots-Tag: noindex for it")
         if any('booksy.com' in pg for _,pg,_ in indexable):
             bk.append("book.html is linked but Booksy links are still on the site; finish the swap")
+        # Section 17a now covers its title, description, canonical, h1, <main>,
+        # og:image and lang along with every other indexable page. These are the
+        # ones that only show up when the link is SHARED, which is exactly how
+        # this page will travel: pasted into a text or a post.
+        for frag,label,why in [
+            ('<meta property="og:url"','og:url','the preview would name the wrong page'),
+            ('<meta property="og:title"','og:title','the link would paste as a bare URL with no card'),
+            ('<meta property="og:description"','og:description','the card would have no text under its title'),
+            ('<meta property="og:type"','og:type','Facebook needs it to build a card at all'),
+            ('<meta name="twitter:card"','twitter:card','the link would paste flat, with no picture'),
+            ('<meta name="twitter:title"','twitter:title','the card would be untitled'),
+            ('<meta name="twitter:description"','twitter:description','the card would have no text'),
+            ('<meta name="twitter:image"','twitter:image','the card would have no picture')]:
+            if frag not in bp: bk.append(f"book.html is live but has no {label}: {why}")
+        # The worst thing this page could say once it takes real money.
+        if "does not create a real appointment" in bp or "<b>Demo.</b>" in bp:
+            bk.append("book.html is live but still carries the demo note telling people a booking "
+                      "here is not real; run build.py to take it out")
     else:
         # pre-cutover: unlinked, and must stay out of the index
         if not meta_noindex: bk.append("book.html is not linked yet, so it needs meta robots noindex")
         if not hdr_noindex:  bk.append("book.html is not linked yet, so _headers needs an X-Robots-Tag noindex rule for it")
+        if "does not create a real appointment" not in bp:
+            bk.append("book.html is still the rehearsal page but has lost the demo note that tells "
+                      "a tester the booking is not real; run build.py to put it back")
     # its own references must resolve
     for m_ in re.finditer(r'(?:href|src)="([^"#][^"]*)"', bp):
         r=m_.group(1)
@@ -648,6 +757,7 @@ for amt in re.findall(r'\$(\d+)',gtxt):
 # Added 2026-11-11 at Luis's request: the gift page is in the menu of every page
 # (on the homepage the menu's "Gift Certificates" goes to the homepage gift section).
 for nm_,pg_,_ in every[1:]:
+    if nm_=='book': continue   # checkout flow: no main nav by design
     mnu=re.search(r'<nav aria-label="Main">(.*?)</nav>',pg_,re.S)
     if not mnu or 'href="/gift-certificates/"' not in mnu.group(1): gf.append(f"{nm_}: the menu has no Gifts link to the gift certificates page")
 if 'href="#gift"' not in (re.search(r'<nav aria-label="Main">(.*?)</nav>',h,re.S) or [None,''])[1]: gf.append("homepage menu lost its Gift Certificates link")
@@ -673,6 +783,7 @@ if om:
 elif 'data-offer' in h: of.append("promo bar has an offer with no OFFER-ENDS date")
 bar=re.search(r'<div class="promo-bar">.*?</div>',h,re.S)
 for nm,pg,url in every[1:]:
+    if nm=='book': continue   # checkout flow: no promo bar by design
     if not bar or bar.group(0) not in pg: of.append(f"{nm}: promo bar differs from the homepage's: run build.py")
 for x in of: bad(x)
 if not of: ok("gold bar offer is dated, switches itself off, and is identical on every page" if om else "gold bar is identical on every page")
