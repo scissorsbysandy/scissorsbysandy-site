@@ -113,16 +113,6 @@ def retarget(tag):
     tag = re.sub(r'\s*\brel="[^"]*"', '', tag)
     return tag[:-1].rstrip() + attrs + '>'
 
-DEMO_NOTE = """
-    <div class="note" style="margin-top:2.5rem">
-      <b>Demo.</b> This is the real website with booking moved on-site. Services, prices and durations are live from the Square catalogue.
-      Open times are generated here using the same rules Square applies &mdash; Sandy&rsquo;s hours,
-      the service length and half-hour starts &mdash; and were checked against Square&rsquo;s own
-      availability for this week. In production each list is fetched live, so a slot
-      someone else just took disappears and double-booking is refused by Square.
-      Confirming here does not create a real appointment.
-    </div>
-"""
 SITEMAP_BOOK = """  <url>
     <loc>https://scissorsbysandy.com/book.html</loc>
     <lastmod>%s</lastmod>
@@ -164,17 +154,11 @@ def patch_booking_visibility():
         elif not want and has:
             hh=hh.replace(HEADERS_BLOCK,''); notes.append('_headers noindex removed')
         open(hp,'w',encoding='utf-8').write(hh)
-    # The note that says a booking here is not real belongs to the rehearsal and
-    # would be a disaster on the live page. It is held in this file, not deleted
-    # from the page, so flipping back puts it straight back.
-    if os.path.exists(bp):
-        b=open(bp,encoding='utf-8').read(); has = 'does not create a real appointment' in b
-        if want and not has:
-            b=b.replace('    </section>\n  </main>','    </section>\n'+DEMO_NOTE+'  </main>',1)
-            notes.append('demo note restored')
-        elif not want and has:
-            b=b.replace(DEMO_NOTE,'',1); notes.append('demo note removed')
-        open(bp,'w',encoding='utf-8').write(b)
+    # There was a note here saying a booking made on this page was not real. It
+    # was written when the page could not reach Square. It can now, and two test
+    # appointments went into Sandy's calendar to prove it, so the note was false
+    # and has been removed rather than reworded: a page that takes real bookings
+    # should not carry a line telling people it does not.
     # Out of the sitemap while it is a rehearsal; in it the moment it is the real
     # booking page, which is also what preflight asserts either way.
     smp = os.path.join(HERE,'..','site','sitemap.xml')
