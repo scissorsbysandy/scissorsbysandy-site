@@ -115,6 +115,26 @@ elif m:
         if mapped==expect else f"SERVICE_IDS map STALE — it overwrites hrefs on load. diff={set(expect.items())^set(mapped.items())}")
 else: warn("no SERVICE_IDS map found (fine if the script was removed)")
 
+# The schema's ReserveAction is the booking link Google itself follows, and it is
+# rewritten from the provider switch rather than by hand. Nothing checked it, so a
+# rewrite that silently failed would leave Google sending people to Booksy on the
+# morning after the cutover, with every visible link already moved. This is the
+# same shape of bug as the stale SERVICE_IDS map above, which did ship once.
+_ra = re.search(r'"@type":\s*"ReserveAction",\s*\n\s*"target":\s*"([^"]*)"', h)
+if not _ra:
+    bad("no ReserveAction in the shop schema — Google has no booking link to follow")
+elif ON_BOOKSY:
+    (ok if 'booksy.com' in _ra.group(1) else bad)(
+        "schema ReserveAction points at Booksy, matching the booking switch"
+        if 'booksy.com' in _ra.group(1)
+        else f"schema ReserveAction is {_ra.group(1)} but the switch still says Booksy")
+else:
+    want_ra = 'https://scissorsbysandy.com' + P.get('booking',{}).get('site_path','/book.html')
+    (ok if _ra.group(1)==want_ra else bad)(
+        "schema ReserveAction points at the site's own booking page"
+        if _ra.group(1)==want_ra
+        else f"schema ReserveAction is {_ra.group(1)}, not {want_ra} — Google would still send people to the old booking page")
+
 # ---------- 5. analytics ----------
 (ok if 'G-XXXXXXXXXX' not in h else bad)("no GA4 placeholder" if 'G-XXXXXXXXXX' not in h else "GA4 PLACEHOLDER still present")
 (ok if re.search(r'G-[A-Z0-9]{8,}', h) else warn)("GA4 measurement id present" if re.search(r'G-[A-Z0-9]{8,}', h) else "no GA4 id")
@@ -441,6 +461,17 @@ if not re.search(r'barber ?shop',ht,re.I): sf.append(f"homepage title must conta
 for x in sf: bad(x)
 if not sf: ok(f"titles, descriptions, h1, <main> and canonical are right on all {len(indexable)} pages")
 
+# 17a-bis. the client quotes fill their grid (added 2026-11-19)
+# The grid is three across, two on a tablet and one on a phone. Any count that
+# does not divide by six leaves a card stranded on the last row. A seventh was
+# added once and looked right on a desktop while sitting at half width, with
+# two words to a line, on the phones most clients actually use.
+nq = len(re.findall(r'<div class="quote">', h))
+if nq == 0: bad("the homepage has no client quotes")
+elif nq % 6: bad(f"the homepage shows {nq} client quotes; it needs a multiple of 6 "
+                 f"(6, 12, ...) or the last row has a gap at some screen width")
+else: ok(f"{nq} client quotes, which fills the grid at every width")
+
 # 17b. structured data ties the pages together: one shop, one @id
 sd=[]
 if bs:
@@ -458,6 +489,28 @@ for nm,pg,url in indexable[1:]:
     if not bc or bc['itemListElement'][-1].get('item')!=url: sd.append(f"{nm}: breadcrumb schema missing or wrong")
 for x in sd: bad(x)
 if not sd: ok("schema: shop @id, WebSite name, and every service page linked back to the shop")
+
+# 17b-bis. the generated pages are actually in step with the homepage (added 2026-11-19)
+# build_pages.py copies the homepage's stylesheet and footer into every generated
+# page, so one edit is meant to reach all of them. If that script stops part way
+# the pages silently keep yesterday's footer and nobody notices. It did exactly
+# that: a service page quoted a review that had been taken off the homepage, the
+# script exited 1, and seven pages shipped with a footer missing a social icon.
+st=[]
+hcss=re.search(r'<style>(.*?)</style>', h, re.S)
+hfoot=re.search(r'(<footer>.*?</footer>)', h, re.S)
+if not hcss or not hfoot: st.append("homepage has no <style> block or no <footer> to copy from")
+else:
+    want_foot=hfoot.group(1).replace('href="#top"','href="/"')
+    for nm,pg,_u in every[1:]:
+        if nm=='book': continue              # hand-written, not generated from the homepage
+        pcss=re.search(r'<style>(.*?)</style>', pg, re.S)
+        if not pcss or hcss.group(1) not in pcss.group(1):
+            st.append(f"{nm}: stylesheet is out of step with the homepage; run build_pages.py")
+        if want_foot not in pg:
+            st.append(f"{nm}: footer is out of step with the homepage; run build_pages.py")
+for x in st: bad(x)
+if not st: ok(f"all {len(every)-1} generated pages carry the homepage's current stylesheet and footer")
 
 # 17c. fonts come from this site, and nothing outside it may hold up the first paint
 sp_=[]
@@ -551,9 +604,18 @@ for nm,pg,_u in every:
         if not fp: continue
         real=imgsize(fp)
         if not real: continue
-        if real!=(int(aw.group(1)),int(ah.group(1))):
-            dim.append(f"{nm}: {src.group(1)} is {real[0]}x{real[1]} on disk but its tag says "
-                       f"{aw.group(1)}x{ah.group(1)} — re-export it or correct the tag, or the page jumps as it loads")
+        tw,th=int(aw.group(1)),int(ah.group(1))
+        # What makes the page jump is the SHAPE, not the size: the browser reserves
+        # a box from the tag's ratio and the CSS width. A 192x192 file in a 52x52
+        # tag is the same square, so nothing moves — it is only wasted bytes, and
+        # that is a warning, not a reason to stop a deploy. An image whose stored
+        # shape differs from its tag genuinely reshapes once it loads.
+        if abs(real[0]/real[1] - tw/th) > 0.01:
+            dim.append(f"{nm}: {src.group(1)} is {real[0]}x{real[1]} on disk, a different shape from "
+                       f"the {tw}x{th} in its tag — the picture reshapes as it loads")
+        elif real[0] > tw*2:
+            warn(f"{nm}: {src.group(1)} is {real[0]}x{real[1]} but is only shown at "
+                 f"{tw}x{th} — a smaller export would save bytes")
 # A <picture> swaps FORMAT at the same shape. A phone-sized crop may be smaller, but
 # a different aspect ratio would reshape the photo the moment the browser picks webp.
 for nm,pg,_u in every:
