@@ -113,6 +113,23 @@ def retarget(tag):
     tag = re.sub(r'\s*\brel="[^"]*"', '', tag)
     return tag[:-1].rstrip() + attrs + '>'
 
+DEMO_NOTE = """
+    <div class="note" style="margin-top:2.5rem">
+      <b>Demo.</b> This is the real website with booking moved on-site. Services, prices and durations are live from the Square catalogue.
+      Open times are generated here using the same rules Square applies &mdash; Sandy&rsquo;s hours,
+      the service length and half-hour starts &mdash; and were checked against Square&rsquo;s own
+      availability for this week. In production each list is fetched live, so a slot
+      someone else just took disappears and double-booking is refused by Square.
+      Confirming here does not create a real appointment.
+    </div>
+"""
+SITEMAP_BOOK = """  <url>
+    <loc>https://scissorsbysandy.com/book.html</loc>
+    <lastmod>%s</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+"""
 NOINDEX_META = '  <meta name="robots" content="noindex,nofollow">\n'
 HEADERS_BLOCK = ("""
 # Booking page for the Square cutover. Live bookings still go through Booksy, so
@@ -147,6 +164,30 @@ def patch_booking_visibility():
         elif not want and has:
             hh=hh.replace(HEADERS_BLOCK,''); notes.append('_headers noindex removed')
         open(hp,'w',encoding='utf-8').write(hh)
+    # The note that says a booking here is not real belongs to the rehearsal and
+    # would be a disaster on the live page. It is held in this file, not deleted
+    # from the page, so flipping back puts it straight back.
+    if os.path.exists(bp):
+        b=open(bp,encoding='utf-8').read(); has = 'does not create a real appointment' in b
+        if want and not has:
+            b=b.replace('    </section>\n  </main>','    </section>\n'+DEMO_NOTE+'  </main>',1)
+            notes.append('demo note restored')
+        elif not want and has:
+            b=b.replace(DEMO_NOTE,'',1); notes.append('demo note removed')
+        open(bp,'w',encoding='utf-8').write(b)
+    # Out of the sitemap while it is a rehearsal; in it the moment it is the real
+    # booking page, which is also what preflight asserts either way.
+    smp = os.path.join(HERE,'..','site','sitemap.xml')
+    if os.path.exists(smp):
+        sm=open(smp,encoding='utf-8').read()
+        has = '<loc>https://scissorsbysandy.com/book.html</loc>' in sm
+        if not want and not has:
+            entry = SITEMAP_BOOK % datetime.date.today().isoformat()
+            sm=sm.replace('</urlset>', entry+'</urlset>',1); notes.append('book.html added to sitemap')
+        elif want and has:
+            sm=re.sub(r'  <url>\s*<loc>https://scissorsbysandy\.com/book\.html</loc>.*?</url>\n','',sm,flags=re.S)
+            notes.append('book.html removed from sitemap')
+        open(smp,'w',encoding='utf-8').write(sm)
     return ('booking page visibility: ' + ', '.join(notes)) if notes else \
            f"booking page visibility already correct for {prov}"
 
