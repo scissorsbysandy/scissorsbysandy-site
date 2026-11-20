@@ -28,6 +28,11 @@ const HOST = process.env.SQUARE_ENV === 'sandbox'
 
 const TOKEN = process.env.SQUARE_ACCESS_TOKEN;
 
+// Stamped on every booking this Function creates, and the thing the shop's
+// new-booking alert looks for. Changing the wording means changing it in the
+// alert too, or Sandy stops being told when someone books.
+const WEB_BOOKING_NOTE = 'Booked on scissorsbysandy.com';
+
 /* ---------- small helpers ---------------------------------------------- */
 
 const json = (status, body) => new Response(JSON.stringify(body), {
@@ -242,6 +247,14 @@ async function createBooking(p) {
         start_at: p.startAt,
         customer_id: customerId,
         ...(p.note ? { customer_note: String(p.note).slice(0, 1500) } : {}),
+        // Square records a booking made with the seller's own token as created
+        // by the team member, because that is whose token it is. From the
+        // outside a client booking on the website is indistinguishable from
+        // Sandy typing it into Square herself, so the alert that tells her
+        // someone has booked cannot tell the two apart and stays silent.
+        // This note is the difference. It is the seller's field, so no client
+        // ever sees it, and it says plainly where the booking came from.
+        seller_note: WEB_BOOKING_NOTE,
         appointment_segments: segments,
       },
     },
