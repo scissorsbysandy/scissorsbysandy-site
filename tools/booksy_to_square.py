@@ -12,12 +12,26 @@ posted. Nothing is created by running this file.
 Join key is the PHONE, never the name. Booksy's calendar and its export both
 abbreviate surnames (a first name plus an initial), so matching on name silently
 creates duplicate customers.
+
+One phone is not one person. A parent books their children on their own
+account, so where the services themselves say more than one person is in the
+chair, the run is left as separate bookings instead of being merged.
 """
 import csv, json, sys, re
 from datetime import datetime, timedelta
 
 LOCATION = "LDGXV0WRF8BFN"
 TEAM_MEMBER = "TMcPuss1Jbyk7-WC"
+
+# Services that are a haircut. Nobody has two of these in one sitting.
+HAIRCUTS = {
+    "The Executive",
+    "The Signature",
+    "The Fresh Fade",
+    "The Regiment",
+    "The Royal Roots",
+}
+
 
 def norm_phone(p):
     """Booksy writes '+1 7325550147'; Square stores '+17325550147'."""
@@ -27,6 +41,7 @@ def norm_phone(p):
     if len(d) == 10:
         d = "1" + d
     return "+" + d if d else None
+
 
 def load(path, cutover):
     """Appointments from `cutover` onward that are still expected to happen."""
@@ -50,20 +65,49 @@ def load(path, cutover):
             })
     return sorted(keep, key=lambda a: (a["phone"], a["start"]))
 
-def group(rows, gap_minutes=0):
-    """Back-to-back services for one phone become one visit."""
+
+def one_person(existing, incoming):
+    """Could a single person plausibly have all of these in one sitting?
+
+    No, in two cases:
+      - the same service twice in a row. A parent booking the same cut for
+        a child books it on their own account, so one phone covers two
+        people. The owner confirmed one such pair in the forward book.
+      - two different haircuts in a row, which nobody books for themselves.
+    """
+    if incoming in existing:
+        return False
+    if incoming in HAIRCUTS and any(s in HAIRCUTS for s in existing):
+        return False
+    return True
+
+
+def group(rows, gap_minutes=15):
+    """Back-to-back services for one phone become one visit, unless the
+    services say there is more than one person on that phone."""
     visits = []
     for a in rows:
+        fresh = {"phone": a["phone"], "name": a["name"], "start": a["start"],
+                 "end": a["end"], "services": [a["service"]], "split": False}
         if visits:
             last = visits[-1]
-            if (last["phone"] == a["phone"]
-                    and 0 <= (a["start"] - last["end"]).total_seconds() / 60 <= gap_minutes):
+            contiguous = (
+                last["phone"] == a["phone"]
+                and 0 <= (a["start"] - last["end"]).total_seconds() / 60 <= gap_minutes
+            )
+            if contiguous and one_person(last["services"], a["service"]):
                 last["services"].append(a["service"])
                 last["end"] = a["end"]
                 continue
-        visits.append({"phone": a["phone"], "name": a["name"], "start": a["start"],
-                       "end": a["end"], "services": [a["service"]]})
+            if contiguous:
+                # Deliberately NOT merged: more than one person on one phone.
+                last["split"] = True
+                fresh["split"] = True
+                visits.append(fresh)
+                continue
+        visits.append(fresh)
     return sorted(visits, key=lambda v: v["start"])
+
 
 def payload(visit, svcmap, customer_id, versions=None):
     segs = []
@@ -85,14 +129,20 @@ def payload(visit, svcmap, customer_id, versions=None):
         }
     }
 
+
 if __name__ == "__main__":
     csv_path, cut = sys.argv[1], datetime.strptime(sys.argv[2], "%Y-%m-%d").date()
     svcmap = json.load(open("/tmp/svcmap.json"))
     rows = load(csv_path, cut)
     visits = group(rows)
-    print(f"{len(rows)} appointments -> {len(visits)} visits\n")
+    print(f"{len(rows)} appointments -> {len(visits)} bookings\n")
     for v in visits:
+        mark = "  [separate person, same phone]" if v["split"] else ""
         print(f'{v["start"]:%a %d %b %H:%M}  {v["name"]:22} {v["phone"]:13} '
-              f'{" + ".join(v["services"])}')
+              f'{" + ".join(v["services"])}{mark}')
     missing = {s for v in visits for s in v["services"] if s not in svcmap}
     print("\nUNMAPPED SERVICES:", missing or "none")
+    splits = [v for v in visits if v["split"]]
+    if splits:
+        print(f"{len(splits)} bookings kept separate because one phone covers "
+              f"more than one person.")
