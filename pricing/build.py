@@ -84,8 +84,30 @@ def patch_site():
     hi=max(s['price'] for c in D['categories'] for s in c['services'])
     m=re.search(r'"priceRange":\s*"([^"]*)"',h)
     if m: h=h[:m.start(1)]+f"${lo}-${hi}"+h[m.end(1):]
+
+    # The full menu, as structured data. hasOfferCatalog is the property an
+    # assistant reads to answer "what do they do and what does it cost". Until
+    # now those prices existed only as page text and on the service pages:
+    # readable by Google, thin for anything that wants structured facts.
+    # Generated here rather than written by hand for the usual reason — a price
+    # edited in one place goes stale in the other and nothing looks broken.
+    nsv = sum(len(cg["services"]) for cg in D["categories"])
+    cat = {"@type": "OfferCatalog", "name": "Services", "itemListElement": [
+        {"@type": "Offer",
+         "itemOffered": {"@type": "Service", "name": sv["name"]},
+         "price": f'{sv["price"]:.2f}', "priceCurrency": "USD"}
+        for cg in D["categories"] for sv in cg["services"]]}
+    block = json.dumps(cat, indent=2, ensure_ascii=False)
+    block = "\n".join(("  " + ln) if ln.strip() else ln for ln in block.split("\n"))
+    want = '  "hasOfferCatalog": ' + block.lstrip() + ',\n'
+    oldcat = re.search(r'  "hasOfferCatalog": \{.*?\n  \},\n', h, re.S)
+    if oldcat:
+        h = h[:oldcat.start()] + want + h[oldcat.end():]
+    else:
+        h = h.replace('  "priceRange"', want + '  "priceRange"', 1)
+
     open(SITE,'w').write(h)
-    return f"site/index.html updated — priceRange ${lo}-${hi}"
+    return f"site/index.html updated — priceRange ${lo}-${hi}, {nsv} services in the schema"
 
 def checklist():
     ch=[s for c in D['categories'] for s in c['services']

@@ -498,6 +498,51 @@ locs=re.findall(r'<loc>([^<]+)</loc>',smx); wantlocs=[u for _,_,u in indexable]
 if sorted(locs)!=sorted(wantlocs): cr.append(f"sitemap.xml should list exactly the {len(wantlocs)} pages; differs by {sorted(set(locs)^set(wantlocs))}")
 rb=rd('robots.txt')
 if not re.search(r'^Sitemap:\s*https://scissorsbysandy\.com/sitemap\.xml\s*$',rb,re.M): cr.append("robots.txt lost its Sitemap line")
+# The crawlers that decide whether an assistant can cite the shop when someone
+# asks where to get a haircut in Old Bridge. A bare "User-agent: * / Allow: /"
+# already lets them in, so this is not about access: it is about an edit that
+# adds a Disallow later and silently takes the shop out of AI answers, which
+# nothing else here would catch. A named group whose own block disallows the
+# site beats the wildcard, so that is what this looks for.
+AI_BOTS = ['OAI-SearchBot','Claude-SearchBot','PerplexityBot','ChatGPT-User','Claude-User',
+           'Perplexity-User','GPTBot','ClaudeBot','Applebot','Amzn-SearchBot']
+_groups, _cur = {}, []
+for _ln in rb.splitlines():
+    _ln = _ln.split('#')[0].strip()
+    if not _ln: continue
+    _k, _, _v = _ln.partition(':')
+    _k, _v = _k.strip().lower(), _v.strip()
+    if _k == 'user-agent':
+        _cur = _groups.setdefault(_v.lower(), [])
+    elif _k in ('allow','disallow') and _cur is not None:
+        _cur.append((_k, _v))
+_blocked = [b for b in AI_BOTS
+            if any(k=='disallow' and v in ('/','') for k,v in _groups.get(b.lower(),[]))
+            or (b.lower() not in _groups
+                and any(k=='disallow' and v=='/' for k,v in _groups.get('*',[])))]
+if _blocked:
+    cr.append("robots.txt shuts out " + ', '.join(_blocked) +
+              " — the shop cannot be cited in AI answers while that stands")
+
+# The menu as structured data. It is what an assistant reads to answer "what do
+# they do and what does it cost", and build.py generates it from prices.json so
+# it cannot drift. Nothing checked that it was still there, or still right.
+_shop = None
+for _m in re.finditer(r'<script type="application/ld\+json">(.*?)</script>', h, re.S):
+    try: _d = json.loads(_m.group(1))
+    except Exception: continue
+    if isinstance(_d, dict) and _d.get('@type') == 'BarberShop': _shop = _d
+if _shop is None:
+    cr.append("no BarberShop block to carry the menu")
+else:
+    _cat = (_shop.get('hasOfferCatalog') or {}).get('itemListElement') or []
+    _got = {(o.get('itemOffered',{}).get('name'), o.get('price')) for o in _cat}
+    _want = {(sv['name'], f"{sv['price']:.2f}") for cg in P['categories'] for sv in cg['services']}
+    if not _cat:
+        cr.append("the shop schema lists no services — run build.py to put the menu back")
+    elif _got != _want:
+        _d1 = sorted(n for n,_ in _want - _got); _d2 = sorted(n for n,_ in _got - _want)
+        cr.append(f"the menu in the shop schema disagrees with prices.json: missing={_d1} stale={_d2}")
 if re.search(r'^Disallow:\s*/\s*$',rb,re.M): cr.append("robots.txt has 'Disallow: /' which hides the whole site from search engines")
 home_ids=set(re.findall(r'\sid="([^"]+)"',h))
 for nm,pg,url in every:
