@@ -72,7 +72,7 @@ PAGES = [
         ("Short and even", f"The Regiment. The classic crew cut, uniform rather than faded. {M('regiment')}."),
         ("Ages 12 and under", f"The Royal Roots. Patient and unhurried. {M('royalroots')}."),
     ]),
-    quotes=["Joe W.", "Danielle K."],
+    quotes=["Timothy H.", "Joe W."],
     faq=[
       ("Is a wash included?", "Yes. Every haircut on my menu includes a wash."),
       ("What makes The Executive different?", f"It's cut entirely with shears, no clippers and no guards, with every line judged by eye. That takes longer, about {M('executive')}, and the result grows out softer and sits more naturally."),
