@@ -125,7 +125,7 @@ def payload(visit, svcmap, customer_id, versions=None):
             "customer_id": customer_id,
             "start_at": visit["start"].strftime("%Y-%m-%dT%H:%M:%S-05:00"),
             "appointment_segments": segs,
-            "customer_note": "Moved from Booksy at cutover",
+            "seller_note": "Moved from Booksy at cutover",
         }
     }
 
