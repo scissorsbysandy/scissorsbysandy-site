@@ -54,7 +54,7 @@ PAGES = [
     tag="Scissor cuts · Fades · Crew cuts · Kids",
     intro="Every cut in my chair starts with a wash and a real conversation about what you want and how you wear your hair day to day. Then I take my time. It's one chair, so nobody is waiting on you and nothing gets rushed.",
     groups=[("The Cuts", ['executive','signature','freshfade','regiment','royalroots'],
-             "In the chair, I use Reuzel hair products."),
+             "In the chair, I use Muk &amp; Reuzel hair products."),
             ("Color", ['greyblend'], None)],
     # real shop photos beside each cut, square so close-ups and wider shots look equally framed
     # (guide cards stay text-only on this page)

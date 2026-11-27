@@ -6,13 +6,13 @@
 <!-- Not linked from the site yet. Booking still goes through Booksy until the Square
      cutover; this page ships dark so it can be deployed and checked before the swap. -->
 <title>Book an Appointment in Old Bridge, NJ | Scissors by Sandy</title>
-<meta name="description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, pick a time, and you are booked.">
+<meta name="description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, choose a date and time, and you are booked.">
 <link rel="canonical" href="https://scissorsbysandy.com/book.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Scissors by Sandy">
 <meta property="og:url" content="https://scissorsbysandy.com/book.html">
 <meta property="og:title" content="Book an Appointment &middot; Scissors by Sandy">
-<meta property="og:description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, pick a time, and you are booked.">
+<meta property="og:description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, choose a date and time, and you are booked.">
 <meta property="og:image" content="https://scissorsbysandy.com/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -20,7 +20,7 @@
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Book an Appointment &middot; Scissors by Sandy">
-<meta name="twitter:description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, pick a time, and you are booked.">
+<meta name="twitter:description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, choose a date and time, and you are booked.">
 <meta name="twitter:image" content="https://scissorsbysandy.com/og-image.jpg">
 <link rel="preload" href="fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -221,10 +221,10 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
    making a client find their way back. Same idea here, on the step where
    changing the visit still changes which times are offered. */
 .add-more{display:inline-flex;align-items:center;gap:.4rem;margin:.9rem auto 0;
-  background:transparent;border:1px solid var(--gold-deep);color:var(--gold-text);
+  background:transparent;border:1.5px solid var(--navy);color:var(--navy);font-weight:500;
   font-family:var(--sans);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
   padding:.6rem 1.1rem;border-radius:2px;cursor:pointer;line-height:1}
-.add-more:hover{background:rgba(248,208,148,.18)}
+.add-more:hover{background:var(--navy);color:var(--cream)}
 .add-more b{font-size:1rem;font-weight:400;line-height:0}
 .sum-ava{width:1.55rem;height:1.55rem;border-radius:50%;object-fit:cover;
   vertical-align:-.42rem;margin-right:.45rem;border:1px solid var(--gold-deep)}
@@ -271,7 +271,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 
     <!-- STEP 2 -->
     <section id="s2" class="hidden">
-      <h2 class="sec-head">Pick a Time</h2>
+      <h2 class="sec-head">Choose Your <span style="white-space:nowrap">Date &amp; Time</span></h2>
       <div class="sec-sub" id="s2sub"></div>
       <div style="text-align:center"><button class="add-more" id="addMore" onclick="addService()"><b>+</b> <span id="addMoreLabel">Add another service</span></button></div>
       <div class="rule"><span>&#10022;</span></div>
