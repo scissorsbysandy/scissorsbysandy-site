@@ -22,6 +22,8 @@
  */
 
 const SQUARE_VERSION = '2026-09-16';
+import crypto from 'node:crypto';
+
 const HOST = process.env.SQUARE_ENV === 'sandbox'
   ? 'https://connect.squareupsandbox.com'
   : 'https://connect.squareup.com';
@@ -263,8 +265,8 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
  * Moves the bookings already made in Booksy across to Square at cutover.
  * Booksy let Sandy shorten a service for a regular and book outside the
  * posted hours, so this keeps her lengths and does not check availability.
- * It is switched off unless MIGRATION_KEY is set, that key is only set on
- * the cutover preview, and this block is deleted once the import is done.
+ * It only answers a one-time key, it lives on the cutover preview only,
+ * and this block is deleted once the import is done.
  * No website note is stamped, so the shop alert stays quiet for these.
  */
 async function importBooking(p) {
@@ -423,8 +425,10 @@ export default async (request) => {
       }
 
       if (action === 'import') {
-        const key = process.env.MIGRATION_KEY;
-        if (!key || body.key !== key) return json(404, { error: 'Not found' });
+        // Only the SHA-256 of the one-time key lives here; the key itself is not
+        // in the repo. This block exists on the cutover preview only.
+        const given = crypto.createHash('sha256').update(String(body.key || '')).digest('hex');
+        if (given !== '80d151be18fe6ee45ac5cc2aeeb3986bcfdc9b8a9cf814b55708cc24642b2afa') return json(404, { error: 'Not found' });
         return json(200, { booking: await importBooking(body) });
       }
 
