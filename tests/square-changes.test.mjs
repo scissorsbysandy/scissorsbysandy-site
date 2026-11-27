@@ -19,6 +19,7 @@ global.fetch = async (url, opts = {}) => {
   if (path.includes('team-member-booking-profiles')) return ok({ team_member_booking_profiles:[{ team_member_id:'TM', is_bookable:true }] });
   if (path.startsWith('/v2/catalog/object/')) return ok({ object:{ type:'ITEM_VARIATION', id:'SVC', version: 999 } });
 
+  if (method === 'POST' && path === '/v2/orders/search') return ok({ orders: [] });
   if (method === 'GET' && path === '/v2/bookings/BK_REAL') return ok({ booking: { ...BOOKING } });
   if (method === 'POST' && path === '/v2/bookings/BK_REAL/cancel')
     return ok({ booking:{ id:'BK_REAL', status:'CANCELLED_BY_CUSTOMER' } });

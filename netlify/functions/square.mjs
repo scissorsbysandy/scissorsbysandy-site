@@ -33,6 +33,13 @@ const TOKEN = process.env.SQUARE_ACCESS_TOKEN;
 // alert too, or Sandy stops being told when someone books.
 const WEB_BOOKING_NOTE = 'Booked on scissorsbysandy.com';
 
+// Written into the booking's seller note once a client has paid ahead, so
+// Sandy sees it on the appointment before she checks them out. The webhook
+// reads the bracketed stamp to stay quiet about the note change itself.
+const PAID_MARK = 'PAID AHEAD';
+const SITE = 'https://scissorsbysandy.com';
+const ALERT_URL = process.env.SBS_ALERT_URL;
+
 /* ---------- small helpers ---------------------------------------------- */
 
 const json = (status, body) => new Response(JSON.stringify(body), {
@@ -322,6 +329,16 @@ async function cancelBooking({ bookingId, phone }) {
   if (booking.status === 'CANCELLED_BY_CUSTOMER' || booking.status === 'CANCELLED_BY_SELLER') {
     return { id: booking.id, status: booking.status };            // already gone; not an error
   }
+  // A paid visit is refunded by Sandy, so she has to hear about it from the
+  // client rather than find a cancelled, paid appointment on her calendar.
+  let paidOnline = isPaid(booking);
+  if (!paidOnline) {
+    // If the order lookup itself fails, a cancel must still work.
+    try { paidOnline = !!(await paidOrderFor(booking.id)); } catch { paidOnline = false; }
+  }
+  if (paidOnline) {
+    throw Object.assign(new Error('This one is paid ahead, so please call or text Sandy at (848) 230-5995 to cancel and she will refund you'), { status: 403 });
+  }
 
   const { booking: out } = await square(
     '/v2/bookings/' + encodeURIComponent(bookingId) + '/cancel',
@@ -338,7 +355,15 @@ async function cancelBooking({ bookingId, phone }) {
 async function rescheduleBooking({ bookingId, phone, service, services, startAt }) {
   const booking = await getBooking(bookingId);
   await assertOwner(booking, phone);
-  const segments = await buildSegments(asServices(services ?? service));
+  const wanted = asServices(services ?? service);
+  // A paid visit can move to another time, but not change what was paid for.
+  if (isPaid(booking)) {
+    const had = (booking.appointment_segments || []).map(s => s.service_variation_id).sort().join(',');
+    if ([...wanted].sort().join(',') !== had) {
+      throw Object.assign(new Error('This one is paid ahead, so the services can’t change online. Please call or text Sandy at (848) 230-5995'), { status: 403 });
+    }
+  }
+  const segments = await buildSegments(wanted);
 
   const { booking: out } = await square('/v2/bookings/' + encodeURIComponent(bookingId), {
     method: 'PUT',
@@ -351,6 +376,222 @@ async function rescheduleBooking({ bookingId, phone, service, services, startAt 
     },
   });
   return { id: out.id, status: out.status, startAt: out.start_at };
+}
+
+/* ---------- paying ahead ------------------------------------------------- */
+
+/**
+ * Booksy let clients pay in the app before they arrived, and some did. This is
+ * the same thing, optional: the client is sent to Square's own checkout page
+ * (cards, Apple Pay, Google Pay, Afterpay, a tip), so no card number ever
+ * touches this site. Nothing here charges anyone.
+ *
+ * Square does not tie a payment-link order to a client or to a booking, so the
+ * order carries the booking id as its reference, and that is how a payment is
+ * matched back to its appointment. Once matched, the booking's seller note says
+ * PAID AHEAD and Sandy gets an alert, so nobody is charged twice at the chair.
+ */
+const isPaid = (b) => String(b?.seller_note || '').includes(PAID_MARK);
+const dollars = (cents) => '$' + (Number(cents || 0) / 100).toFixed(2).replace(/\.00$/, '');
+
+function whenText(startAt) {
+  return new Date(startAt).toLocaleString('en-US', {
+    timeZone: 'America/New_York', weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
+}
+
+/** Paid pay-ahead orders from the last 120 days, keyed by booking id. Read only. */
+async function paidOrders() {
+  const { locationId } = await setup();
+  const since = new Date(Date.now() - 120 * 86400000).toISOString();
+  const out = new Map();
+  let cursor;
+  for (let page = 0; page < 10; page++) {
+    const res = await square('/v2/orders/search', {
+      method: 'POST',
+      body: {
+        location_ids: [locationId],
+        query: {
+          filter: { date_time_filter: { created_at: { start_at: since } } },
+          sort: { sort_field: 'CREATED_AT', sort_order: 'DESC' },
+        },
+        limit: 200,
+        ...(cursor ? { cursor } : {}),
+      },
+    });
+    for (const o of res.orders || []) {
+      if (!o.reference_id) continue;
+      const paidIn = (o.tenders || []).length > 0;
+      const owed = Number(o.net_amount_due_money?.amount ?? 1);
+      if (paidIn && owed === 0 && !out.has(o.reference_id)) out.set(o.reference_id, o);
+    }
+    cursor = res.cursor;
+    if (!cursor) break;
+  }
+  return out;
+}
+async function paidOrderFor(bookingId) {
+  return (await paidOrders()).get(bookingId) || null;
+}
+
+/** Write PAID AHEAD on the booking and tell Sandy. Safe to call twice. */
+async function markPaid(booking, order) {
+  if (isPaid(booking)) return;
+  const total = order.total_money?.amount ?? 0;
+  const tip = order.total_tip_money?.amount ?? 0;
+  const amount = dollars(total - tip) + (tip ? ` + ${dollars(tip)} tip` : '');
+  const stamp = new Date().toISOString();
+  const line = `${PAID_MARK} ${amount} online. Don't charge at checkout. [paid ${stamp} order ${order.id}]`;
+  const note = [booking.seller_note, line].filter(Boolean).join('\n');
+  await square('/v2/bookings/' + encodeURIComponent(booking.id), {
+    method: 'PUT',
+    body: { booking: { version: booking.version, seller_note: note.slice(0, 4096) } },
+  });
+  if (ALERT_URL) {
+    let who = 'A client';
+    try {
+      const { customer } = await square('/v2/customers/' + encodeURIComponent(booking.customer_id));
+      who = [customer?.given_name, customer?.family_name].filter(Boolean).join(' ') || who;
+    } catch { /* the alert matters more than the name */ }
+    try {
+      await fetch(ALERT_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          text: `Paid ahead: ${who} paid ${amount} for ${whenText(booking.start_at)}. Don't charge them at checkout.`,
+          headline: 'Paid ahead', client: who, startAt: booking.start_at,
+          status: booking.status, bookingId: booking.id,
+        }),
+      });
+    } catch { /* never fail a paid client over an alert */ }
+  }
+}
+
+/** Has this booking been paid? Marks it if Square says so. */
+async function checkPaid(bookingId) {
+  const booking = await getBooking(bookingId);
+  if (isPaid(booking)) return true;
+  const order = await paidOrderFor(booking.id);
+  if (!order) return false;
+  await markPaid(booking, order);
+  return true;
+}
+
+async function payLink({ bookingId, phone }) {
+  const booking = await getBooking(bookingId);
+  await assertOwner(booking, phone);
+  if (await checkPaid(booking.id)) return { paid: true };
+  if (booking.status !== 'ACCEPTED' && booking.status !== 'PENDING') {
+    throw Object.assign(new Error('This appointment is no longer booked'), { status: 400 });
+  }
+  if (new Date(booking.start_at).getTime() <= Date.now()) {
+    throw Object.assign(new Error('This appointment has already started'), { status: 400 });
+  }
+  const { locationId } = await setup();
+  const { payment_link } = await square('/v2/online-checkout/payment-links', {
+    method: 'POST',
+    body: {
+      idempotency_key: crypto.randomUUID(),
+      description: 'Pay ahead for booking ' + booking.id,
+      order: {
+        location_id: locationId,
+        reference_id: booking.id,
+        line_items: (booking.appointment_segments || []).map(s => ({
+          catalog_object_id: s.service_variation_id, quantity: '1',
+        })),
+      },
+      checkout_options: {
+        allow_tipping: true,
+        ask_for_shipping_address: false,
+        redirect_url: SITE + '/book.html?paid=' + encodeURIComponent(booking.id),
+      },
+      pre_populated_data: { buyer_phone_number: toE164(phone) },
+      payment_note: 'Scissors by Sandy, appointment ' + whenText(booking.start_at),
+    },
+  });
+  return { url: payment_link.url || payment_link.long_url };
+}
+
+/* ---------- card on file ------------------------------------------------ */
+
+/**
+ * Optional: a client can save a card to their own record in Square, so Sandy
+ * can check them out with it. The card is typed into Square's own fields on
+ * the page (Square's Web Payments SDK); this Function only ever sees the
+ * one-time token Square gives back, never a card number. Nothing is charged.
+ *
+ * The SDK needs the app id and location id, both public. The app id is read
+ * from the token's own status, so there is still only one secret to set.
+ */
+let cachedAppId = null;
+async function cardConfig() {
+  const { locationId } = await setup();
+  if (!cachedAppId) {
+    cachedAppId = process.env.SQUARE_APPLICATION_ID || null;
+    if (!cachedAppId) {
+      const st = await square('/oauth2/token/status', { method: 'POST', body: {} });
+      cachedAppId = st.client_id || null;
+    }
+  }
+  if (!cachedAppId) throw Object.assign(new Error('Saving a card is not available right now'), { status: 400 });
+  return { appId: cachedAppId, locationId };
+}
+
+async function saveCard({ bookingId, phone, sourceId }) {
+  const booking = await getBooking(bookingId);
+  await assertOwner(booking, phone);
+  let card;
+  try {
+    ({ card } = await square('/v2/cards', {
+      method: 'POST',
+      body: {
+        idempotency_key: crypto.randomUUID(),
+        source_id: String(sourceId),
+        card: { customer_id: booking.customer_id },
+      },
+    }));
+  } catch (err) {
+    // Square's own wording (CARD_DECLINED_VERIFICATION_REQUIRED and so on) is
+    // not for a client. Log it, and tell them plainly.
+    console.error('save card failed:', err.message);
+    throw Object.assign(new Error('That card couldn\u2019t be saved. Please check the details or try another card'), { status: 400 });
+  }
+  const brand = card?.card_brand || 'Card';
+  const last4 = card?.last_4 || '';
+  const label = brand.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+              + (last4 ? ' ending ' + last4 : '');
+  // Put it where Sandy looks: the appointment's note, above Take payment, and
+  // an alert. A failure here must not undo a card that was saved.
+  try {
+    const fresh = await getBooking(booking.id);
+    const stamp = new Date().toISOString();
+    const line = `CARD ON FILE: ${label}, saved online. Use it at checkout. [card ${stamp}]`;
+    const note = [fresh.seller_note, line].filter(Boolean).join('\n');
+    await square('/v2/bookings/' + encodeURIComponent(booking.id), {
+      method: 'PUT',
+      body: { booking: { version: fresh.version, seller_note: note.slice(0, 4096) } },
+    });
+  } catch (err) { console.error('card note failed:', err.message); }
+  if (ALERT_URL) {
+    let who = 'A client';
+    try {
+      const { customer } = await square('/v2/customers/' + encodeURIComponent(booking.customer_id));
+      who = [customer?.given_name, customer?.family_name].filter(Boolean).join(' ') || who;
+    } catch { /* the alert matters more than the name */ }
+    try {
+      await fetch(ALERT_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          text: `Card on file: ${who} saved a ${label} for ${whenText(booking.start_at)}. Use it at checkout.`,
+          headline: 'Card on file', client: who, startAt: booking.start_at,
+          status: booking.status, bookingId: booking.id,
+        }),
+      });
+    } catch { /* never fail over an alert */ }
+  }
+  return { brand, last4 };
 }
 
 /* ---------- finding a client's appointments ------------------------------ */
@@ -414,6 +655,7 @@ async function findBookings({ phone, name }) {
           const segs = b.appointment_segments || [];
           out.push({
             id: b.id,
+            raw: b,
             startAt: b.start_at,
             services: segs.map(s => s.service_variation_id),
             minutes: segs.reduce((n, s) => n + (s.duration_minutes || 0), 0),
@@ -426,6 +668,20 @@ async function findBookings({ phone, name }) {
   const seen = new Set();
   const bookings = out.filter(b => !seen.has(b.id) && seen.add(b.id))
                       .sort((a, b) => a.startAt.localeCompare(b.startAt));
+  // Mark anything paid ahead, including a payment whose client closed the
+  // page before coming back to the site.
+  let orders = null;
+  for (const b of bookings) {
+    b.paid = isPaid(b.raw);
+    if (!b.paid) {
+      try {
+        orders = orders || await paidOrders();
+        const o = orders.get(b.id);
+        if (o) { await markPaid(b.raw, o); b.paid = true; }
+      } catch { /* a lookup must not fail over this */ }
+    }
+    delete b.raw;
+  }
   const who = mine[0];
   return { client: { firstName: who.given_name || '', lastName: who.family_name || '' }, bookings };
 }
@@ -464,6 +720,26 @@ export default async (request) => {
         const missing = need(['bookingId', 'phone', 'startAt']);
         if (missing) return json(400, { error: missing });
         return json(200, { booking: await rescheduleBooking(body) });
+      }
+
+      if (action === 'cardconfig') return json(200, await cardConfig());
+
+      if (action === 'savecard') {
+        const missing = need(['bookingId', 'phone', 'sourceId']);
+        if (missing) return json(400, { error: missing });
+        return json(200, { card: await saveCard(body) });
+      }
+
+      if (action === 'paylink') {
+        const missing = need(['bookingId', 'phone']);
+        if (missing) return json(400, { error: missing });
+        return json(200, await payLink(body));
+      }
+
+      if (action === 'paid') {
+        const missing = need(['bookingId']);
+        if (missing) return json(400, { error: missing });
+        return json(200, { paid: await checkPaid(String(body.bookingId)) });
       }
 
       if (action === 'find') {

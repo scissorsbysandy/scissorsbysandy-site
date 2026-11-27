@@ -103,6 +103,16 @@ function headlineFor(type, booking) {
   return HEADLINE[type] || 'Booking';
 }
 
+function justMarkedPaid(booking) {
+  // Stamps the booking page writes: [paid <time> order <id>] and [card <time>]
+  const m = String(booking?.seller_note || '').match(/\[(?:paid|card) (\d{4}-\d\d-\d\dT[^\s\]]+)/g);
+  if (!m) return false;
+  const stamps = m.map(x => Date.parse(x.replace(/^\[(?:paid|card) /, '')));
+  const paidAt = Math.max(...stamps.filter(Number.isFinite));
+  const updated = Date.parse(booking.updated_at || '');
+  return Number.isFinite(paidAt) && Number.isFinite(updated) && Math.abs(updated - paidAt) < 3 * 60 * 1000;
+}
+
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -122,6 +132,13 @@ export default async (request) => {
   const booking = event?.data?.object?.booking;
   if (!booking || !type.startsWith('booking.')) {
     return new Response('OK', { status: 200 });   // not ours; never make Square retry
+  }
+
+  // The booking page writes PAID AHEAD into the note when a client pays ahead,
+  // and sends Sandy its own "Paid ahead" alert. That note change arrives here
+  // as booking.updated; announcing it as "Booking changed" would only confuse.
+  if (type === 'booking.updated' && justMarkedPaid(booking)) {
+    return new Response('OK', { status: 200 });
   }
 
   try {

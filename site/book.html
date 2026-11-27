@@ -239,6 +239,40 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .conf-err{color:#8C2F23;background:#F6E7E4;border:1px solid #E0BDB6;border-radius:4px;
   font-size:.86rem;line-height:1.45;margin-top:.75rem;padding:.6rem .75rem}
 .conf-err:empty{display:none}
+.up-pay{display:block;width:100%;margin-top:.6rem;padding:.6rem .4rem;background:none;cursor:pointer;
+  border:1px solid rgba(248,208,148,.55);color:var(--gold);font-family:var(--sans);font-size:.62rem;
+  letter-spacing:.2em;text-transform:uppercase}
+.up-pay span{letter-spacing:.06em;text-transform:none;opacity:.75}
+.up-pay:hover{background:rgba(248,208,148,.15)}
+.up-paid{margin-top:.45rem;font-size:.78rem;color:#9fd3a8;letter-spacing:.04em}
+.up-opts{display:flex;gap:.6rem}
+.up-opts .up-pay{flex:1}
+.up-optnote{margin-top:.5rem;font-size:.72rem;color:rgba(214,214,204,.75);text-align:center}
+.pay-now #cardNow{width:100%;margin-top:1.1rem}
+.up-saved{font-size:.85rem;color:#2f7a45;margin-top:1rem}
+.sheet{position:fixed;inset:0;background:rgba(10,20,32,.62);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet.hidden{display:none}
+.sheet-box{background:var(--cream);width:100%;max-width:480px;padding:1.5rem 1.3rem 1.3rem;
+  max-height:92vh;overflow:auto}
+@media (min-width:600px){.sheet{align-items:center}}
+.sheet-box h3{font-family:var(--serif);letter-spacing:.14em;text-transform:uppercase;color:var(--navy);
+  font-size:1.05rem;text-align:center;margin-bottom:.5rem}
+.sheet-sub{font-size:.82rem;line-height:1.45;color:#4a5562;text-align:center;margin-bottom:1rem}
+.card-fields{min-height:90px}
+.card-loading{font-size:.82rem;color:#6b7480;text-align:center;padding:1.6rem 0}
+.agree{display:flex;gap:.55rem;align-items:flex-start;font-size:.78rem;line-height:1.45;color:#3a4552;margin:.4rem 0 .9rem}
+.agree input{margin-top:.2rem;flex:none;width:18px;height:18px}
+.sheet-err{font-size:.82rem;color:#a33;margin-bottom:.7rem}
+.sheet-err:empty{display:none}
+.sheet-box .btn{width:100%}
+.sheet-cancel{display:block;margin:.8rem auto 0;background:none;border:none;font-family:var(--sans);
+  font-size:.8rem;color:var(--navy);text-decoration:underline;cursor:pointer}
+.pay-thanks{background:rgba(159,211,168,.14);border:1px solid rgba(159,211,168,.45);color:#fff;
+  font-size:.85rem;line-height:1.45;padding:.7rem .8rem;margin-bottom:1rem}
+.pay-now{max-width:440px;margin:1.6rem auto 0;text-align:center}
+.pay-now .btn{width:100%}
+.pay-now p{font-size:.8rem;color:var(--muted,#5b6470);margin-top:.6rem;line-height:1.45}
+.pay-err{font-size:.8rem;color:#a33;margin-top:.5rem}
 .finder{text-align:center;margin:-1rem 0 2.2rem}
 .upcoming:not(.hidden)+.finder{margin-top:-1.6rem}
 .find-toggle{background:none;border:none;padding:.4rem .2rem;cursor:pointer;font-family:var(--sans);
@@ -347,12 +381,29 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
         <p>A confirmation is on its way, and I&rsquo;ll send a reminder the day before.</p>
       </div>
       <div class="summary" id="sum2"></div>
+      <div class="pay-now" id="payNow">
+        <button class="btn btn-gold" type="button" onclick="payAhead(lastBooked,this)">Pay Ahead Now</button>
+        <p>Optional. Pay securely with Square now, or pay me at your visit.</p>
+        <button class="btn btn-line" type="button" id="cardNow" onclick="openCard(lastBooked)">Save a Card for Checkout</button>
+      </div>
       <div class="actions" style="justify-content:center">
         <button class="btn btn-line" onclick="reset()">Book Another</button>
       </div>
     </section>
 
   </main>
+</div>
+
+<div class="sheet hidden" id="cardSheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle">
+  <div class="sheet-box">
+    <h3 id="cardTitle">Save a Card for Checkout</h3>
+    <p class="sheet-sub">Your card is entered into Square&rsquo;s secure form and kept with Square. Nothing is charged now.</p>
+    <div id="cardFields" class="card-fields"><div class="card-loading">Loading secure card form&hellip;</div></div>
+    <label class="agree"><input type="checkbox" id="cardAgree"> I authorize Scissors by Sandy to keep this card on file with Square and charge it for services I receive. I can ask to have it removed at any time.</label>
+    <div class="sheet-err" id="cardErr" role="alert"></div>
+    <button class="btn btn-gold" id="cardSave" type="button" onclick="saveCard()">Save Card</button>
+    <button class="sheet-cancel" type="button" onclick="closeCard()">Not now</button>
+  </div>
 </div>
 
 <script>
@@ -652,15 +703,29 @@ function renderUpcoming(){
       const when=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+
         ' at '+fmtRange(d.getHours()*60+d.getMinutes(), b.min||0);
       const hrs=(d.getTime()-Date.now())/3600000;
-      const acts = hrs>CUTOFF_HOURS
-        ? '<div class="up-acts"><button onclick="doReschedule(\''+b.id+'\')">Reschedule</button>'+
-          '<button class="danger" onclick="askCancel(\''+b.id+'\')">Cancel</button></div>'
-        : '<div class="up-late">Within '+CUTOFF_HOURS+' hour of your appointment, please call or text Sandy at '+
+      let acts;
+      if(hrs<=CUTOFF_HOURS){
+        acts='<div class="up-late">Within '+CUTOFF_HOURS+' hour of your appointment, please call or text Sandy at '+
           '<a href="tel:+18482305995">(848) 230-5995</a>.</div>';
+      } else if(b.paid){
+        // Paid visits are refunded by Sandy, so cancelling goes through her.
+        acts='<div class="up-acts"><button onclick="doReschedule(\''+b.id+'\')">Reschedule</button>'+
+          (b.card?'':'<button onclick="openCard(\''+b.id+'\')">Save a Card</button>')+'</div>'+
+          '<div class="up-late">To cancel a paid visit, call or text Sandy at '+
+          '<a href="tel:+18482305995">(848) 230-5995</a> and she\u2019ll refund you.</div>';
+      } else {
+        acts='<div class="up-acts"><button onclick="doReschedule(\''+b.id+'\')">Reschedule</button>'+
+          '<button class="danger" onclick="askCancel(\''+b.id+'\')">Cancel</button></div>'+
+          '<div class="up-opts"><button class="up-pay" onclick="payAhead(\''+b.id+'\',this)">Pay Ahead</button>'+
+          (b.card?'':'<button class="up-pay" onclick="openCard(\''+b.id+'\')">Save a Card</button>')+'</div>'+
+          '<div class="up-optnote">Both optional. You can always pay at your visit.</div>';
+      }
+      const paidTag = (b.paid ? '<div class="up-paid">&#10003; Paid ahead</div>' : '')+
+        (b.card ? '<div class="up-paid">&#10003; '+b.card+' saved for checkout</div>' : '');
       // Records saved before visits could hold several services kept one name.
       const names=(b.svcNames&&b.svcNames.length)?listNames(b.svcNames):(b.svcName||'Appointment');
       return '<div class="up-card" id="card-'+b.id+'"><div class="up-svc">'+names+'</div>'+
-             '<div class="up-when">'+when+'</div>'+acts+'</div>';
+             '<div class="up-when">'+when+'</div>'+paidTag+acts+'</div>';
     }).join('');
 }
 function askCancel(id){
@@ -718,6 +783,111 @@ function doReschedule(id){
   AVAIL=null; availKey=null; availState='idle';
   renderPicked(); toTime();
 }
+/* ---------- pay ahead (optional, like Booksy Pay) ---------- */
+/* Opens Square's own checkout page in this tab. No card details touch this
+   site. Square sends them back here with ?paid=<booking id>, and the booking
+   function checks with Square that the payment really went through. */
+let lastBooked=null;
+async function payAhead(id,btn){
+  if(!id) return;
+  const phone=savedPhone();
+  const label=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true; btn.textContent='Opening secure checkout\u2026'}
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'paylink',bookingId:id,phone:phone})});
+    const data=await r.json().catch(function(){return{}});
+    if(!r.ok) throw new Error(data.error||'That did not go through');
+    if(data.paid){ markPaidLocal(id); renderUpcoming(); if(btn) btn.outerHTML='<div class="up-paid">&#10003; Already paid ahead</div>'; return }
+    if(!data.url) throw new Error('That did not go through');
+    location.href=data.url;
+  }catch(e){
+    if(btn){btn.disabled=false; btn.innerHTML=label}
+    alertLine(id,e.message+'. Nothing was charged. You can pay at your visit, or try again.');
+    if(btn && !el('card-'+id)) btn.insertAdjacentHTML('afterend','<p class="pay-err">'+e.message+'. Nothing was charged. You can pay at your visit.</p>');
+  }
+}
+function markPaidLocal(id){
+  putBookings(getBookings().map(b=>b.id===id?Object.assign({},b,{paid:true}):b));
+}
+async function returnFromCheckout(){
+  const id=new URLSearchParams(location.search).get('paid'); if(!id) return;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'paid',bookingId:id})});
+    const data=await r.json().catch(function(){return{}});
+    const box=el('upcoming');
+    if(r.ok && data.paid){
+      markPaidLocal(id); renderUpcoming();
+      box.classList.remove('hidden');
+      box.insertAdjacentHTML('afterbegin','<div class="pay-thanks">Thank you, you\u2019re all paid. See you soon.</div>');
+    } else {
+      // Square can take a moment to record it. Say so rather than claim it failed.
+      el('findMsg').textContent='';
+      box.classList.remove('hidden');
+      box.insertAdjacentHTML('afterbegin','<div class="pay-thanks">Your payment is still being confirmed. If you paid, you\u2019re all set and Sandy will see it.</div>');
+    }
+  }catch(e){}
+}
+
+/* ---------- card on file (optional) ---------- */
+/* Square's own card fields (Web Payments SDK) are loaded only when someone
+   taps Save a Card. The site's server only ever receives Square's one-time
+   token, never the card number. */
+let cardFor=null, sqCard=null, sqCardFor=null;
+function loadSquareJs(){
+  if(window.Square) return Promise.resolve();
+  return new Promise((ok,no)=>{const sc=document.createElement('script');
+    sc.src='https://web.squarecdn.com/v1/square.js'; sc.onload=ok; sc.onerror=()=>no(new Error('The secure card form did not load'));
+    document.head.appendChild(sc)});
+}
+async function openCard(id){
+  if(!id) return;
+  cardFor=id; el('cardErr').textContent=''; el('cardAgree').checked=false;
+  el('cardSave').disabled=false; el('cardSave').textContent='Save Card';
+  el('cardSheet').classList.remove('hidden'); document.body.style.overflow='hidden';
+  if(sqCard) return;
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'cardconfig'})});
+    const cfg=await r.json().catch(function(){return{}});
+    if(!r.ok||!cfg.appId) throw new Error(cfg.error||'Saving a card is not available right now');
+    await loadSquareJs();
+    const payments=window.Square.payments(cfg.appId,cfg.locationId);
+    sqCard=await payments.card();
+    el('cardFields').innerHTML='';
+    await sqCard.attach('#cardFields');
+  }catch(e){
+    sqCard=null;
+    el('cardFields').innerHTML='';
+    el('cardErr').textContent=e.message+'. You can still pay at your visit.';
+    el('cardSave').disabled=true;
+  }
+}
+function closeCard(){el('cardSheet').classList.add('hidden'); document.body.style.overflow=''}
+async function saveCard(){
+  if(!sqCard||!cardFor) return;
+  if(!el('cardAgree').checked){el('cardErr').textContent='Please tick the box to agree before saving.';return}
+  const btn=el('cardSave'); btn.disabled=true; btn.textContent='Saving\u2026'; el('cardErr').textContent='';
+  let me={}; try{me=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
+  try{
+    const tok=await sqCard.tokenize({intent:'STORE',customerInitiated:true,sellerKeyedIn:false,
+      billingContact:{givenName:me.fn||'',familyName:me.ln||''}});
+    if(tok.status!=='OK') throw new Error((tok.errors&&tok.errors[0]&&tok.errors[0].message)||'Please check the card details');
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'savecard',bookingId:cardFor,phone:savedPhone(),sourceId:tok.token})});
+    const data=await r.json().catch(function(){return{}});
+    if(!r.ok||!data.card) throw new Error(data.error||'That did not go through');
+    const label=data.card.brand.replace(/_/g,' ').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())+(data.card.last4?' ending '+data.card.last4:'');
+    putBookings(getBookings().map(b=>b.id===cardFor?Object.assign({},b,{card:label}):b));
+    closeCard(); renderUpcoming();
+    const cn=el('cardNow'); if(cn && cardFor===lastBooked) cn.outerHTML='<p class="up-saved">&#10003; '+label+' saved for checkout.</p>';
+  }catch(e){
+    el('cardErr').textContent=e.message+'. Nothing was saved.';
+    btn.disabled=false; btn.textContent='Save Card';
+  }
+}
+
 /* ---------- find an appointment made elsewhere ---------- */
 /* Bookings made on another phone, by Sandy, or moved over from the old system
    are not in this browser's list. Phone number plus a name on the record finds
@@ -755,7 +925,7 @@ async function findMine(){
     const counts=[]; if(known) svcs.forEach(s=>{const g=counts.find(x=>x.svc===s); g?g.qty++:counts.push({svc:s,qty:1})});
     return {id:b.id, svcIds:known?svcs.map(s=>s.id):[],
             svcNames:known?counts.map(g=>g.qty>1?g.svc.name+' × '+g.qty:g.svc.name):['Appointment'],
-            price:known?svcs.reduce((n,s)=>n+s.price,0):0, min:b.minutes||0, startISO:b.startAt};
+            price:known?svcs.reduce((n,s)=>n+s.price,0):0, min:b.minutes||0, startISO:b.startAt, paid:!!b.paid};
   });
   if(!found.length){
     msg.innerHTML='I couldn’t find an upcoming appointment under that number and name. '+
@@ -829,11 +999,13 @@ async function confirmIt(){
   }
   btn.textContent=label;
   saveMe();
+  const before=getBookings().find(b=>b.id===rescheduleId);
   const all=getBookings().filter(b=>b.id!==rescheduleId);
   all.push({id:booked.id, svcIds:picked.map(x=>x.id),
             svcNames:visitNames(), price:totalPrice(),
-            min:totalMin(), startISO:startISO()});
-  putBookings(all); rescheduleId=null;
+            min:totalMin(), startISO:startISO(), paid:!!(before&&before.paid), card:(before&&before.card)||''});
+  putBookings(all); rescheduleId=null; lastBooked=booked.id;
+  el('payNow').classList.toggle('hidden', !!(before&&before.paid));
   el('confLine').textContent=listNames(visitNames())+' with Sandy on '+
     day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';
   el('sum2').innerHTML=sumHTML();
@@ -853,7 +1025,7 @@ function go(n){
   });
   window.scrollTo({top:0,behavior:'smooth'});
 }
-renderCats(); renderUpcoming();
+renderCats(); renderUpcoming(); returnFromCheckout();
 // Arriving from a "Book this service" link: skip the service list.
 // The links the site generates carry ?service=<id>; a #<id> hash is accepted
 // too, because that is what this page originally read and links outlive pages.

@@ -98,5 +98,23 @@ check('an unrelated event is accepted quietly', r.status===200 && r.alerts.lengt
 r = await post(null, { raw:'not json', signature: sign('not json') });
 check('unparseable json does not error', r.status===200);
 
+
+// --- paying ahead: the note change is announced by the booking page, not here ---
+{
+  const paidAt = '2027-01-05T15:00:00.000Z';
+  const marked = { ...BOOKING, updated_at:'2027-01-05T15:00:02Z',
+    seller_note:`Booked on scissorsbysandy.com\nPAID AHEAD $60 online. Don't charge at checkout. [paid ${paidAt} order ORD1]` };
+  let p = await post(evt('booking.updated', marked, 'ev-paid'));
+  check('the PAID AHEAD note change does not send a second, confusing alert', p.status===200 && p.alerts.length===0, JSON.stringify(p.alerts));
+  const movedLater = { ...marked, updated_at:'2027-01-06T10:00:00Z', start_at:'2027-01-09T19:00:00Z' };
+  p = await post(evt('booking.updated', movedLater, 'ev-moved'));
+  check('a paid visit moved later still alerts Sandy', p.alerts.length===1, JSON.stringify(p.alerts));
+  p = await post(evt('booking.updated', { ...marked, status:'CANCELLED_BY_SELLER', updated_at:'2027-01-07T10:00:00Z' }, 'ev-cx'));
+  check('a paid visit cancelled later still alerts Sandy', p.alerts.length===1);
+  const carded = { ...BOOKING, updated_at:'2027-01-05T16:00:01Z',
+    seller_note:"Booked on scissorsbysandy.com\nCARD ON FILE: Visa ending 4242, saved online. Use it at checkout. [card 2027-01-05T16:00:00.000Z]" };
+  p = await post(evt('booking.updated', carded, 'ev-card'));
+  check('the CARD ON FILE note change does not send a second alert', p.alerts.length===0, JSON.stringify(p.alerts));
+}
 console.log(bad?`\n${bad} check(s) failed`:'\nall checks pass');
 process.exit(bad?1:0);

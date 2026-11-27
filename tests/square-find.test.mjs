@@ -47,6 +47,7 @@ global.fetch = async (url, opts = {}) => {
     const e164 = body.query.filter.phone_number.exact;
     return ok({ customers: CUSTOMERS.filter(c => c.phone_number === e164) });
   }
+  if (method === 'POST' && path === '/v2/orders/search') return ok({ orders: [] });
   if (method === 'GET' && path === '/v2/bookings') {
     const min = Date.parse(u.searchParams.get('start_at_min'));
     const max = Date.parse(u.searchParams.get('start_at_max'));
@@ -88,7 +89,7 @@ check('returns the services so the page can rebook the same visit',
       JSON.stringify(first.services) === '["VAR_CUT","VAR_BEARD"]', JSON.stringify(first.services));
 check('returns the length of the visit', first.minutes === 60, String(first.minutes));
 check('nothing is changed in Square by a lookup',
-      r.calls.every(c => c.method === 'GET' || c.path === '/v2/customers/search'));
+      r.calls.every(c => c.method === 'GET' || c.path === '/v2/customers/search' || c.path === '/v2/orders/search'));
 
 // --- household: the name decides whose appointments are shown ---
 r = await find({ phone:'7325550101', name:'Robin' });
