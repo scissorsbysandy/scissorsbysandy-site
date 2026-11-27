@@ -20,7 +20,7 @@ global.fetch = async (url, opts = {}) => {
   if (u.includes('/v2/locations')) return ok({ locations: [{ id: 'LDGXV0WRF8BFN', status: 'ACTIVE', timezone: 'America/New_York' }] });
   if (u.includes('team-member-booking-profiles')) return ok({ team_member_booking_profiles: [{ team_member_id: 'TM1', is_bookable: true }] });
   if (u.includes('/v2/catalog/object/')) return ok({ object: { type: 'ITEM_VARIATION', id: 'SVC', version: 1 } });
-  if (u.includes('/v2/catalog/batch-retrieve')) return ok({ objects: [{ item_variation_data: { name: 'The Executive' } }] });
+  if (u.includes('/v2/catalog/batch-retrieve')) return ok({ objects: [{ type: 'ITEM_VARIATION', item_variation_data: { name: 'Regular', item_id: 'ITEM1' } }], related_objects: [{ type: 'ITEM', id: 'ITEM1', item_data: { name: 'The Executive' } }] });
   if (u.includes('/v2/customers/custom-attribute-definitions')) {
     return ok({ custom_attribute_definitions: [{ key: 'sq0idp-OTHER:appointments-online-booking-blocking' }, { key: KEY }] });
   }
@@ -90,7 +90,7 @@ res = await handler(new Request('https://x/api/square?action=ics&id=BK1'));
 const ics = await res.text();
 check('calendar file is served as text/calendar', res.status === 200 && (res.headers.get('content-type') || '').startsWith('text/calendar'));
 check('it has the right start and end', ics.includes('DTSTART:20261205T150000Z') && ics.includes('DTEND:20261205T154500Z'), ics);
-check('it names the service and the shop', ics.includes('The Executive') && ics.includes('Old Bridge'));
+check('it names the service and the shop', ics.includes('The Executive') && !ics.includes('Regular') && ics.includes('Old Bridge'));
 check('it carries no client name', !/Robin|Example/.test(ics));
 
 // 5. Pay ahead fills the receipt email from the private field

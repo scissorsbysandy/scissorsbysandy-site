@@ -787,11 +787,13 @@ async function icsFor(bookingId) {
   const esc = (t) => String(t).replace(/[\\;,]/g, (c) => '\\' + c).replace(/\n/g, '\\n');
   let names = [];
   try {
-    const { objects = [] } = await square('/v2/catalog/batch-retrieve', {
+    const { objects = [], related_objects = [] } = await square('/v2/catalog/batch-retrieve', {
       method: 'POST',
       body: { object_ids: segs.map(x => x.service_variation_id), include_related_objects: true },
     });
-    names = objects.map(o => o.item_variation_data?.name).filter(Boolean);
+    // A service's own name lives on its item; the variation is usually "Regular".
+    const items = Object.fromEntries(related_objects.filter(o => o.type === 'ITEM').map(o => [o.id, o.item_data?.name]));
+    names = objects.map(o => items[o.item_variation_data?.item_id] || o.item_variation_data?.name).filter(Boolean);
   } catch { /* the times matter more than the names */ }
   const lines = [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Scissors by Sandy//Booking//EN', 'METHOD:PUBLISH',
