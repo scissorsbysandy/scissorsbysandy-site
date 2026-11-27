@@ -72,7 +72,7 @@ PAGES = [
         ("Short and even", f"The Regiment. The classic crew cut, uniform rather than faded. {M('regiment')}."),
         ("Ages 12 and under", f"The Royal Roots. Patient and unhurried. {M('royalroots')}."),
     ]),
-    quotes=["Timothy H.", "Joe W."],
+    quotes=["Timothy H.", "Joe W.", "Esdras V."],
     faq=[
       ("Is a wash included?", "Yes. Every haircut on my menu includes a wash."),
       ("What makes The Executive different?", f"It's cut entirely with shears, no clippers and no guards, with every line judged by eye. That takes longer, about {M('executive')}, and the result grows out softer and sits more naturally."),
@@ -98,7 +98,7 @@ PAGES = [
         ("By appointment", "The time you book is held for your child, so you walk in and we start."),
         ("Easy parking", "Free parking directly outside the suite at The Shoppes at Old Bridge."),
     ]),
-    quotes=["Danielle K.", "Pablo C."],
+    quotes=["Danielle K.", "Joselyn C."],
     faq=[
       ("What ages is The Royal Roots for?", f"Ages 12 and under. It's a wash and cut, {M('royalroots')}, {P('royalroots')}. From 13 up, book any cut on my haircut menu."),
       ("Do you take walk-ins for kids' cuts?", "No. I'm by appointment only, and that's what keeps it calm. The time is held for your child, with no waiting room and no rushing."),
@@ -152,7 +152,7 @@ PAGES = [
         ("Cleanse", "A gentle cleanse and exfoliation, then a deep pore cleanse."),
         ("Finish", "A hydrating mask and a moisturizer suited to your skin."),
     ]),
-    quotes=["Jim F."],
+    quotes=["Boardwalk Runner"],
     faq=[
       ("How long is the Mini Facial?", f"Thirty minutes, {P('minifacial')}. It's relaxing on its own, or you can add it to any cut."),
       ("Can I add a treatment to my haircut?", f"Yes. Book them together and they're done in one visit. The Diplomat pairs The Signature cut with a Scalp Treatment for {P('diplomat')}."),
@@ -244,6 +244,17 @@ def nav_items(current=None):
                      for h, t in items)
 
 def esc(t): return html.escape(t, quote=False)
+
+# Reviews quoted on a service page but not on the homepage. Copied word for word
+# from Google (trimmed to whole sentences only, never reworded); the name is how
+# the homepage credits reviewers, first name and last initial, or the reviewer's
+# Google handle when that is all they give.
+PAGE_REVIEWS = {
+    "Joselyn C.": "I brought both of my boys in for haircuts, and I don’t think their hair has ever looked this good! One needed his haircut entirely with scissors, and the other with clippers and scissors, and she did such an amazing job with both. I’m usually very picky when it comes to their haircuts, so finding someone who gets it right means so much to me.",
+    "Boardwalk Runner": "I’ve been going to Sandy for over two years, and I wouldn’t trust anyone else with my hair. From the haircut to the scalp massage, shave, facial, and attention to every detail, it’s an experience, not just an appointment. She uses great products, takes pride in her work, and it shows every time I leave.",
+    "Esdras V.": "Sandy is a true master of her craft, and her dedication to the art of barbering is evident in every single detail of her work. It is incredibly difficult to find a professional today who is willing to take the necessary time to perform every cut to absolute perfection, but Sandy does exactly that without fail.",
+}
+
 def text(h_): return re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', '', h_))).strip()
 
 def pic(cls, base, big, alt, ratio, sizes):
@@ -300,6 +311,8 @@ EXTRA_CSS = """
   .quote-grid.one{grid-template-columns:minmax(0,640px);justify-content:center}
   .quote-grid.two{grid-template-columns:repeat(2,minmax(0,1fr));max-width:900px}
   @media (max-width:900px){ .quote-grid.two{grid-template-columns:1fr} }
+  .quote-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media (max-width:900px){ .quote-grid.three{grid-template-columns:1fr} }
   .visit-strip{text-align:center}
   .more-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.4rem;max-width:860px;margin:0 auto}
   @media (max-width:820px){ .more-grid{grid-template-columns:1fr;max-width:520px} }
@@ -378,11 +391,12 @@ def build():
         guide = '\n'.join(f'    <div>{pic("g-pic", *ph, 4/3, "(max-width:700px) 92vw, 340px") if ph else ""}<h3>{esc(a)}</h3><p>{esc(b)}</p></div>'
                            for (a, b), ph in zip(gitems, gp))
         # ---- quotes
-        qcls = 'one' if len(p['quotes']) == 1 else 'two'
-        def quote(name):  # verbatim from the homepage, so a review is never reworded
+        qcls = {1: 'one', 3: 'three'}.get(len(p['quotes']), 'two')
+        def quote(name):  # verbatim from the homepage (or PAGE_REVIEWS), so a review is never reworded
             m = re.search(r'<blockquote>((?:(?!<blockquote>).)*?)</blockquote>\s*<(?:cite|figcaption)>' + re.escape(name), home, re.S)
-            if not m: raise SystemExit(f"build_pages: review by {name} not found on the homepage")
-            return m.group(1).strip()
+            if m: return m.group(1).strip()
+            if name in PAGE_REVIEWS: return esc(PAGE_REVIEWS[name])
+            raise SystemExit(f"build_pages: review by {name} not found on the homepage or in PAGE_REVIEWS")
         quotes = '\n'.join(f'    <div class="quote">\n      <div class="stars">★★★★★</div>\n'
                            f'      <blockquote>{quote(c)}</blockquote>\n      <cite>{esc(c)}</cite>\n    </div>'
                            for c in p['quotes'])
