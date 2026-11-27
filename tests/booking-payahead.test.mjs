@@ -30,7 +30,8 @@ const browser=await chromium.launch();
 let failures=0;
 const check=(l,c,d='')=>{ if(!c){failures++;console.log(`FAIL  ${l}`);if(d)console.log('        '+d)} else console.log(`PASS  ${l}`) };
 
-async function session({saved=[], paidState=false, payFails=false, url=PAGE, viewport}={}) {
+async function session({saved=[], paidState=false, paidAfter=0, payFails=false, url=PAGE, viewport}={}) {
+  let paidCalls=0;
   const ctx=await browser.newContext({timezoneId:'America/New_York', ...(viewport?{viewport,deviceScaleFactor:2}:{})});
   const page=await ctx.newPage(); await page.clock.setFixedTime(NOW);
   const seen=[]; const errs=[];
@@ -42,7 +43,7 @@ async function session({saved=[], paidState=false, payFails=false, url=PAGE, vie
     const body=JSON.parse(req.postData()||'{}'); seen.push(body);
     if(body.action==='paylink') return payFails ? J(502,{error:'Could not reach the booking calendar'})
                                                 : J(200,{url:BASE+'/fake-square-checkout'});
-    if(body.action==='paid') return J(200,{paid:paidState});
+    if(body.action==='paid'){ paidCalls++; return J(200,{paid: paidState || (paidAfter>0 && paidCalls>=paidAfter)}); }
     return J(200,{booking:{id:'BK_NEW',status:'ACCEPTED'}});
   });
   await page.addInitScript(([s])=>{
@@ -105,10 +106,21 @@ const CARD={id:'BK1',svcIds:['executive'],svcNames:['The Executive'],price:60,mi
   await ctx.close();
 }
 
-/* ---- 4. coming back before Square has recorded it ---- */
+/* ---- 4a. Square records the payment a few seconds after sending them back ---- */
 {
-  const {page,ctx}=await session({saved:[CARD], paidState:false, url:PAGE+'?paid=BK1'});
+  const {page,seen,ctx}=await session({saved:[CARD], paidAfter:3, url:PAGE+'?paid=BK1'});
+  await page.waitForTimeout(7000);
+  const txt=await page.locator('#upcoming').innerText();
+  check('the page keeps checking and thanks them once Square catches up', /all paid/.test(txt) && seen.filter(s=>s.action==='paid').length===3, txt);
+  await ctx.close();
+}
+
+/* ---- 4b. never recorded while they wait ---- */
+{
+  const {page,seen,ctx}=await session({saved:[CARD], paidState:false, url:PAGE+'?paid=BK1'});
   await page.waitForTimeout(400);
+  check('it says nothing while it is still checking', !/being confirmed|all paid/.test(await page.locator('#upcoming').innerText()));
+  await page.waitForTimeout(19500);
   const txt=await page.locator('#upcoming').innerText();
   check('it says the payment is being confirmed, not that it failed', /being confirmed/.test(txt) && !/fail/i.test(txt), txt);
   await ctx.close();

@@ -814,9 +814,16 @@ async function returnFromCheckout(){
   const id=new URLSearchParams(location.search).get('paid'); if(!id) return;
   try{history.replaceState(null,'',location.pathname)}catch(e){}
   try{
-    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({action:'paid',bookingId:id})});
-    const data=await r.json().catch(function(){return{}});
+    // Square sends the client back a few seconds before it has finished
+    // recording the payment, so check a few times before saying anything.
+    let r, data={};
+    for(let i=0;i<8;i++){
+      r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({action:'paid',bookingId:id})});
+      data=await r.json().catch(function(){return{}});
+      if(r.ok && data.paid) break;
+      await new Promise(res=>setTimeout(res,2500));
+    }
     const box=el('upcoming');
     if(r.ok && data.paid){
       markPaidLocal(id); renderUpcoming();

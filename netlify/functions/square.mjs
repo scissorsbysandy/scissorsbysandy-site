@@ -320,6 +320,7 @@ async function assertOwner(booking, phone) {
   if (!customer || customer.phone_number !== e164) {
     throw Object.assign(new Error('That appointment is not under this phone number'), { status: 403 });
   }
+  return customer;
 }
 
 async function cancelBooking({ bookingId, phone }) {
@@ -401,6 +402,12 @@ function whenText(startAt) {
   });
 }
 
+function payNote(customer, booking) {
+  const who = [customer?.given_name, customer?.family_name].filter(Boolean).join(' ').trim();
+  const when = whenText(booking.start_at);
+  return ('Paid ahead' + (who ? ' for ' + who : '') + ': appointment ' + when + ' with Sandy').slice(0, 500);
+}
+
 /** Paid pay-ahead orders from the last 120 days, keyed by booking id. Read only. */
 async function paidOrders() {
   const { locationId } = await setup();
@@ -480,7 +487,7 @@ async function checkPaid(bookingId) {
 
 async function payLink({ bookingId, phone }) {
   const booking = await getBooking(bookingId);
-  await assertOwner(booking, phone);
+  const customer = await assertOwner(booking, phone);
   if (await checkPaid(booking.id)) return { paid: true };
   if (booking.status !== 'ACCEPTED' && booking.status !== 'PENDING') {
     throw Object.assign(new Error('This appointment is no longer booked'), { status: 400 });
@@ -506,8 +513,15 @@ async function payLink({ bookingId, phone }) {
         ask_for_shipping_address: false,
         redirect_url: SITE + '/book.html?paid=' + encodeURIComponent(booking.id),
       },
-      pre_populated_data: { buyer_phone_number: toE164(phone) },
-      payment_note: 'Scissors by Sandy, appointment ' + whenText(booking.start_at),
+      // The client's own email, so the receipt reaches them and Square files
+      // the payment under the client it already knows rather than a new one.
+      pre_populated_data: {
+        buyer_phone_number: toE164(phone),
+        ...(customer.email_address ? { buyer_email: customer.email_address } : {}),
+      },
+      // Printed at the top of the receipt and on the payment in Square, so it
+      // says who it is for, what, and when.
+      payment_note: payNote(customer, booking),
     },
   });
   return { url: payment_link.url || payment_link.long_url };

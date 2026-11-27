@@ -37,7 +37,7 @@ global.fetch = async (url, opts = {}) => {
   }
   if (method === 'POST' && path === '/v2/bookings/BK1/cancel') return ok({ booking:{ id:'BK1', status:'CANCELLED_BY_CUSTOMER' } });
   if (method === 'GET' && path === '/v2/customers/C1')
-    return ok({ customer:{ id:'C1', given_name:'Pat', family_name:'Example', phone_number:'+17325550101' } });
+    return ok({ customer:{ id:'C1', given_name:'Pat', family_name:'Example', phone_number:'+17325550101', email_address:'pat@example.com' } });
   if (method === 'POST' && path === '/v2/customers/search')
     return ok({ customers:[{ id:'C1', given_name:'Pat', family_name:'Example', phone_number:'+17325550101' }] });
   if (method === 'GET' && path === '/v2/bookings') return ok({ bookings:[{ ...BOOKING }] });
@@ -76,6 +76,9 @@ check('it charges exactly the booked services, from the catalog',
         { catalog_object_id:'VAR_CUT', quantity:'1' }, { catalog_object_id:'VAR_BEARD', quantity:'1' }]),
       JSON.stringify(link?.body?.order?.line_items));
 check('tipping is offered', link?.body?.checkout_options?.allow_tipping === true);
+check('the receipt line names the client and the visit',
+      /^Paid ahead for Pat Example: appointment \w{3}, \w{3} \d+, \d+:\d\d [AP]M with Sandy$/.test(link?.body?.payment_note || ''), link?.body?.payment_note);
+check('the client\u2019s own email is filled in so the receipt reaches them', link?.body?.pre_populated_data?.buyer_email === 'pat@example.com');
 check('Square sends them back to the booking page with the booking id',
       link?.body?.checkout_options?.redirect_url === 'https://scissorsbysandy.com/book.html?paid=BK1');
 check('making a link changes nothing on the booking', !calls.some(c => c.method === 'PUT'));
