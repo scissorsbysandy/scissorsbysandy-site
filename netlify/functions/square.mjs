@@ -22,8 +22,6 @@
  */
 
 const SQUARE_VERSION = '2026-09-16';
-import crypto from 'node:crypto';
-
 const HOST = process.env.SQUARE_ENV === 'sandbox'
   ? 'https://connect.squareupsandbox.com'
   : 'https://connect.squareup.com';
@@ -355,50 +353,6 @@ async function rescheduleBooking({ bookingId, phone, service, services, startAt 
   return { id: out.id, status: out.status, startAt: out.start_at };
 }
 
-/* ---------- one-time staff move (temporary, cutover preview only) ------- */
-/* Moves an existing booking to another team member, keeping its time,
- * services and lengths. Deleted once the move is done. */
-async function reassignBooking({ bookingId, teamMemberId }) {
-  const booking = await getBooking(bookingId);
-  const segments = (booking.appointment_segments || []).map(s => ({
-    service_variation_id: s.service_variation_id,
-    service_variation_version: s.service_variation_version,
-    duration_minutes: s.duration_minutes,
-    team_member_id: teamMemberId,
-  }));
-  const { booking: out } = await square('/v2/bookings/' + encodeURIComponent(bookingId), {
-    method: 'PUT',
-    body: { booking: { version: booking.version, appointment_segments: segments } },
-  });
-  return { id: out.id, status: out.status, startAt: out.start_at,
-           team: (out.appointment_segments || []).map(x => x.team_member_id) };
-}
-
-async function addStaffToServices({ teamMemberId }) {
-  let cursor, items = [];
-  do {
-    const q = '/v2/catalog/list?types=ITEM' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : '');
-    const page = await square(q);
-    items = items.concat(page.objects || []);
-    cursor = page.cursor;
-  } while (cursor);
-  const services = items.filter(o => o.item_data?.product_type === 'APPOINTMENTS_SERVICE' && !o.is_deleted);
-  const strip = o => { delete o.updated_at; delete o.created_at; return o; };
-  for (const it of services) {
-    strip(it);
-    for (const v of it.item_data.variations || []) {
-      strip(v);
-      const ids = v.item_variation_data.team_member_ids || [];
-      if (!ids.includes(teamMemberId)) v.item_variation_data.team_member_ids = ids.concat(teamMemberId);
-    }
-  }
-  const out = await square('/v2/catalog/batch-upsert', {
-    method: 'POST',
-    body: { idempotency_key: crypto.randomUUID(), batches: [{ objects: services }] },
-  });
-  return { services: services.length, updated: (out.objects || []).length };
-}
-
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -433,13 +387,6 @@ export default async (request) => {
         const missing = need(['bookingId', 'phone', 'startAt']);
         if (missing) return json(400, { error: missing });
         return json(200, { booking: await rescheduleBooking(body) });
-      }
-
-      if (action === 'reassign') {
-        const given = crypto.createHash('sha256').update(String(body.key || '')).digest('hex');
-        if (given !== '223f6e8ca59ee472eefae1e624d2814b4dc48ab202201ddca07cb1b252d8cca9') return json(404, { error: 'Not found' });
-        if (body.step === 'services') return json(200, await addStaffToServices(body));
-        return json(200, { booking: await reassignBooking(body) });
       }
 
       if (action !== 'book') return json(400, { error: 'Unknown action' });
