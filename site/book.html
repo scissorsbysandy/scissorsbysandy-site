@@ -239,6 +239,15 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .conf-err{color:#8C2F23;background:#F6E7E4;border:1px solid #E0BDB6;border-radius:4px;
   font-size:.86rem;line-height:1.45;margin-top:.75rem;padding:.6rem .75rem}
 .conf-err:empty{display:none}
+.finder{text-align:center;margin:-1rem 0 2.2rem}
+.upcoming:not(.hidden)+.finder{margin-top:-1.6rem}
+.find-toggle{background:none;border:none;padding:.4rem .2rem;cursor:pointer;font-family:var(--sans);
+  font-size:.8rem;line-height:1.5;color:var(--navy)}
+.find-toggle b{font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.find-form{max-width:440px;margin:1.1rem auto 0;text-align:left}
+.find-form .btn{width:100%}
+.find-msg{font-size:.86rem;line-height:1.45;margin-top:.8rem}
+.find-msg:empty{display:none}
 </style>
 </head>
 <body>
@@ -259,6 +268,15 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
     <!-- STEP 1 -->
     <section id="s1">
       <div class="upcoming hidden" id="upcoming"></div>
+      <div class="finder" id="finder">
+        <button class="find-toggle" id="findToggle" type="button" onclick="toggleFind()">Already have an appointment? <b>Find it to move or cancel</b></button>
+        <div class="find-form hidden" id="findForm">
+          <div class="field"><label for="fph">Mobile Number</label><input id="fph" type="tel" autocomplete="tel" placeholder="(848) 230-5995"></div>
+          <div class="field"><label for="fnm">Your Name</label><input id="fnm" autocomplete="name"></div>
+          <button class="btn btn-gold" id="findBtn" type="button" onclick="findMine()">Find My Appointment</button>
+          <div class="find-msg" id="findMsg" role="status" aria-live="polite"></div>
+        </div>
+      </div>
       <h2 class="sec-head">Choose Your Services</h2>
       <div class="sec-sub">Add as many as you like &middot; One chair at a time</div>
       <div class="rule"><span>&#10022;</span></div>
@@ -623,6 +641,9 @@ function startISO(){const d=new Date(day); d.setHours(Math.floor(slot/60),slot%6
 
 function renderUpcoming(){
   const list=getBookings(), box=el('upcoming');
+  const ft=el('findToggle');
+  if(ft) ft.innerHTML=(list.length?'Don’t see your appointment?':'Already have an appointment?')+
+    ' <b>Find it to move or cancel</b>';
   if(!list.length){box.classList.add('hidden'); return}
   box.classList.remove('hidden');
   box.innerHTML='<h3>Your Upcoming '+(list.length>1?'Appointments':'Appointment')+'</h3>'+
@@ -696,6 +717,61 @@ function doReschedule(id){
   rescheduleId=id; picked=again;
   AVAIL=null; availKey=null; availState='idle';
   renderPicked(); toTime();
+}
+/* ---------- find an appointment made elsewhere ---------- */
+/* Bookings made on another phone, by Sandy, or moved over from the old system
+   are not in this browser's list. Phone number plus a name on the record finds
+   them; after that they behave exactly like one booked here. */
+function svcByVar(v){for(const c of CATS){const f=c.services.find(x=>x.var===v); if(f) return f} return null}
+function toggleFind(){
+  const f=el('findForm'), opening=f.classList.contains('hidden');
+  f.classList.toggle('hidden');
+  if(opening){
+    let d=null; try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+    if(d){ if(!el('fph').value) el('fph').value=d.ph||'';
+           if(!el('fnm').value) el('fnm').value=[d.fn,d.ln].filter(Boolean).join(' '); }
+    (el('fph').value?el('fnm'):el('fph')).focus();
+  }
+}
+async function findMine(){
+  const phone=el('fph').value.trim(), name=el('fnm').value.trim(), msg=el('findMsg'), btn=el('findBtn');
+  if(phone.replace(/\D/g,'').length<10){msg.textContent='Please enter the mobile number you booked with.';return}
+  if(!name){msg.textContent='Please enter your name.';return}
+  btn.disabled=true; msg.textContent='Looking…';
+  let data;
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({action:'find',phone:phone,name:name})});
+    data=await r.json().catch(function(){return{}});
+    if(!r.ok) throw new Error(data.error||'That did not go through');
+  }catch(e){
+    msg.textContent=e.message+'. Please try again, or call or text Sandy at (848) 230-5995.';
+    btn.disabled=false; return;
+  }
+  btn.disabled=false;
+  const found=(data.bookings||[]).map(b=>{
+    const svcs=(b.services||[]).map(svcByVar);
+    const known=svcs.length&&svcs.every(Boolean);
+    const counts=[]; if(known) svcs.forEach(s=>{const g=counts.find(x=>x.svc===s); g?g.qty++:counts.push({svc:s,qty:1})});
+    return {id:b.id, svcIds:known?svcs.map(s=>s.id):[],
+            svcNames:known?counts.map(g=>g.qty>1?g.svc.name+' × '+g.qty:g.svc.name):['Appointment'],
+            price:known?svcs.reduce((n,s)=>n+s.price,0):0, min:b.minutes||0, startISO:b.startAt};
+  });
+  if(!found.length){
+    msg.innerHTML='I couldn’t find an upcoming appointment under that number and name. '+
+      'Please call or text Sandy at <a href="tel:+18482305995">(848) 230-5995</a>.';
+    return;
+  }
+  const ids=new Set(found.map(b=>b.id));
+  putBookings(getBookings().filter(b=>!ids.has(b.id)).concat(found));
+  // Keep the number for the Cancel and Reschedule checks, without losing an email already saved.
+  let d={}; try{d=JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){}
+  const c=data.client||{}, parts=name.split(/\s+/);
+  try{localStorage.setItem(KEY,JSON.stringify({fn:c.firstName||d.fn||parts[0], ln:c.lastName||d.ln||parts.slice(1).join(' '),
+                                               ph:phone, em:d.em||''}))}catch(e){}
+  msg.textContent=''; el('findForm').classList.add('hidden');
+  renderUpcoming();
+  el('upcoming').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function alertLine(id,msg){
   const c=el('card-'+id); if(!c) return;

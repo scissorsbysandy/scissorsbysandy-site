@@ -179,7 +179,7 @@ function toE164(raw) {
 
 /**
  * Compare names loosely enough to survive casing, accents and punctuation
- * ("O'Neil" / "oneil", "jayden" / "Jayden") without matching different people.
+ * ("O'Brien" / "obrien", "jayden" / "Jayden") without matching different people.
  */
 function normName(s) {
   return String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z]/g, '');
@@ -353,6 +353,83 @@ async function rescheduleBooking({ bookingId, phone, service, services, startAt 
   return { id: out.id, status: out.status, startAt: out.start_at };
 }
 
+/* ---------- finding a client's appointments ------------------------------ */
+
+/**
+ * The page remembers only the bookings made in that browser. Appointments moved
+ * over from Booksy, made by Sandy, or booked on another phone were invisible to
+ * it, so those clients had to call to move or cancel. This finds them.
+ *
+ * Two things must agree before anything is shown: the phone number on the
+ * record, and a name on it (first or last, so the single-name records Booksy
+ * kept, like "Andrew", still work). A number on its own is not enough, because
+ * one number can be a whole household. If nothing matches, the answer is the
+ * same empty list whether or not the number is known, so the lookup cannot be
+ * used to test whose number is whose.
+ */
+const TITLES = new Set(['mr', 'mrs', 'ms', 'miss', 'dr']);
+function nameTokens(...parts) {
+  return parts.join(' ').split(/[\s,]+/).map(normName).filter(t => t.length >= 2 && !TITLES.has(t));
+}
+
+async function findBookings({ phone, name }) {
+  const e164 = toE164(phone);
+  if (!e164) throw Object.assign(new Error('That phone number does not look right'), { status: 400 });
+  const typed = nameTokens(name);
+  if (!typed.length) throw Object.assign(new Error('Please enter your name'), { status: 400 });
+
+  const { customers = [] } = await square('/v2/customers/search', {
+    method: 'POST',
+    body: { query: { filter: { phone_number: { exact: e164 } } }, limit: 20 },
+  });
+  // Score each record on the number by how many typed names it carries, and keep
+  // only the best. "Pat Example" then finds Pat and not Pat's child on the same
+  // number, while "Example" on its own still shows the whole household.
+  const scored = customers.map(c => {
+    const have = nameTokens(c.given_name, c.family_name);
+    return { c, score: typed.filter(t => have.includes(t)).length };
+  });
+  const best = Math.max(0, ...scored.map(s => s.score));
+  const mine = best ? scored.filter(s => s.score === best).map(s => s.c) : [];
+  if (!mine.length) return { client: null, bookings: [] };
+
+  const { locationId } = await setup();
+  const now = Date.now();
+  const DAY = 86400000;
+  const out = [];
+  for (const c of mine) {
+    // Square lists at most 31 days per request; three windows reach 90 days out.
+    for (let w = 0; w < 3; w++) {
+      const min = new Date(now + w * 30 * DAY).toISOString();
+      const max = new Date(now + (w + 1) * 30 * DAY).toISOString();
+      let cursor = '';
+      do {
+        const q = new URLSearchParams({ location_id: locationId, customer_id: c.id,
+          start_at_min: min, start_at_max: max, limit: '100' });
+        if (cursor) q.set('cursor', cursor);
+        const res = await square('/v2/bookings?' + q.toString());
+        for (const b of res.bookings || []) {
+          if (b.status !== 'ACCEPTED' && b.status !== 'PENDING') continue;
+          if (new Date(b.start_at).getTime() <= now) continue;
+          const segs = b.appointment_segments || [];
+          out.push({
+            id: b.id,
+            startAt: b.start_at,
+            services: segs.map(s => s.service_variation_id),
+            minutes: segs.reduce((n, s) => n + (s.duration_minutes || 0), 0),
+          });
+        }
+        cursor = res.cursor || '';
+      } while (cursor);
+    }
+  }
+  const seen = new Set();
+  const bookings = out.filter(b => !seen.has(b.id) && seen.add(b.id))
+                      .sort((a, b) => a.startAt.localeCompare(b.startAt));
+  const who = mine[0];
+  return { client: { firstName: who.given_name || '', lastName: who.family_name || '' }, bookings };
+}
+
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -387,6 +464,12 @@ export default async (request) => {
         const missing = need(['bookingId', 'phone', 'startAt']);
         if (missing) return json(400, { error: missing });
         return json(200, { booking: await rescheduleBooking(body) });
+      }
+
+      if (action === 'find') {
+        const missing = need(['phone', 'name']);
+        if (missing) return json(400, { error: missing });
+        return json(200, await findBookings(body));
       }
 
       if (action !== 'book') return json(400, { error: 'Unknown action' });
