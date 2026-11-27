@@ -15,13 +15,16 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const PAGE=`http://127.0.0.1:${server.address().port}/book.html`;
 const SHOTS = process.env.SHOTS || '';
 
-const t=new Date(Date.now()+6*24*3600*1000); const pad=n=>String(n).padStart(2,'0');
+// Freeze the clock mid-month so the test never depends on today's date
+// (a slot six days out used to land in next month near month end).
+const NOW=new Date('2027-02-10T12:00:00-05:00').getTime();
+const t=new Date(NOW+6*24*3600*1000); const pad=n=>String(n).padStart(2,'0');
 const DATE=`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
 const SLOTS=[`${DATE}T15:00:00-05:00`,`${DATE}T16:00:00-05:00`];
 
 const browser=await chromium.launch();
 const ctx=await browser.newContext({timezoneId:'America/New_York', viewport:{width:430,height:900}});
-const page=await ctx.newPage();
+const page=await ctx.newPage(); await page.clock.setFixedTime(NOW);
 const posts=[]; const gets=[]; const errs=[];
 page.on('pageerror',e=>errs.push(e.message));
 await page.route('**/api/square*', async route=>{
@@ -81,7 +84,7 @@ const ids = decodeURIComponent((lastGet.match(/services=([^&]+)/)||[])[1]||'');
 check('availability asks for both services', ids.split(',').length===2, ids);
 check('step 2 sums the visit', /2 services/i.test(await page.locator('#s2sub').innerText()));
 
-await page.locator('.day:not([disabled])').first().click(); await page.waitForTimeout(300);
+await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(300);
 await page.locator('.slot').first().click(); await page.waitForTimeout(200);
 await page.locator('#toS3').click(); await page.waitForTimeout(300);
 

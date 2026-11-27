@@ -17,11 +17,14 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const PAGE=`http://127.0.0.1:${server.address().port}/book.html`;
 
 // a weekday six days out, 3pm shop time
-const t=new Date(Date.now()+6*24*3600*1000);
+// Freeze the clock mid-month so the test never depends on today's date
+// (a slot six days out used to land in next month near month end).
+const NOW=new Date('2027-02-10T12:00:00-05:00').getTime();
+const t=new Date(NOW+6*24*3600*1000);
 const pad=n=>String(n).padStart(2,'0');
 const DATE=`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
 const SLOTS=[`${DATE}T15:00:00-05:00`,`${DATE}T16:00:00-05:00`];
-const future=new Date(Date.now()+5*24*3600*1000).toISOString();
+const future=new Date(NOW+5*24*3600*1000).toISOString();
 
 const browser=await chromium.launch();
 let failures=0;
@@ -29,7 +32,7 @@ const check=(l,c,d='')=>{ if(!c){failures++;console.log(`FAIL  ${l}`);if(d)conso
 
 async function session({cancelFails=false}={}) {
   const ctx=await browser.newContext({timezoneId:'America/New_York'});
-  const page=await ctx.newPage();
+  const page=await ctx.newPage(); await page.clock.setFixedTime(NOW);
   const seen=[]; const errs=[];
   page.on('pageerror',e=>errs.push(e.message));
   await page.route('**/api/square*', async route=>{
@@ -91,7 +94,7 @@ async function session({cancelFails=false}={}) {
   const {page,seen,errs,ctx}=await session();
   await page.locator('#upcoming button', {hasText:'Reschedule'}).first().click();
   await page.waitForTimeout(600);
-  const dayBtn=page.locator(`.day:not([disabled])`).first();
+  const dayBtn=page.locator(`button.day:not([disabled])`).first();
   await dayBtn.click(); await page.waitForTimeout(300);
   await page.locator('.slot').first().click(); await page.waitForTimeout(200);
   await page.locator('#toS3').click(); await page.waitForTimeout(300);

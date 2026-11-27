@@ -12,12 +12,15 @@ const server=http.createServer((req,res)=>{const f=path.join(ROOT,decodeURICompo
   res.writeHead(200,{'content-type':'text/html'});res.end(d)})});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const BASE=`http://127.0.0.1:${server.address().port}`;
-const SLOTS=[new Date(Date.now()+6*864e5).toISOString()];
+// Freeze the clock mid-month so the test never depends on today's date
+// (a slot six days out used to land in next month near month end).
+const NOW=new Date('2027-02-10T12:00:00-05:00').getTime();
+const SLOTS=[new Date(NOW+6*864e5).toISOString()];
 const b=await chromium.launch(); const ctx=await b.newContext({timezoneId:'America/New_York'});
 let bad=0; const check=(l,c,d='')=>{ if(!c){bad++;console.log(`FAIL  ${l}`);if(d)console.log('        '+d)} else console.log(`PASS  ${l}`) };
 
 async function land(url){
-  const page=await ctx.newPage();
+  const page=await ctx.newPage(); await page.clock.setFixedTime(NOW);
   await page.route('**/api/square*', r=> r.request().method()==='GET'
     ? r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({slots:SLOTS})})
     : r.fulfill({status:200,contentType:'application/json',body:'{"booking":{"id":"BK"}}'}));

@@ -12,13 +12,16 @@ const server=http.createServer((req,res)=>{const f=path.join(ROOT,decodeURICompo
   res.writeHead(200,{'content-type':'text/html'});res.end(d)})});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const BASE=`http://127.0.0.1:${server.address().port}`;
-const day=new Date(Date.now()+6*864e5); const pad=n=>String(n).padStart(2,'0');
+// Freeze the clock mid-month so the test never depends on today's date
+// (a slot six days out used to land in next month near month end).
+const NOW=new Date('2027-02-10T12:00:00-05:00').getTime();
+const day=new Date(NOW+6*864e5); const pad=n=>String(n).padStart(2,'0');
 const D=`${day.getFullYear()}-${pad(day.getMonth()+1)}-${pad(day.getDate())}`;
 const SLOTS=[`${D}T15:00:00-05:00`,`${D}T16:00:00-05:00`,`${D}T17:00:00-05:00`];
 
 const b=await chromium.launch();
 const ctx=await b.newContext({timezoneId:'America/New_York',viewport:{width:430,height:930}});
-const page=await ctx.newPage();
+const page=await ctx.newPage(); await page.clock.setFixedTime(NOW);
 const errs=[]; page.on('pageerror',e=>errs.push(e.message));
 await page.route('**/api/square*', r=> r.request().method()==='GET'
   ? r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({slots:SLOTS})})
@@ -49,7 +52,7 @@ check('the control now reads "another"',
       await page.locator('#addMore').innerText());
 
 // and the visit still books
-await page.locator('.day:not([disabled])').first().click(); await page.waitForTimeout(350);
+await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(350);
 await page.locator('.slot').first().click(); await page.waitForTimeout(150);
 await page.locator('#toS3').click(); await page.waitForTimeout(300);
 await page.locator('#fn').fill('Casey'); await page.locator('#ln').fill('Example');
