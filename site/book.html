@@ -1033,6 +1033,15 @@ function go(n){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 renderCats(); renderUpcoming(); returnFromCheckout();
+// "Change or cancel" and "Pay ahead or save a card" in Sandy's booking emails
+// land here with ?find=1: open the find-my-appointment form straight away.
+(function findLink(){
+  try{
+    if(new URLSearchParams(location.search).get('find')!=='1') return;
+    if(el('findForm').classList.contains('hidden')) toggleFind();
+    el('findToggle').scrollIntoView({block:'center'});
+  }catch(e){}
+})();
 // Arriving from a "Book this service" link: skip the service list.
 // The links the site generates carry ?service=<id>; a #<id> hash is accepted
 // too, because that is what this page originally read and links outlive pages.

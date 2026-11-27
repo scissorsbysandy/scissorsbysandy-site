@@ -4,7 +4,7 @@
  * The booking page never talks to Square directly: the access token must never
  * reach a browser. The page calls this Function, this Function calls Square.
  *
- * Two jobs:
+ * Jobs (the main two):
  *   GET  /api/square?action=availability&service=<id>&from=<ISO>&to=<ISO>
  *        -> the times Sandy is genuinely free, straight from Square's calendar.
  *   POST /api/square   {service, startAt, firstName, lastName, phone, email, note}
@@ -193,12 +193,62 @@ function normName(s) {
 }
 
 /**
+ * Where a client's email lives.
+ *
+ * Booking emails come from Sandy's own address (the Zapier workflow), not from
+ * Square. Square emails anyone whose email is in its own email field, and that
+ * cannot be switched off per message, so the address is kept in a private
+ * custom field, notify_email, instead. Square never sees it as an email to
+ * write to; the workflow reads it. Square texts still go out, by phone number.
+ *
+ * The field belongs to the Zapier connection, so from this token its key comes
+ * back qualified ("<app id>:notify_email"); it is looked up, not hardcoded.
+ * Every call here is best effort: a booking must never fail over an email.
+ */
+let notifyKeyPromise = null;
+function notifyKey() {
+  if (!notifyKeyPromise) {
+    notifyKeyPromise = (async () => {
+      const { custom_attribute_definitions = [] } =
+        await square('/v2/customers/custom-attribute-definitions?limit=100');
+      const def = custom_attribute_definitions.find(d =>
+        d.key === 'notify_email' || String(d.key).endsWith(':notify_email'));
+      return def ? def.key : null;
+    })().catch(() => { notifyKeyPromise = null; return null; });
+  }
+  return notifyKeyPromise;
+}
+
+async function getNotifyEmail(customerId) {
+  try {
+    const key = await notifyKey();
+    if (!key || !customerId) return '';
+    const { custom_attribute } = await square('/v2/customers/' + encodeURIComponent(customerId)
+      + '/custom-attributes/' + encodeURIComponent(key));
+    return String(custom_attribute?.value || '');
+  } catch { return ''; }
+}
+
+async function setNotifyEmail(customerId, email, { onlyIfEmpty = false } = {}) {
+  try {
+    const key = await notifyKey();
+    if (!key || !customerId || !email) return;
+    if (onlyIfEmpty && await getNotifyEmail(customerId)) return;
+    await square('/v2/customers/' + encodeURIComponent(customerId)
+      + '/custom-attributes/' + encodeURIComponent(key), {
+      method: 'POST',
+      body: { custom_attribute: { value: String(email).trim() }, idempotency_key: crypto.randomUUID() },
+    });
+  } catch { /* the booking matters more than the email */ }
+}
+
+/**
  * Reuse a client's existing record, and quietly fill in what it is missing.
  *
- * The records imported from Booksy carry a phone number and little else. Square
- * had no address to send to, so a returning client got texts and no email, and
- * the address they had just typed into the form was thrown away on the way past.
- * Anything they give us that the record does not already hold is written back.
+ * The records imported from Booksy carry a phone number and little else, so a
+ * returning client got texts and no email, and the address they had just typed
+ * into the form was thrown away on the way past. Anything they give us that the
+ * record does not already hold is written back (the email to notify_email).
  *
  * Never overwrites: a value already on the record is the one Sandy or the client
  * put there. And a failure here is swallowed, because a booking must not fail
@@ -206,7 +256,7 @@ function normName(s) {
  */
 async function reuseCustomer(c, { firstName, lastName, email }) {
   const patch = {};
-  if (email && !c.email_address) patch.email_address = email;
+  if (email) await setNotifyEmail(c.id, email, { onlyIfEmpty: true });
   if (firstName && !c.given_name) patch.given_name = firstName;
   if (lastName && !c.family_name) patch.family_name = lastName;
   if (Object.keys(patch).length) {
@@ -259,9 +309,9 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
       given_name: firstName,
       family_name: lastName,
       phone_number: e164,
-      ...(email ? { email_address: email } : {}),
     },
   });
+  if (email) await setNotifyEmail(customer.id, email);
   return customer.id;
 }
 
@@ -341,9 +391,24 @@ async function cancelBooking({ bookingId, phone }) {
     throw Object.assign(new Error('This one is paid ahead, so please call or text Sandy at (848) 230-5995 to cancel and she will refund you'), { status: 403 });
   }
 
+  // Square records a cancel made with the shop's token as cancelled by the
+  // seller, the same as Sandy cancelling. The stamp tells the email workflow
+  // the client did it, so they get "thanks for the heads-up", not "Sandy
+  // cancelled you". If the stamp can't be written the cancel still goes ahead.
+  let version = booking.version;
+  try {
+    const line = `[web cancel ${new Date().toISOString()}]`;
+    const note = [booking.seller_note, line].filter(Boolean).join('\n');
+    const { booking: stamped } = await square('/v2/bookings/' + encodeURIComponent(bookingId), {
+      method: 'PUT',
+      body: { booking: { version: booking.version, seller_note: note.slice(0, 4096) } },
+    });
+    if (stamped?.version != null) version = stamped.version;
+  } catch { /* the cancel matters more than the stamp */ }
+
   const { booking: out } = await square(
     '/v2/bookings/' + encodeURIComponent(bookingId) + '/cancel',
-    { method: 'POST', body: { idempotency_key: crypto.randomUUID(), booking_version: booking.version } },
+    { method: 'POST', body: { idempotency_key: crypto.randomUUID(), booking_version: version } },
   );
   return { id: out.id, status: out.status };
 }
@@ -496,6 +561,7 @@ async function payLink({ bookingId, phone }) {
     throw Object.assign(new Error('This appointment has already started'), { status: 400 });
   }
   const { locationId } = await setup();
+  const buyerEmail = (await getNotifyEmail(customer.id)) || customer.email_address || '';
   const { payment_link } = await square('/v2/online-checkout/payment-links', {
     method: 'POST',
     body: {
@@ -517,7 +583,7 @@ async function payLink({ bookingId, phone }) {
       // the payment under the client it already knows rather than a new one.
       pre_populated_data: {
         buyer_phone_number: toE164(phone),
-        ...(customer.email_address ? { buyer_email: customer.email_address } : {}),
+        ...(buyerEmail ? { buyer_email: buyerEmail } : {}),
       },
       // Printed at the top of the receipt and on the payment in Square, so it
       // says who it is for, what, and when.
@@ -700,6 +766,49 @@ async function findBookings({ phone, name }) {
   return { client: { firstName: who.given_name || '', lastName: who.family_name || '' }, bookings };
 }
 
+/* ---------- add to calendar --------------------------------------------- */
+
+/**
+ * The "Apple / Outlook" button in the booking emails. Returns the visit as a
+ * calendar file. It carries only the time, the services and the shop's address,
+ * never the client's name, because a booking id is all it takes to open it.
+ */
+async function icsFor(bookingId) {
+  const booking = await getBooking(bookingId);
+  const st = String(booking.status || '');
+  if (st.startsWith('CANCELLED') || st === 'DECLINED') {
+    throw Object.assign(new Error('That appointment was canceled'), { status: 400 });
+  }
+  const segs = booking.appointment_segments || [];
+  const minutes = segs.reduce((a, x) => a + (Number(x.duration_minutes) || 0), 0) || 30;
+  const start = new Date(booking.start_at);
+  const end = new Date(start.getTime() + minutes * 60000);
+  const stamp = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const esc = (t) => String(t).replace(/[\\;,]/g, (c) => '\\' + c).replace(/\n/g, '\\n');
+  let names = [];
+  try {
+    const { objects = [] } = await square('/v2/catalog/batch-retrieve', {
+      method: 'POST',
+      body: { object_ids: segs.map(x => x.service_variation_id), include_related_objects: true },
+    });
+    names = objects.map(o => o.item_variation_data?.name).filter(Boolean);
+  } catch { /* the times matter more than the names */ }
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Scissors by Sandy//Booking//EN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    'UID:' + booking.id + '@scissorsbysandy.com',
+    'DTSTAMP:' + stamp(new Date()),
+    'DTSTART:' + stamp(start),
+    'DTEND:' + stamp(end),
+    'SUMMARY:' + esc('Scissors by Sandy'),
+    'LOCATION:' + esc('Scissors by Sandy, 3813 US-9, Suite 101, Old Bridge, NJ 08857'),
+    'DESCRIPTION:' + esc([names.join(', '), 'Change or cancel: ' + SITE + '/book.html?find=1', '(848) 230-5995'].filter(Boolean).join('\n')),
+    'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:' + esc('Scissors by Sandy'), 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR',
+  ];
+  return lines.join('\r\n') + '\r\n';
+}
+
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -707,6 +816,19 @@ export default async (request) => {
 
   try {
     const url = new URL(request.url);
+
+    if (request.method === 'GET' && url.searchParams.get('action') === 'ics') {
+      const id = url.searchParams.get('id');
+      if (!id) return json(400, { error: 'id is required' });
+      return new Response(await icsFor(id), {
+        status: 200,
+        headers: {
+          'content-type': 'text/calendar; charset=utf-8',
+          'content-disposition': 'attachment; filename="scissors-by-sandy.ics"',
+          'cache-control': 'no-store',
+        },
+      });
+    }
 
     if (request.method === 'GET' && url.searchParams.get('action') === 'availability') {
       const services = url.searchParams.get('services') || url.searchParams.get('service');
