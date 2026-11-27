@@ -258,39 +258,6 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
   return customer.id;
 }
 
-/* ---------- one-time Booksy import -------------------------------------- */
-/*
- * Moves the bookings already made in Booksy across to Square at cutover.
- * Booksy let Sandy shorten a service for a regular and book outside the
- * posted hours, so this keeps her lengths and does not check availability.
- * It is switched off unless MIGRATION_KEY is set, that key is only set on
- * the cutover preview, and this block is deleted once the import is done.
- * No website note is stamped, so the shop alert stays quiet for these.
- */
-async function importBooking(p) {
-  const { locationId } = await setup();
-  const wanted = Array.isArray(p.segments) ? p.segments : [];
-  const segments = await buildSegments(asServices(wanted.map(s => s.service)));
-  wanted.forEach((s, i) => {
-    if (Number(s.minutes) > 0) segments[i].duration_minutes = Number(s.minutes);
-  });
-  const customerId = p.customerId || await findOrCreateCustomer(p);
-  const { booking } = await square('/v2/bookings', {
-    method: 'POST',
-    body: {
-      idempotency_key: p.idempotencyKey || crypto.randomUUID(),
-      booking: {
-        location_id: locationId,
-        start_at: p.startAt,
-        customer_id: customerId,
-        seller_note: 'Moved from Booksy',
-        appointment_segments: segments,
-      },
-    },
-  });
-  return { id: booking.id, status: booking.status, startAt: booking.start_at, customerId };
-}
-
 /* ---------- create the booking ------------------------------------------ */
 
 async function createBooking(p) {
@@ -420,12 +387,6 @@ export default async (request) => {
         const missing = need(['bookingId', 'phone', 'startAt']);
         if (missing) return json(400, { error: missing });
         return json(200, { booking: await rescheduleBooking(body) });
-      }
-
-      if (action === 'import') {
-        const key = process.env.MIGRATION_KEY;
-        if (!key || body.key !== key) return json(404, { error: 'Not found' });
-        return json(200, { booking: await importBooking(body) });
       }
 
       if (action !== 'book') return json(400, { error: 'Unknown action' });
