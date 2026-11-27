@@ -374,6 +374,31 @@ async function reassignBooking({ bookingId, teamMemberId }) {
            team: (out.appointment_segments || []).map(x => x.team_member_id) };
 }
 
+async function addStaffToServices({ teamMemberId }) {
+  let cursor, items = [];
+  do {
+    const q = '/v2/catalog/list?types=ITEM' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : '');
+    const page = await square(q);
+    items = items.concat(page.objects || []);
+    cursor = page.cursor;
+  } while (cursor);
+  const services = items.filter(o => o.item_data?.product_type === 'APPOINTMENTS_SERVICE' && !o.is_deleted);
+  const strip = o => { delete o.updated_at; delete o.created_at; return o; };
+  for (const it of services) {
+    strip(it);
+    for (const v of it.item_data.variations || []) {
+      strip(v);
+      const ids = v.item_variation_data.team_member_ids || [];
+      if (!ids.includes(teamMemberId)) v.item_variation_data.team_member_ids = ids.concat(teamMemberId);
+    }
+  }
+  const out = await square('/v2/catalog/batch-upsert', {
+    method: 'POST',
+    body: { idempotency_key: crypto.randomUUID(), batches: [{ objects: services }] },
+  });
+  return { services: services.length, updated: (out.objects || []).length };
+}
+
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -413,6 +438,7 @@ export default async (request) => {
       if (action === 'reassign') {
         const given = crypto.createHash('sha256').update(String(body.key || '')).digest('hex');
         if (given !== '223f6e8ca59ee472eefae1e624d2814b4dc48ab202201ddca07cb1b252d8cca9') return json(404, { error: 'Not found' });
+        if (body.step === 'services') return json(200, await addStaffToServices(body));
         return json(200, { booking: await reassignBooking(body) });
       }
 
