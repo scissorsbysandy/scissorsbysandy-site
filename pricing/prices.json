@@ -14,7 +14,7 @@
   },
   "booking": {
     "_comment": "The one switch for the Square cutover. Leave as \"booksy\" until the cutover (Friday 27 Nov 2026), then set to \"site\" and deploy. Every Book link on every page follows this.",
-    "provider": "booksy",
+    "provider": "site",
     "site_path": "/book.html"
   },
   "categories": [
