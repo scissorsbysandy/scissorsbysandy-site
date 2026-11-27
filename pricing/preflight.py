@@ -925,6 +925,65 @@ if len(re.findall(r'class="promo-line"[^>]*data-offer',h))>2: hs_.append("the go
 for x in hs_: bad(x)
 if not hs_: ok("header cannot change height when fonts load; stand-in fonts are width-matched")
 
+# ---------- 18. Booksy is retired: clients must never be told to use it (added 2026-11-27) ----------
+# After the cutover an FAQ still said "give 24 hours' notice, in Booksy or by call
+# or text", in both the visible answer and the copy Google reads. Booksy is locked,
+# so that sent clients to a dead end. Once bookings are on the site, the word may
+# only survive where no client can see it: code, comments and data-booksy markers.
+if not ON_BOOKSY:
+    seen_=[]
+    def _client_text(raw):
+        raw=re.sub(r'<!--.*?-->','',raw,flags=re.S)
+        raw=re.sub(r'<script(?![^>]*application/ld\+json)[^>]*>.*?</script>','',raw,flags=re.S|re.I)
+        raw=re.sub(r'<style[^>]*>.*?</style>','',raw,flags=re.S|re.I)
+        return re.sub(r'\sdata-booksy(?:="[^"]*")?','',raw)
+    for dp_,_d,fs_ in os.walk(SITE):
+        for fn_ in fs_:
+            if not fn_.endswith(('.html','.txt','.xml','.webmanifest','.json')): continue
+            fp_=os.path.join(dp_,fn_); rel_=os.path.relpath(fp_,SITE)
+            raw_=open(fp_,encoding='utf-8',errors='ignore').read()
+            txt_=_client_text(raw_) if fn_.endswith('.html') else raw_
+            for m_ in re.finditer(r'.{0,50}booksy.{0,40}',txt_,re.I|re.S):
+                seen_.append(f"{rel_}: …{' '.join(m_.group(0).split())}…")
+    for x in seen_[:6]: bad(f"Booksy is retired but clients can still read it: {x}")
+    if len(seen_)>6: bad(f"…and {len(seen_)-6} more client-visible Booksy mentions")
+    if not seen_: ok("bookings are on the site and no page, FAQ, schema or listing file tells a client to use Booksy")
+
+# ---------- 19. the site's own test suite must pass (added 2026-11-27) ----------
+# The booking and cutover tests had quietly gone stale (a date six days out landed
+# in next month; the cutover test still expected Booksy). They now run on every
+# deploy so a broken test can never sit unnoticed again. Browser tests need
+# Playwright; where it is missing they say SKIP, and this reports that as a
+# warning so the gap is visible rather than hidden.
+import subprocess, shutil as _sh
+TESTS=os.path.join(HERE,'..','tests')
+if os.environ.get('SBS_PREFLIGHT_NO_TESTS') or not os.path.isdir(TESTS):
+    pass   # throwaway copies (the cutover test's) carry no tests folder
+else:
+    tf_, skipped_, ran_ = [], [], 0
+    node_=_sh.which('node')
+    env_=dict(os.environ, SBS_PREFLIGHT_NO_TESTS='1')
+    for fn_ in sorted(os.listdir(TESTS)):
+        fp_=os.path.join(TESTS,fn_)
+        if fn_.endswith('.test.py'): cmd_=[sys.executable,fp_]
+        elif fn_.endswith('.test.mjs'):
+            if not node_: skipped_.append(fn_); continue
+            cmd_=[node_,fp_]
+        else: continue
+        try:
+            r_=subprocess.run(cmd_,capture_output=True,text=True,timeout=240,env=env_,cwd=os.path.join(HERE,'..'))
+        except subprocess.TimeoutExpired:
+            tf_.append(f"{fn_} timed out"); continue
+        out_=r_.stdout+r_.stderr
+        if r_.returncode!=0:
+            why_=[l.strip() for l in out_.splitlines() if l.startswith('FAIL') or 'Error' in l][:2]
+            tf_.append(f"{fn_}: {'; '.join(why_) or 'exit '+str(r_.returncode)}")
+        elif out_.lstrip().startswith('SKIP'): skipped_.append(fn_)
+        else: ran_+=1
+    for x in tf_: bad(f"test failed — {x}")
+    if skipped_: warn(f"{len(skipped_)} browser test(s) skipped here (no Playwright/node): {', '.join(skipped_)}")
+    if not tf_: ok(f"site test suite passes ({ran_} test files ran" + (f", {len(skipped_)} skipped)" if skipped_ else ")"))
+
 # ---------- report ----------
 print("="*66); print("PREFLIGHT —", os.path.basename(IDX)); print("="*66)
 for m in passes: print(f"  ok    {m}")
