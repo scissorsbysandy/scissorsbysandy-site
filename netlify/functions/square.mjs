@@ -22,6 +22,7 @@
  */
 
 const SQUARE_VERSION = '2026-09-16';
+import crypto from 'node:crypto';
 const HOST = process.env.SQUARE_ENV === 'sandbox'
   ? 'https://connect.squareupsandbox.com'
   : 'https://connect.squareup.com';
@@ -353,6 +354,28 @@ async function rescheduleBooking({ bookingId, phone, service, services, startAt 
   return { id: out.id, status: out.status, startAt: out.start_at };
 }
 
+
+/* TEMPORARY (preview only): give each service a calendar colour. */
+async function setLabelColors({ colors }) {
+  const items = []; let cursor;
+  do {
+    const r = await square('/v2/catalog/list?types=ITEM' + (cursor ? '&cursor=' + encodeURIComponent(cursor) : ''));
+    (r.objects || []).forEach(o => items.push(o)); cursor = r.cursor;
+  } while (cursor);
+  const changed = [];
+  for (const o of items) {
+    const c = colors[o.item_data && o.item_data.name];
+    if (!c || o.item_data.label_color === c) continue;
+    o.item_data.label_color = c;
+    delete o.updated_at; delete o.created_at;
+    (o.item_data.variations || []).forEach(v => { delete v.updated_at; delete v.created_at; });
+    changed.push(o);
+  }
+  if (!changed.length) return { changed: 0 };
+  const r = await square('/v2/catalog/batch-upsert', { method: 'POST', body: { idempotency_key: crypto.randomUUID(), batches: [{ objects: changed }] } });
+  return { changed: changed.length, names: (r.objects || []).map(o => o.item_data && o.item_data.name + '=' + o.item_data.label_color) };
+}
+
 /* ---------- entry point -------------------------------------------------- */
 
 export default async (request) => {
@@ -377,6 +400,11 @@ export default async (request) => {
         return null;
       };
 
+      if (action === 'colors') {
+        const given = crypto.createHash('sha256').update(String(body.key || '')).digest('hex');
+        if (given !== '3a045e934c000bc194d71e355f56dea477ed430a39da1624a3b1ebe36df61329') return json(404, { error: 'Not found' });
+        return json(200, await setLabelColors(body));
+      }
       if (action === 'cancel') {
         const missing = need(['bookingId', 'phone']);
         if (missing) return json(400, { error: missing });
