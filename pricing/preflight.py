@@ -847,7 +847,7 @@ if not bk: ok("booking page: menu matches prices.json, every service has its own
 ex=[]
 if not re.search(r'<meta name="robots" content="noindex">',p404): ex.append("404.html must carry noindex")
 if 'href="/"' not in p404: ex.append("404.html must link back to the homepage")
-rel=[u for u in re.findall(r'(?:href|src|srcset)="([^"]+)"',p404) if not re.match(r'(/|https?://|tel:|mailto:|#)',u)]
+rel=[u for u in re.findall(r'(?:href|src|srcset)="([^"]+)"',p404) if not re.match(r'(/|https?://|tel:|sms:|mailto:|#)',u)]
 if rel: ex.append(f"404.html has relative addresses that break when shown at a deeper path: {rel[:3]}")
 ll=rd('llms.txt')
 for s in svc:

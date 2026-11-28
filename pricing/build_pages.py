@@ -241,7 +241,9 @@ def nav_items(current=None):
     (The homepage menu is hand-written in site/index.html and links to its own sections.)"""
     items = ([('/', 'Home')] + [(f"/{q['slug']}/", q['nav']) for q in PAGES]
              + [('/gift-certificates/', 'Gifts'), ('/#visit', 'Visit')])
-    return '\n'.join(f'    <li><a href="{h}"{" aria-current=\"page\"" if h == current else ""}>{t}</a></li>'
+    # Booking leads the menu on every page.
+    book = '    <li class="nav-book"><a href="/book.html" data-booksy>Book</a></li>\n'
+    return book + '\n'.join(f'    <li><a href="{h}"{" aria-current=\"page\"" if h == current else ""}>{t}</a></li>'
                      for h, t in items)
 
 def esc(t): return html.escape(t, quote=False)

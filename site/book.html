@@ -287,6 +287,12 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .pay-thanks{background:rgba(159,211,168,.14);border:1px solid rgba(159,211,168,.45);color:#fff;
   font-size:.85rem;line-height:1.45;padding:.7rem .8rem;margin-bottom:1rem}
 .pay-now{max-width:440px;margin:1.6rem auto 0;text-align:center}
+/* done screen: what a client wants next, the same as the confirmation email gives */
+.conf-extra{max-width:440px;margin:0 auto;text-align:center}
+.conf-extra .cal{display:flex;gap:.7rem}
+.conf-extra .cal .btn{flex:1;padding:.85rem .5rem;font-size:.7rem;letter-spacing:.1em}
+.conf-extra p{font-size:.85rem;line-height:1.7;margin-top:1rem}
+.conf-extra p a{color:var(--navy);font-weight:500;white-space:nowrap}
 .pay-now .btn{width:100%}
 .pay-now p{font-size:.8rem;color:var(--muted,#5b6470);margin-top:.6rem;line-height:1.45}
 .pay-err{font-size:.8rem;color:#a33;margin-top:.5rem}
@@ -403,6 +409,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
         <p id="confNote">A confirmation is on its way, and I&rsquo;ll send a reminder the day before.</p>
       </div>
       <div class="summary" id="sum2"></div>
+      <div class="conf-extra" id="confExtra"></div>
       <div class="pay-now" id="payNow">
         <button class="btn btn-gold" type="button" onclick="payAhead(lastBooked,this)">Pay Ahead Now</button>
         <p>Optional. Pay securely with Square now, or pay me at your visit.</p>
@@ -1127,7 +1134,31 @@ async function confirmIt(){
   el('payNow').classList.toggle('hidden', !!(before&&before.paid));
   el('confLine').textContent=listNames(visitNames())+' with Sandy on '+
     day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';
+  el('confExtra').replaceChildren(confExtraNodes(booked.id, startISO(), totalMin()));
   go(4);
+}
+/** Add to calendar, directions, and how to change it: the next things a client
+ *  reaches for, on the screen as well as in the email. */
+const SHOP_ADDR='Scissors by Sandy, 3813 US-9 Suite 101, Old Bridge, NJ 08857';
+function confExtraNodes(id, startIso, minutes){
+  const st=new Date(startIso), en=new Date(st.getTime()+(minutes||30)*60000);
+  const z=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const g='https://calendar.google.com/calendar/render?action=TEMPLATE'+
+    '&text='+encodeURIComponent('Scissors by Sandy')+'&dates='+z(st)+'/'+z(en)+
+    '&details='+encodeURIComponent(listNames(visitNames())+'\nChange or cancel: https://scissorsbysandy.com/book.html?find=1\n(848) 230-5995')+
+    '&location='+encodeURIComponent(SHOP_ADDR);
+  const ics=API+'?action=ics&id='+encodeURIComponent(id);
+  const map='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(SHOP_ADDR);
+  // Built as elements, so every address is set as a property, never pasted into markup.
+  const a=(href,text,cls,out)=>{const x=document.createElement('a');x.href=href;x.textContent=text;
+    if(cls)x.className=cls;if(out){x.target='_blank';x.rel='noopener'}return x};
+  const box=document.createDocumentFragment(), cal=document.createElement('div'), p=document.createElement('p');
+  cal.className='cal';
+  cal.append(a(g,'Google Calendar','btn btn-line',true), a(ics,'Apple / Outlook','btn btn-line'));
+  p.append('3813 US-9, Suite 101, Old Bridge \u00b7 ', a(map,'Directions','',true), document.createElement('br'),
+    'Need to change it? ', a('/book.html?find=1','Move or cancel online'), ' up to an hour before.');
+  box.append(cal,p);
+  return box;
 }
 function reset(){rescheduleId=null;movingFrom=null;picked=[];day=null;slot=null;el('nt').value='';renderPicked();go(1)}
 
@@ -1182,15 +1213,17 @@ window.addEventListener('hashchange',function(){
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+  // Only the real site is counted: preview and test copies stay out of the numbers.
+  var GA_LIVE = /(^|\.)scissorsbysandy\.com$/.test(location.hostname);
   gtag('js', new Date());
-  gtag('config', 'G-76DN6KF3WB', { anonymize_ip: true });
+  if (GA_LIVE) gtag('config', 'G-76DN6KF3WB', { anonymize_ip: true });
   // The analytics library is 178 KB. It is fetched only once the page itself has
   // finished loading, so it never competes with the fonts and the first screen.
   // Anything recorded before it arrives waits in dataLayer and is sent then.
   (function () {
     var started = false;
     function start() {
-      if (started) return; started = true;
+      if (started || !GA_LIVE) return; started = true;
       var s = document.createElement('script');
       s.async = true;
       s.src = 'https://www.googletagmanager.com/gtag/js?id=G-76DN6KF3WB';
@@ -1207,6 +1240,12 @@ window.addEventListener('hashchange',function(){
     if (typeof _go === 'function') window.go = function (n) {
       var r = _go.apply(this, arguments);
       try { gtag('event', 'booking_step', { step: n, booked: n === 4 }); } catch (e) {}
+      // A finished booking, with its value: the number that says whether visits become appointments.
+      if (n === 4) try {
+        var moved = /Moved/.test((document.getElementById('confHead') || {}).textContent || '');
+        gtag('event', moved ? 'booking_moved' : 'booking_complete',
+             { value: (typeof totalPrice === 'function' ? totalPrice() : 0), currency: 'USD' });
+      } catch (e) {}
       return r;
     };
     var _ci = window.confirmIt;
