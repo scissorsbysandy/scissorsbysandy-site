@@ -35,6 +35,7 @@ BOOK_GENERAL, BOOK_GENERAL_ATTRS = booking.link(D)
 BASE = 'https://scissorsbysandy.com'
 TEL = '<a href="tel:+18482305995">(848) 230-5995</a>'
 SVC = {s['id']: s for c in D['categories'] for s in c['services']}
+BOOKABLE = {i for i, s in SVC.items() if s.get("variantId")}  # every menu service books online
 CAT = {s['id']: c for c in D['categories'] for s in c['services']}
 
 # ---------------------------------------------------------------- the pages
@@ -380,7 +381,10 @@ def build():
             for i in ids:
                 menu.append(item(SVC[i], p.get('pics', {}).get(i), p.get('pic_ratio', 3/2)))
                 offers.append({"@type": "Offer", "name": text(SVC[i]['name']), "price": str(SVC[i]['price']),
-                               "priceCurrency": "USD", "url": url})
+                               "priceCurrency": "USD",
+                               # A bookable service points at its own booking link; wedding
+                               # packages are arranged by call or text, so they keep the page.
+                               "url": f"{BASE}/book.html?service={i}" if i in BOOKABLE else url})
             menu.append('    </div>')
             if note and not p.get('wedding'): menu.append(f'    <p class="cat-note">{note}</p>')
         menu.append('  </div>')
@@ -505,7 +509,7 @@ def build():
 {wed}<section id="services">
   <h2 class="sec-head">{svc_head}</h2>
   <p class="sec-sub">{svc_sub}</p>
-  <p class="responders">First responders get $5 off their total &mdash; every visit.</p>
+  <p class="responders">First responders get $5 off their total, every visit.</p>
 {chr(10).join(menu)}
 </section>
 
@@ -844,6 +848,8 @@ def build():
          f"- Book online: {booking.absolute(D)}",
          "- Website: https://scissorsbysandy.com/",
          "- Walk-ins: no, by appointment only",
+         "- Change or cancel: online on the booking page up to an hour before the appointment (Find it to move or cancel); inside that hour, call or text (848) 230-5995",
+         "- Paying: at the visit, or optionally ahead online; a card can also be saved for checkout. No deposits or cancellation fees on regular appointments (only The Wedding Party package is held with a deposit)",
          "- Languages: English and Spanish",
          "- Woman-owned: yes",
          "- Parking: free, directly outside the suite",

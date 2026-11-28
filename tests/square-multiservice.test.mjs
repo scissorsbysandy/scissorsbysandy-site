@@ -8,6 +8,12 @@ global.fetch = async (url, opts = {}) => {
   const method = (opts.method || 'GET').toUpperCase();
   const body = opts.body ? JSON.parse(opts.body) : {};
   calls.push({ method, path: u.pathname, body });
+  // The booking function re-checks the chosen time with Square before saving it.
+  if (String(url).includes('/v2/bookings/availability/search') && !globalThis.__takeSlot && body?.query?.filter?.start_at_range && (Date.parse(body.query.filter.start_at_range.end_at)-Date.parse(body.query.filter.start_at_range.start_at))<=3600000) {
+    const q = JSON.parse(opts.body || '{}'); const at = q?.query?.filter?.start_at_range?.start_at;
+    const o = { availabilities: at ? [{ start_at: at }] : [] };
+    return { ok: true, status: 200, json: async () => o, text: async () => JSON.stringify(o) };
+  }
   const ok = (o) => ({ ok:true, status:200, json: async () => o, text: async () => JSON.stringify(o) });
 
   if (u.pathname === '/v2/locations') return ok({ locations:[{ id:'LOC', status:'ACTIVE' }] });

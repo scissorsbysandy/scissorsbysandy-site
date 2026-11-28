@@ -170,6 +170,27 @@ async function availability(serviceIds, fromISO, toISO) {
   return availabilities.map(a => a.start_at);
 }
 
+/**
+ * Is this exact start time still open for this whole visit?
+ *
+ * The shop's token books with seller-level permissions, and Square lets a
+ * seller book over an existing appointment or outside opening hours. The page
+ * only ever offers free times, but a page left open for an hour, or two people
+ * tapping the same time, would otherwise land two clients in one chair. So ask
+ * Square again at the moment of booking. `ownWindow` is the client's own
+ * current appointment when moving it: a new time that overlaps the old one is
+ * blocked only by itself, so it is allowed through.
+ */
+async function assertStillFree(serviceIds, startAt, ownWindow) {
+  const t = Date.parse(startAt);
+  if (!Number.isFinite(t)) throw Object.assign(new Error('That time does not look right'), { status: 400 });
+  if (ownWindow && t < ownWindow.end && t + ownWindow.length > ownWindow.start) return;
+  const open = await availability(serviceIds, new Date(t).toISOString(), new Date(t + 3600000).toISOString());
+  if (!open.some(x => Date.parse(x) === t)) {
+    throw Object.assign(new Error('Sorry, that time was just taken'), { status: 409 });
+  }
+}
+
 /* ---------- client matching --------------------------------------------- */
 
 /**
@@ -321,6 +342,7 @@ async function createBooking(p) {
   const { locationId } = await setup();
   const serviceIds = asServices(p.services ?? p.service);
   const segments = await buildSegments(serviceIds);
+  await assertStillFree(serviceIds, p.startAt);
   const customerId = await findOrCreateCustomer(p);
 
   const { booking } = await square('/v2/bookings', {
@@ -373,6 +395,20 @@ async function assertOwner(booking, phone) {
   return customer;
 }
 
+/**
+ * The page hides Move and Cancel inside the last hour; this is the same rule on
+ * the server, so a stale page or a direct request cannot pull an appointment
+ * out from under Sandy minutes before it starts. Keep in step with CUTOFF_HOURS
+ * in book.html and the policy in the booking emails.
+ */
+const CUTOFF_MS = 60 * 60 * 1000;
+function assertNotTooLate(booking) {
+  const t = Date.parse(booking.start_at);
+  if (Number.isFinite(t) && t - Date.now() <= CUTOFF_MS) {
+    throw Object.assign(new Error('Within an hour of your appointment, please call or text Sandy at (848) 230-5995'), { status: 403 });
+  }
+}
+
 async function cancelBooking({ bookingId, phone }) {
   const booking = await getBooking(bookingId);
   await assertOwner(booking, phone);
@@ -380,6 +416,7 @@ async function cancelBooking({ bookingId, phone }) {
   if (booking.status === 'CANCELLED_BY_CUSTOMER' || booking.status === 'CANCELLED_BY_SELLER') {
     return { id: booking.id, status: booking.status };            // already gone; not an error
   }
+  assertNotTooLate(booking);
   // A paid visit is refunded by Sandy, so she has to hear about it from the
   // client rather than find a cancelled, paid appointment on her calendar.
   let paidOnline = isPaid(booking);
@@ -421,6 +458,7 @@ async function cancelBooking({ bookingId, phone }) {
 async function rescheduleBooking({ bookingId, phone, service, services, startAt }) {
   const booking = await getBooking(bookingId);
   await assertOwner(booking, phone);
+  assertNotTooLate(booking);
   const wanted = asServices(services ?? service);
   // A paid visit can move to another time, but not change what was paid for.
   if (isPaid(booking)) {
@@ -430,6 +468,11 @@ async function rescheduleBooking({ bookingId, phone, service, services, startAt 
     }
   }
   const segments = await buildSegments(wanted);
+  const oldStart = Date.parse(booking.start_at);
+  const oldLen = (booking.appointment_segments || []).reduce((a, x) => a + (Number(x.duration_minutes) || 0), 0) * 60000;
+  // Durations are not on the new segments; a moved visit is the same length
+  // unless services changed, and only the overlap with itself matters here.
+  await assertStillFree(wanted, startAt, { start: oldStart, end: oldStart + oldLen, length: oldLen });
 
   const { booking: out } = await square('/v2/bookings/' + encodeURIComponent(bookingId), {
     method: 'PUT',
@@ -898,7 +941,7 @@ export default async (request) => {
     // Never hand Square's raw error to a client standing in the shop, but do
     // log it so a failed booking can be traced.
     console.error('square function failed:', err.message, err.squareErrors || '');
-    const status = (err.status === 400 || err.status === 403) ? err.status : 502;
+    const status = (err.status === 400 || err.status === 403 || err.status === 409) ? err.status : 502;
     return json(status, {
       error: status === 502 ? 'Could not reach the booking calendar' : err.message,
     });

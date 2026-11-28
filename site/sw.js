@@ -15,7 +15,11 @@ self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
-  if (new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  // Booking calls are live answers from the calendar: never cache them, so an
+  // offline phone can never be shown yesterday's free times as if they were open.
+  if (url.pathname.startsWith('/api/')) return;
   e.respondWith(
     fetch(req)
       .then((res) => {

@@ -175,10 +175,27 @@ need=['index.html','sitemap.xml','robots.txt','_headers','og-image.jpg',
       'sandy-mordan.jpg','sandy-mordan.webp',
       'fonts/cormorant-garamond-latin.woff2','fonts/jost-latin.woff2','404.html','llms.txt',
       'gift-certificate-majesty.webp','gift-certificate-executive.webp','gift-certificate-sovereign.webp',
-      'gift-video-poster.webp']
+      'gift-video-poster.webp','favicon.ico','book.html','manifest.webmanifest','sw.js']
 for f in need:
     if not os.path.exists(os.path.join(SITE,f)): bad(f"missing file: {f}")
 if all(os.path.exists(os.path.join(SITE,f)) for f in need): ok(f"all {len(need)} deploy files present")
+
+# ---------- 8b. one address per page ----------
+# Netlify's Pretty URLs rewrote every /book.html link in the served pages to
+# /book while the canonical, sitemap and emails said /book.html, so Google saw
+# two copies and treated the real one as an orphan (live crawl, 27 Nov 2026).
+_toml=open(os.path.join(SITE,'..','netlify.toml'),encoding='utf-8').read()
+if re.search(r'\[build\.processing\.html\][^\[]*pretty_urls\s*=\s*false',_toml):
+    ok("Netlify serves links exactly as written (Pretty URLs off), so each page has one address")
+else:
+    bad("netlify.toml must set [build.processing.html] pretty_urls = false, or Netlify rewrites /book.html links to /book and splits the booking page in two")
+# Every page a person can land on carries the shop's icon. Without one the
+# browser asks for /favicon.ico on its own, and search results show a blank.
+_noicon=[f for f in ['index.html','book.html','404.html']+[d+'/index.html' for d in sorted(os.listdir(SITE))
+         if os.path.isfile(os.path.join(SITE,d,'index.html')) and d!='text']
+         if 'rel="icon"' not in open(os.path.join(SITE,f),encoding='utf-8').read()]
+if _noicon: bad("no site icon on: "+", ".join(_noicon))
+else: ok("every public page names the site icon, and /favicon.ico exists for browsers that ask anyway")
 
 # ---------- 9. package arithmetic ----------
 byid={s['id']:s for s in svc}

@@ -51,6 +51,7 @@ try:
     for d in ('site', 'pricing'):
         shutil.copytree(os.path.join(ROOT, d), os.path.join(tmp, d),
                         ignore=shutil.ignore_patterns('__pycache__'))
+    shutil.copy(os.path.join(ROOT, 'netlify.toml'), tmp)   # preflight reads the Netlify settings too
     site = os.path.join(tmp, 'site')
 
     def site_state_checks(when):

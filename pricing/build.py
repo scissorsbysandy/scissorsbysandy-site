@@ -104,7 +104,9 @@ def patch_site():
     cat = {"@type": "OfferCatalog", "name": "Services", "itemListElement": [
         {"@type": "Offer",
          "itemOffered": {"@type": "Service", "name": sv["name"]},
-         "price": f'{sv["price"]:.2f}', "priceCurrency": "USD"}
+         "price": f'{sv["price"]:.2f}', "priceCurrency": "USD",
+         # Where to book this one service: the same deep link the menu uses.
+         "url": "https://scissorsbysandy.com" + booking.cfg(D)[1] + "?service=" + sv["id"]}
         for cg in D["categories"] for sv in cg["services"]]}
     block = json.dumps(cat, indent=2, ensure_ascii=False)
     block = "\n".join(("  " + ln) if ln.strip() else ln for ln in block.split("\n"))

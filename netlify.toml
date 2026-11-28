@@ -3,3 +3,11 @@
   # 1. date-stamp the sitemap for the day this deploy goes live
   # 2. run every preflight check; any failure stops the deploy
   command = "python3 pricing/stamp_sitemap.py && python3 pricing/preflight.py"
+
+# Netlify's "Pretty URLs" rewrites every /book.html link in the served pages to
+# /book, while the canonical tag, sitemap and booking emails all say /book.html.
+# Google then sees two addresses for one page and never settles on the right
+# one (the live crawl on 27 Nov 2026 found /book linked and /book.html orphaned).
+# Serve the links exactly as written.
+[build.processing.html]
+  pretty_urls = false

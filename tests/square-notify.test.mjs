@@ -10,6 +10,12 @@ let notify = {};          // customerId -> email in the private field
 let bookingVersion = 3;
 
 global.fetch = async (url, opts = {}) => {
+  // The booking function re-checks the chosen time with Square before saving it.
+  if (String(url).includes('/v2/bookings/availability/search') && !globalThis.__takeSlot) {
+    const q = JSON.parse(opts.body || '{}'); const at = q?.query?.filter?.start_at_range?.start_at;
+    const o = { availabilities: at ? [{ start_at: at }] : [] };
+    return { ok: true, status: 200, json: async () => o, text: async () => JSON.stringify(o) };
+  }
   const u = String(url);
   const method = opts.method || 'GET';
   const body = opts.body ? JSON.parse(opts.body) : {};

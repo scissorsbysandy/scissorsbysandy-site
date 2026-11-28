@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<!-- Not linked from the site yet. Booking still goes through Booksy until the Square
-     cutover; this page ships dark so it can be deployed and checked before the swap. -->
 <title>Book an Appointment in Old Bridge, NJ | Scissors by Sandy</title>
 <meta name="description" content="Book your appointment at Scissors by Sandy, a private one-chair barber suite in Old Bridge, NJ. Choose your services, a date and a time, and you are booked.">
 <link rel="canonical" href="https://scissorsbysandy.com/book.html">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#16293C">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Scissors by Sandy">
 <meta property="og:url" content="https://scissorsbysandy.com/book.html">
@@ -38,6 +41,11 @@
   --sans:'Jost','Helvetica Neue',Arial,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.noscript{padding:1.4rem 1.6rem;text-align:center;font-size:1rem;line-height:1.6}
+.noscript a{color:var(--ink);font-weight:500}
+.taken-note{max-width:620px;margin:0 auto 1rem;padding:.8rem 1rem;border-left:3px solid var(--gold-deep);
+  background:rgba(162,126,60,.1);font-size:.95rem;line-height:1.5;color:var(--ink)}
 body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weight:300;
   -webkit-font-smoothing:antialiased;line-height:1.5}
 .wrap{max-width:860px;margin:0 auto;min-height:100vh;background:var(--cream);
@@ -59,7 +67,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 /* steps */
 .steps{display:flex;background:var(--navy-deep);padding:0}
 .step{flex:1;text-align:center;padding:.75rem .3rem;font-size:.58rem;letter-spacing:.18em;
-  text-transform:uppercase;color:rgba(214,214,204,.42);position:relative;transition:color .25s}
+  text-transform:uppercase;color:rgba(214,214,204,.6);position:relative;transition:color .25s}
 .step.on{color:var(--gold)}
 .step.done{color:var(--cream-soft)}
 .step.on::after{content:"";position:absolute;left:18%;right:18%;bottom:0;height:2px;background:var(--gold)}
@@ -108,7 +116,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .svc-name{font-family:var(--serif);font-size:1.12rem;font-weight:500;color:var(--ink)}
 .svc-price{font-family:var(--serif);font-size:1.12rem;color:var(--gold-text);white-space:nowrap}
 .svc-meta{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);
-  margin-top:.25rem;opacity:.8}
+  margin-top:.25rem;opacity:.9}
 .svc-desc{font-size:.8rem;color:var(--ink-soft);margin-top:.45rem;line-height:1.5;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
@@ -121,7 +129,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .nav-b:hover:not(:disabled){background:rgba(248,208,148,.2)}
 .nav-b:disabled{opacity:.25;cursor:not-allowed}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
-.dow div{text-align:center;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);opacity:.7}
+.dow div{text-align:center;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);opacity:.85}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .day{aspect-ratio:1;border:1px solid rgba(22,41,60,.12);background:#fff;cursor:pointer;
   font-family:var(--sans);font-size:.85rem;color:var(--ink);transition:all .18s;
@@ -131,7 +139,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .day.sel,.day.sel:hover:not(:disabled){background:var(--navy);color:var(--gold);border-color:var(--navy)}
 .day.empty{border:none;background:transparent;cursor:default}
 .closed-note{text-align:center;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--ink-soft);margin-top:1rem;opacity:.75}
+  color:var(--ink-soft);margin-top:1rem;opacity:.9}
 
 /* slots */
 .slots-wrap{margin-top:2rem}
@@ -286,17 +294,19 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <a class="back-site" href="index.html">&#8249; Site</a>
-    <h1 class="brand">Scissors by Sandy</h1>
+  <header class="top">
+    <a class="back-site" href="/">&#8249; Site</a>
+    <h1 class="brand">Scissors by Sandy<span class="sr-only">: book an appointment</span></h1>
     <div class="brand-sub">By Appointment Only</div>
-  </div>
+  </header>
 
   <div class="steps">
     <div class="step on" data-s="1"><i>I</i>Services</div>
     <div class="step" data-s="2"><i>II</i>Date &amp; Time</div>
     <div class="step" data-s="3"><i>III</i>Your Details</div>
   </div>
+  <noscript><p class="noscript">Booking online needs JavaScript switched on. To book, call or text Sandy at
+    <a href="tel:+18482305995">(848) 230-5995</a>.</p></noscript>
 
   <main class="panel">
     <!-- STEP 1 -->
@@ -327,11 +337,12 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
       <div class="sec-sub" id="s2sub"></div>
       <div style="text-align:center"><button class="add-more" id="addMore" onclick="addService()"><b>+</b> <span id="addMoreLabel">Add another service</span></button></div>
       <div class="rule"><span>&#10022;</span></div>
+      <p class="taken-note hidden" id="slotsNote" role="alert"></p>
       <div class="cal">
         <div class="cal-head">
-          <button class="nav-b" id="prevM">&#8249;</button>
+          <button class="nav-b" id="prevM" aria-label="Previous month">&#8249;</button>
           <div class="cal-mon" id="monLabel"></div>
-          <button class="nav-b" id="nextM">&#8250;</button>
+          <button class="nav-b" id="nextM" aria-label="Next month">&#8250;</button>
         </div>
         <div class="dow"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
         <div class="grid" id="grid"></div>
@@ -357,12 +368,12 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
       <div class="welcome hidden" id="welcome"></div>
       <div class="form">
         <div class="two">
-          <div class="field"><label>First Name</label><input id="fn" autocomplete="given-name"></div>
-          <div class="field"><label>Last Name</label><input id="ln" autocomplete="family-name"></div>
+          <div class="field"><label for="fn">First Name</label><input id="fn" autocomplete="given-name"></div>
+          <div class="field"><label for="ln">Last Name</label><input id="ln" autocomplete="family-name"></div>
         </div>
-        <div class="field"><label>Mobile Number</label><input id="ph" type="tel" autocomplete="tel" placeholder="(848) 230-5995"></div>
-        <div class="field"><label>Email</label><input id="em" type="email" autocomplete="email"></div>
-        <div class="field"><label>Anything I should know?</label><textarea id="nt" rows="2"></textarea></div>
+        <div class="field"><label for="ph">Mobile Number</label><input id="ph" type="tel" autocomplete="tel" placeholder="(848) 230-5995"></div>
+        <div class="field"><label for="em">Email</label><input id="em" type="email" autocomplete="email"></div>
+        <div class="field"><label for="nt">Anything I should know?</label><textarea id="nt" rows="2"></textarea></div>
         <div class="actions">
           <button class="btn btn-line" onclick="go(2)">Back</button>
           <button class="btn btn-gold" id="confirmBtn" disabled onclick="confirmIt()">Confirm Booking</button>
@@ -417,9 +428,27 @@ const HOURS = {0:[11,17],1:[10,19],2:[10,19],3:null,4:[10,19],5:[10,19],6:[10,17
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
 let picked=[], day=null, slot=null, view=new Date();
 view.setDate(1);
-const today=new Date(); today.setHours(0,0,0,0);
+/* Every time on this page is the shop's time, whatever the phone is set to.
+   A client booking from another time zone (away at school, travelling) must
+   see 10:00 AM for a 10:00 AM appointment, not their own clock's version. */
+const SHOP_TZ='America/New_York';
+function shopParts(d){
+  const o={};
+  for(const p of new Intl.DateTimeFormat('en-US',{timeZone:SHOP_TZ,year:'numeric',month:'numeric',
+      day:'numeric',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(d)) o[p.type]=+p.value;
+  return {y:o.year,mo:o.month-1,d:o.day,h:o.hour%24,mi:o.minute};
+}
+function shopMin(d){const p=shopParts(d);return p.h*60+p.mi}
+function shopDay(d){const p=shopParts(d);return new Date(p.y,p.mo,p.d)}   // calendar date, as a plain local date
+function shopISO(y,mo,d,mins){                                           // shop wall time -> real instant
+  const want=Date.UTC(y,mo,d,Math.floor(mins/60),mins%60); let t=want;
+  for(let i=0;i<3;i++){const p=shopParts(new Date(t));t+=want-Date.UTC(p.y,p.mo,p.d,p.h,p.mi)}
+  return new Date(t).toISOString();
+}
+const today=shopDay(new Date());
 
 function el(id){return document.getElementById(id)}
+function escH(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 /* ---------- step 1 ---------- */
 /* Most visits are more than one service: a cut and a beard, a shave and a
@@ -589,8 +618,8 @@ async function loadMonth(){
     const data=await r.json();
     const map={};
     for(const iso of (data.slots||[])){
-      const d=new Date(iso);
-      (map[dkey(d)]=map[dkey(d)]||[]).push(d.getHours()*60+d.getMinutes());
+      const d=new Date(iso), k=dkey(shopDay(d));
+      (map[k]=map[k]||[]).push(shopMin(d));
     }
     for(const k in map) map[k].sort(function(a,b){return a-b});
     if(availKey!==key) return;          // a later request already won
@@ -648,7 +677,7 @@ function fmtRange(start,len){
   return (a.slice(-2)===b.slice(-2) ? a.slice(0,-3) : a)+' \u2013 '+b;
 }
 function setSlot(m){
-  slot=m;
+  slot=m; BOOK_KEY=null; el('slotsNote').classList.add('hidden');
   [...document.querySelectorAll('.slot')].forEach(b=>b.classList.toggle('sel',b.textContent===fmt(m)));
   el('toS3').disabled=false;
 }
@@ -688,7 +717,7 @@ function getBookings(){
           .sort((x,y)=>new Date(x.startISO)-new Date(y.startISO));
 }
 function putBookings(a){try{localStorage.setItem(BKEY,JSON.stringify(a))}catch(e){}}
-function startISO(){const d=new Date(day); d.setHours(Math.floor(slot/60),slot%60,0,0); return d.toISOString()}
+function startISO(){return shopISO(day.getFullYear(),day.getMonth(),day.getDate(),slot)}
 
 function renderUpcoming(){
   const list=getBookings(), box=el('upcoming');
@@ -700,8 +729,8 @@ function renderUpcoming(){
   box.innerHTML='<h3>Your Upcoming '+(list.length>1?'Appointments':'Appointment')+'</h3>'+
     list.map(b=>{
       const d=new Date(b.startISO);
-      const when=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+
-        ' at '+fmtRange(d.getHours()*60+d.getMinutes(), b.min||0);
+      const when=d.toLocaleDateString('en-US',{timeZone:SHOP_TZ,weekday:'long',month:'long',day:'numeric'})+
+        ' at '+fmtRange(shopMin(d), b.min||0);
       const hrs=(d.getTime()-Date.now())/3600000;
       let acts;
       if(hrs<=CUTOFF_HOURS){
@@ -964,7 +993,7 @@ function loadMe(){
   let d=null; try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
   if(!d||!d.fn) return false;
   el('fn').value=d.fn; el('ln').value=d.ln||''; el('ph').value=d.ph||''; el('em').value=d.em||'';
-  el('welcome').innerHTML='<span>Welcome back, <b>'+d.fn+'</b>. Your details are filled in.</span>'+
+  el('welcome').innerHTML='<span>Welcome back, <b>'+escH(d.fn)+'</b>. Your details are filled in.</span>'+
     '<button onclick="forgetMe()">Not you?</button>';
   el('welcome').classList.remove('hidden');
   check(); return true;
@@ -973,6 +1002,15 @@ function forgetMe(){
   try{localStorage.removeItem(KEY)}catch(e){}
   ['fn','ln','ph','em','nt'].forEach(i=>el(i).value='');
   el('welcome').classList.add('hidden'); check(); el('fn').focus();
+}
+/* One key per booking attempt. If the connection drops after Square saved the
+   booking and the client taps Confirm again, Square sees the same key and hands
+   back the same appointment instead of making a second one. */
+let BOOK_KEY=null;
+function bookKey(){
+  if(!BOOK_KEY) BOOK_KEY=(self.crypto&&crypto.randomUUID)?crypto.randomUUID():
+    'k'+Date.now().toString(36)+Math.random().toString(36).slice(2);
+  return BOOK_KEY;
 }
 async function confirmIt(){
   const btn=el('confirmBtn'), label=btn.textContent;
@@ -985,13 +1023,23 @@ async function confirmIt(){
     const payload = rescheduleId
       ? {action:'reschedule', bookingId:rescheduleId, services:pickedVars(),
          startAt:startISO(), phone:el('ph').value.trim()}
-      : {services:pickedVars(), startAt:startISO(),
+      : {services:pickedVars(), startAt:startISO(), idempotencyKey:bookKey(),
          firstName:el('fn').value.trim(), lastName:el('ln').value.trim(),
          phone:el('ph').value.trim(), email:el('em').value.trim(),
          note:el('nt').value.trim()};
     const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify(payload)});
     const data=await r.json().catch(function(){return{}});
+    if(r.status===409){
+      // Someone else took this time between choosing it and confirming.
+      // Nothing is booked; send them back to the calendar with fresh times.
+      btn.disabled=false; btn.textContent=label; BOOK_KEY=null;
+      AVAIL=null; availKey=null; availState='idle';
+      go(2); loadMonth();
+      el('slotsNote').textContent=(data.error||'Sorry, that time was just taken.')+' Please choose another.';
+      el('slotsNote').classList.remove('hidden');
+      return;
+    }
     if(!r.ok||!data.booking) throw new Error(data.error||'That did not go through');
     booked=data.booking;
   }catch(e){
@@ -1011,7 +1059,7 @@ async function confirmIt(){
   all.push({id:booked.id, svcIds:picked.map(x=>x.id),
             svcNames:visitNames(), price:totalPrice(),
             min:totalMin(), startISO:startISO(), paid:!!(before&&before.paid), card:(before&&before.card)||''});
-  putBookings(all); rescheduleId=null; lastBooked=booked.id;
+  putBookings(all); rescheduleId=null; lastBooked=booked.id; BOOK_KEY=null;
   el('payNow').classList.toggle('hidden', !!(before&&before.paid));
   el('confLine').textContent=listNames(visitNames())+' with Sandy on '+
     day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})+' at '+fmt(slot)+'.';

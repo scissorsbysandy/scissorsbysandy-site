@@ -8,12 +8,12 @@
 <style>
   /* Private hand-off page: the message and number travel only in the #fragment,
      which browsers never send to the server, so nothing is stored or logged here. */
-  :root { --navy:#203E58; --gold:#B8955A; --ink:#16212c; --muted:#5b6876; --bg:#f6f7f9; --card:#fff; --line:#dde2e8; }
-  @media (prefers-color-scheme: dark) { :root { --ink:#e8edf2; --muted:#9aa8b6; --bg:#0f1720; --card:#17222e; --line:#2a3846; --navy:#4a7aa3; } }
+  :root { --navy:#203E58; --gold:#B8955A; --ink:#16212c; --muted:#5b6876; --bg:#f6f7f9; --card:#fff; --line:#dde2e8; --eyebrow:#7F622F; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#e8edf2; --muted:#9aa8b6; --bg:#0f1720; --card:#17222e; --line:#2a3846; --navy:#4a7aa3; --eyebrow:#B8955A; } }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; padding:24px 16px; }
   main { max-width:520px; margin:0 auto; display:grid; gap:16px; }
-  .eyebrow { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); font-weight:600; }
+  .eyebrow { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--eyebrow); font-weight:600; }
   h1 { font:400 26px/1.15 Georgia,"Times New Roman",serif; margin:0; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; display:grid; gap:10px; }
   .to { font-variant-numeric:tabular-nums; color:var(--muted); }
