@@ -44,7 +44,7 @@ async function session(tz, onPost) {
   return { ctx, page, posts, gets, errs };
 }
 async function pickFirstSlotAndConfirm(page) {
-  await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(250);
+  await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(250);
   await page.locator('.slot').first().click(); await page.waitForTimeout(150);
   await page.locator('#toS3').click(); await page.waitForTimeout(250);
   await page.locator('#fn').fill('Pat'); await page.locator('#ln').fill('Example');
@@ -56,9 +56,9 @@ const ok = (route) => route.fulfill({ status: 200, contentType: 'application/jso
 /* ---- 1. a phone in California sees and books New Jersey time ---- */
 for (const tz of ['America/Los_Angeles', 'Europe/London', 'America/New_York']) {
   const s = await session(tz, ok);
-  const day = await s.page.locator('button.day:not([disabled])').allInnerTexts();
+  const day = await s.page.locator('button.day:not([disabled]):not(.full)').allInnerTexts();
   check(`${tz}: only the 16th is offered`, day.join() === '16', day.join());
-  await s.page.locator('button.day:not([disabled])').first().click(); await s.page.waitForTimeout(250);
+  await s.page.locator('button.day:not([disabled]):not(.full)').first().click(); await s.page.waitForTimeout(250);
   const times = await s.page.locator('.slot').allInnerTexts();
   check(`${tz}: times are shown in shop time`, times.join('|') === '10:00 AM|2:30 PM', times.join('|'));
   await s.page.locator('.slot').first().click(); await s.page.waitForTimeout(150);
@@ -90,7 +90,7 @@ for (const tz of ['America/Los_Angeles', 'Europe/London', 'America/New_York']) {
   check('and fetches fresh times', s.gets.length > getsBefore);
   check('nothing is saved as booked', (await s.page.evaluate(() => JSON.parse(localStorage.getItem('sbs_bookings') || '[]'))).length === 0);
   check('no confirmation screen', !(await s.page.locator('#s4').isVisible()));
-  await s.page.locator('button.day:not([disabled])').first().click(); await s.page.waitForTimeout(250);
+  await s.page.locator('button.day:not([disabled]):not(.full)').first().click(); await s.page.waitForTimeout(250);
   await s.page.locator('.slot').nth(1).click(); await s.page.waitForTimeout(150);
   check('choosing another time clears the note', !(await s.page.locator('#slotsNote').isVisible()));
   check('no page errors', s.errs.length === 0, s.errs.join('; '));

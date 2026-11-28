@@ -52,7 +52,7 @@ check('the control now reads "another"',
       await page.locator('#addMore').innerText());
 
 // and the visit still books
-await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(350);
+await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(350);
 await page.locator('.slot').first().click(); await page.waitForTimeout(150);
 await page.locator('#toS3').click(); await page.waitForTimeout(300);
 await page.locator('#fn').fill('Casey'); await page.locator('#ln').fill('Example');

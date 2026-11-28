@@ -1,3 +1,4 @@
 .netlify/
 __pycache__/
 *.zip
+node_modules/

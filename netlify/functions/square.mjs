@@ -146,7 +146,7 @@ async function buildSegments(serviceIds) {
   }));
 }
 
-async function availability(serviceIds, fromISO, toISO) {
+export async function availability(serviceIds, fromISO, toISO) {
   const { locationId, teamMemberId } = await setup();
   const { availabilities = [] } = await square('/v2/bookings/availability/search', {
     method: 'POST',
@@ -168,6 +168,36 @@ async function availability(serviceIds, fromISO, toISO) {
   });
   // The page only needs the start times; everything else it already knows.
   return availabilities.map(a => a.start_at);
+}
+
+/**
+ * Phone numbers of everyone booked between two instants, wherever they booked
+ * (the site, the Square app, a phone call Sandy typed in). The waitlist uses
+ * it so someone who has since booked the day they were waiting for comes off
+ * that day's list instead of being emailed about it.
+ */
+export async function phonesBooked(fromISO, toISO) {
+  const { locationId } = await setup();
+  const ids = new Set();
+  let cursor = '';
+  for (let page = 0; page < 5; page++) {
+    const q = new URLSearchParams({ location_id: locationId, start_at_min: fromISO, start_at_max: toISO, limit: '100' });
+    if (cursor) q.set('cursor', cursor);
+    const { bookings = [], cursor: next } = await square('/v2/bookings?' + q.toString());
+    for (const b of bookings) {
+      if ((b.status === 'ACCEPTED' || b.status === 'PENDING') && b.customer_id) ids.add(b.customer_id);
+    }
+    if (!next) break;
+    cursor = next;
+  }
+  const phones = new Set();
+  await Promise.all([...ids].map(async (id) => {
+    try {
+      const { customer } = await square('/v2/customers/' + encodeURIComponent(id));
+      if (customer?.phone_number) phones.add(customer.phone_number);
+    } catch { /* one unreadable client never stops the rest */ }
+  }));
+  return phones;
 }
 
 /**
@@ -198,7 +228,7 @@ async function assertStillFree(serviceIds, startAt, ownWindow) {
  * search matches an exact phone, so the page's digits are normalised to E.164
  * before searching. If nothing matches we create the client.
  */
-function toE164(raw) {
+export function toE164(raw) {
   const digits = String(raw || '').replace(/\D/g, '');
   if (digits.length === 10) return '+1' + digits;              // US, as typed in the shop
   if (digits.length === 11 && digits[0] === '1') return '+' + digits;

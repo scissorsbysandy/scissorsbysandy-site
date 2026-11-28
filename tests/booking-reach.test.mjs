@@ -119,7 +119,7 @@ for (const dev of ['iPhone SE', 'Pixel 7']) {
   await page.locator('[id^="svc-"]').first().click();
   await page.locator('#pickBar button', { hasText: 'Continue' }).click(); await page.waitForTimeout(500);
   await page.click('#nextM'); await page.waitForTimeout(500);
-  await page.locator('button.day:not([disabled])').first().click(); await page.locator('.slot').first().click();
+  await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.locator('.slot').first().click();
   await page.click('#toS3');
   await page.fill('#fn', 'Pat'); await page.fill('#ln', 'Example'); await page.fill('#ph', '7325550101'); await page.fill('#em', 'pat@example.com');
   await page.click('#confirmBtn'); await page.waitForTimeout(600);

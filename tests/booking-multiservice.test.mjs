@@ -84,7 +84,7 @@ const ids = decodeURIComponent((lastGet.match(/services=([^&]+)/)||[])[1]||'');
 check('availability asks for both services', ids.split(',').length===2, ids);
 check('step 2 sums the visit', /2 services/i.test(await page.locator('#s2sub').innerText()));
 
-await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(300);
+await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(300);
 await page.locator('.slot').first().click(); await page.waitForTimeout(200);
 await page.locator('#toS3').click(); await page.waitForTimeout(300);
 

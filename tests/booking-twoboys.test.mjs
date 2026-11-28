@@ -53,7 +53,7 @@ await page.locator('#pickBar .btn').click(); await page.waitForTimeout(900);
 const q=decodeURIComponent((gets[gets.length-1].match(/services=([^&]+)/)||[])[1]||'');
 check('Square is asked for the cut twice', q.split(',').length===2 && new Set(q.split(',')).size===1, q);
 
-await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(350);
+await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(350);
 await page.locator('.slot').first().click(); await page.waitForTimeout(150);
 await page.locator('#toS3').click(); await page.waitForTimeout(350);
 const sum=(await page.locator('#sum').innerText()).replace(/\s+/g,' ');
