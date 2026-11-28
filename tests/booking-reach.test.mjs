@@ -1,5 +1,5 @@
 // Booking is always one tap away: the hero leads with Book Online, every menu
-// leads with Book, a bar keeps booking in reach on phones once the hero's
+// leads with Book on wider screens, a bar keeps booking in reach on phones once the hero's
 // buttons scroll away, and the done screen offers the calendar, directions and
 // how to change it. Analytics counts only the real site.
 let pwmod;
@@ -60,7 +60,7 @@ for (const dev of ['iPhone SE', 'iPhone 13']) {
   const tap = await page.locator('nav ul a').nth(1).boundingBox();
   check(`${dev}: menu links are thumb-sized (44px tall)`, tap.height >= 44, JSON.stringify(tap));
   check(`${dev}: the menu stays one row (fixed header height)`,
-    await page.locator('nav ul').evaluate(u => { const t = [...u.children].map(li => li.getBoundingClientRect().top); return Math.max(...t) - Math.min(...t) < 2 }));
+    await page.locator('nav ul').evaluate(u => { const t = [...u.children].filter(li => li.offsetParent).map(li => li.getBoundingClientRect().top); return Math.max(...t) - Math.min(...t) < 2 }));
   check(`${dev}: the bar stays out of the way while the hero's buttons show`, !(await page.locator('#bookbar').evaluate(b => b.classList.contains('on'))));
   await page.evaluate(() => scrollTo(0, 2500)); await page.waitForTimeout(500);
   check(`${dev}: once they scroll away, the bar slides in`, await page.locator('#bookbar').evaluate(b => b.classList.contains('on')));
@@ -73,6 +73,34 @@ for (const dev of ['iPhone SE', 'iPhone 13']) {
   const bar = await page.locator('#bookbar').boundingBox();
   check(`${dev}: at the very bottom the bar covers none of the footer links`, lastLink.y + lastLink.height <= bar.y, `${JSON.stringify(lastLink)} vs ${JSON.stringify(bar)}`);
   check(`${dev}: no page errors`, errs.length === 0, errs.join(' | '));
+  await ctx.close();
+}
+
+/* ---- one gold Book on a phone screen at a time, top to bottom, every page ---- */
+for (const dev of ['iPhone SE', 'Pixel 7']) {
+  const ctx = await ctxFor({ ...devices[dev] });
+  for (const p of PAGES) {
+    const page = await ctx.newPage(); await page.goto(U + p); await page.waitForTimeout(300);
+    check(`${dev} ${p}: no gold Book pinned in the menu on a phone`, !(await page.locator('.nav-book a').isVisible()));
+    const H = await page.evaluate(() => document.documentElement.scrollHeight);
+    const both = [], none = [];
+    for (let y = 0; y < H; y += Math.round(H / 12)) {
+      await page.evaluate(y => scrollTo(0, y), y); await page.waitForTimeout(380);
+      const st = await page.evaluate(() => {
+        const bar = document.getElementById('bookbar'), br = bar.getBoundingClientRect();
+        const barUp = br.top < innerHeight - 5;
+        const navBottom = Math.max(0, document.querySelector('nav').getBoundingClientRect().bottom);
+        const c = document.querySelector('.cta-row'); let hero = false;
+        if (c) { const r = c.getBoundingClientRect(); hero = r.bottom > navBottom && r.top < innerHeight - (barUp ? br.height : 0); }
+        return { barUp, hero };
+      });
+      if (st.barUp && st.hero) both.push(y);
+      if (!st.barUp && !st.hero) none.push(y);
+    }
+    check(`${dev} ${p}: the bar and the page's Book buttons are never on screen together`, both.length === 0, 'at ' + both.join(','));
+    check(`${dev} ${p}: a Book button is always within reach`, none.length === 0, 'missing at ' + none.join(','));
+    await page.close();
+  }
   await ctx.close();
 }
 

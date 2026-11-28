@@ -885,7 +885,7 @@
       padding-right:1.5rem}
     nav ul::-webkit-scrollbar{display:none}
     nav ul li{flex:none}
-    nav ul li:first-child{margin-left:auto}
+    nav ul li:first-child,nav ul li.nav-book+li{margin-left:auto}
     nav ul li:last-child{margin-right:auto}
     nav ul a{font-size:.7rem!important;letter-spacing:.1em!important;line-height:1;padding:1.05rem .1rem!important;white-space:nowrap}
     .nav-book a{padding:1.05rem 1rem!important}
@@ -902,7 +902,7 @@
   @media (max-width:900px){
     .bookbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:80;gap:.5rem;
       padding:.6rem .8rem calc(.6rem + env(safe-area-inset-bottom));
-      background:rgba(14,26,38,.97);border-top:1px solid var(--gold-deep);
+      background:#0e1a26;border-top:1px solid var(--gold-deep);
       transform:translateY(110%);transition:transform .3s ease}
     .bookbar.on{transform:translateY(0)}
     .bookbar a{display:flex;align-items:center;justify-content:center;min-height:46px;text-decoration:none;
@@ -912,6 +912,10 @@
     .bookbar-alt{flex:0 0 4.4rem;color:var(--gold);border:1px solid var(--gold-deep)}
     footer{padding-bottom:6.5rem}
     body.bookbar-on .a2hs:not(.mini){bottom:5.4rem}
+    /* One gold Book on a phone screen at a time: the page's own Book Online
+       button at the top, then this bar once it has scrolled away. The menu's
+       gold Book is for wider screens, where there is no bar. */
+    .nav-book{display:none}
   }
   @media (prefers-reduced-motion:reduce){ .bookbar{transition:none} }
 </style>
@@ -1495,14 +1499,40 @@
     <a class="bookbar-alt" href="sms:+18482305995">Text</a>
   </div>
   <script>
-  /* Show the bar only when the page's own Book buttons are off screen. */
+  /* Phones and tablets: one Book on screen at a time. The bar comes up only once
+     the page's own Book buttons have scrolled out of sight (or, on a page
+     without them, after the first screen), and the menu's gold Book folds away
+     while it is up. Measured on every scroll, so it works in every browser. */
   (function () {
     var bar = document.getElementById('bookbar');
-    if (!bar || !('IntersectionObserver' in window)) return;
+    if (!bar) return;
     var cta = document.querySelector('.cta-row');
-    var on = function (v) { bar.classList.toggle('on', v); document.body.classList.toggle('bookbar-on', v); };
-    if (!cta) { addEventListener('scroll', function () { on(scrollY > 400); }, { passive: true }); return; }
-    new IntersectionObserver(function (e) { on(!e[0].isIntersecting); }).observe(cta);
+    var nav = document.querySelector('nav');
+    var small = window.matchMedia ? matchMedia('(max-width:900px)') : { matches: true };
+    var state = null, queued = false;
+    var check = function () {
+      queued = false;
+      var v = false;
+      if (small.matches) {
+        if (cta) {
+          var r = cta.getBoundingClientRect();
+          var top = nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
+          v = r.bottom <= top || r.top >= innerHeight;
+        } else {
+          v = (window.scrollY || document.documentElement.scrollTop) > 400;
+        }
+      }
+      if (v === state) return;
+      state = v;
+      bar.classList.toggle('on', v);
+      document.body.classList.toggle('bookbar-on', v);
+    };
+    var soon = function () { if (!queued) { queued = true; requestAnimationFrame(check); } };
+    addEventListener('scroll', soon, { passive: true });
+    addEventListener('resize', soon);
+    addEventListener('pageshow', soon);
+    addEventListener('load', soon);
+    check();
   })();
   </script>
 </footer>
