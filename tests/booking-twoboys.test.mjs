@@ -62,7 +62,7 @@ check('the summary charges eighty', sum.includes("$80"), sum);
 check('the summary reserves sixty minutes', sum.includes('60 minutes'), sum);
 
 await page.locator('#fn').fill('Jordan'); await page.locator('#ln').fill('Sample');
-await page.locator('#ph').fill('7325550148'); await page.waitForTimeout(250);
+await page.locator('#ph').fill('7325550148'); await page.locator('#em').fill('pat@example.com'); await page.waitForTimeout(250);
 await page.locator('#confirmBtn').click(); await page.waitForTimeout(900);
 const sent=posts[posts.length-1];
 check('the booking sends the service twice', sent?.services?.length===2 && new Set(sent.services).size===1,

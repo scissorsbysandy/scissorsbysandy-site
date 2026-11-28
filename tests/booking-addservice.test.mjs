@@ -56,7 +56,7 @@ await page.locator('button.day:not([disabled])').first().click(); await page.wai
 await page.locator('.slot').first().click(); await page.waitForTimeout(150);
 await page.locator('#toS3').click(); await page.waitForTimeout(300);
 await page.locator('#fn').fill('Casey'); await page.locator('#ln').fill('Example');
-await page.locator('#ph').fill('7325550145'); await page.waitForTimeout(250);
+await page.locator('#ph').fill('7325550145'); await page.locator('#em').fill('pat@example.com'); await page.waitForTimeout(250);
 await page.locator('#confirmBtn').click(); await page.waitForTimeout(800);
 check('the two-service visit books', await page.locator('#s4').isVisible());
 check('no page errors', errs.length===0, errs.join('; '));

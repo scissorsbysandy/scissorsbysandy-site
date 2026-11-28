@@ -339,6 +339,9 @@ async function findOrCreateCustomer({ firstName, lastName, phone, email }) {
 /* ---------- create the booking ------------------------------------------ */
 
 async function createBooking(p) {
+  // Confirmations and reminders go by email only, so a new booking needs one.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(p.email || '').trim()))
+    throw Object.assign(new Error('Please enter your email so I can send your confirmation'), { status: 400 });
   const { locationId } = await setup();
   const serviceIds = asServices(p.services ?? p.service);
   const segments = await buildSegments(serviceIds);

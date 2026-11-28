@@ -49,7 +49,7 @@ async function session({saved=[], paidState=false, paidAfter=0, payFails=false, 
   await page.addInitScript(([s])=>{
     if(!sessionStorage.getItem('seeded')){
       localStorage.setItem('sbs_bookings',JSON.stringify(s));
-      localStorage.setItem('sbs_client',JSON.stringify({fn:'Pat',ln:'Example',ph:'7325550101',em:''}));
+      localStorage.setItem('sbs_client',JSON.stringify({fn:'Pat',ln:'Example',ph:'7325550101',em:'pat@example.com'}));
       sessionStorage.setItem('seeded','1');
     }
   },[saved]);

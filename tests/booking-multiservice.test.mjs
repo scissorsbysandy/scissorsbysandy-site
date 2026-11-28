@@ -95,7 +95,7 @@ check('the summary totals the length', summary.includes(String(m0+m1)+' minutes'
 if(SHOTS) await page.screenshot({path:SHOTS+'/multi-2-summary.png', fullPage:false});
 
 await page.locator('#fn').fill('Pat'); await page.locator('#ln').fill('Example');
-await page.locator('#ph').fill('7325550142'); await page.waitForTimeout(150);
+await page.locator('#ph').fill('7325550142'); await page.locator('#em').fill('pat@example.com'); await page.waitForTimeout(150);
 await page.locator('#confirmBtn').click(); await page.waitForTimeout(700);
 
 const booked=posts[posts.length-1];

@@ -46,7 +46,7 @@ const made = (r) => r.calls.some(c => c.path === '/v2/bookings' && c.method === 
 const moved = (r) => r.calls.some(c => c.path === '/v2/bookings/BK' && c.method === 'PUT');
 
 const T = '2026-12-05T16:00:00.000Z';
-const base = { services: ['SVC_A'], startAt: T, firstName: 'Pat', phone: '7325550142' };
+const base = { services: ['SVC_A'], startAt: T, firstName: 'Pat', phone: '7325550142', email: 'pat@example.com' };
 
 // still free: booked
 open = [T];
@@ -57,6 +57,14 @@ check('the check asks about the exact time', Date.parse(q?.start_at_range?.start
 check('the check is for Sandy only', q?.segment_filters?.[0]?.team_member_id_filter?.any?.[0] === 'SANDY');
 check('the check comes before the booking is written',
   r.calls.findIndex(c => c.path === '/v2/bookings/availability/search') < r.calls.findIndex(c => c.path === '/v2/bookings'));
+
+// no email: confirmations and reminders go by email only, so refuse it
+open = [T];
+for (const email of ['', '   ', 'pat@', 'not an email']) {
+  r = await POST({ ...base, email });
+  check(`a booking with email "${email}" is refused with 400`, r.status === 400 && !made(r), JSON.stringify(r.body));
+}
+check('and the client is asked for their email', /enter your email/i.test(r.body.error || ''));
 
 // taken in the meantime: refused, nothing written
 open = ['2026-12-05T16:30:00Z'];

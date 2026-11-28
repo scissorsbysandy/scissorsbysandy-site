@@ -55,7 +55,7 @@ async function book(firstName, lastName, phone) {
   created = null; bookedCustomer = null;
   const res = await handler(new Request('https://x/api/square', {
     method:'POST',
-    body: JSON.stringify({ service:'SVC', startAt:'2026-12-04T15:00:00Z', firstName, lastName, phone }),
+    body: JSON.stringify({ service:'SVC', startAt:'2026-12-04T15:00:00Z', firstName, lastName, phone, email: 'client@example.com' }),
   }));
   const out = await res.json();
   if (res.status !== 200) throw new Error('booking failed: ' + JSON.stringify(out));

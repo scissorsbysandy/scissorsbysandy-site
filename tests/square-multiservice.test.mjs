@@ -61,7 +61,7 @@ check('a single service query still works', r.status === 200 && f?.segment_filte
 
 // booking three services
 r = await POST({ services:['SVC_C','SVC_A','SVC_B'], startAt:'2026-12-04T15:00:00Z',
-                 firstName:'Pat', phone:'7325550142' });
+                 firstName:'Pat', phone:'7325550142', email:'pat@example.com' });
 let segs = r.calls.find(c => c.path === '/v2/bookings' && c.method === 'POST')?.body?.booking?.appointment_segments;
 check('three services make one booking of three segments', r.status === 200 && segs?.length === 3);
 check('segments stay in the order the client picked', ids(segs) === 'SVC_C,SVC_A,SVC_B', ids(segs));
@@ -70,7 +70,7 @@ check('each segment carries its own version',
       segs?.map(s=>s.service_variation_version).join(','));
 
 // single service still books
-r = await POST({ service:'SVC_A', startAt:'2026-12-04T15:00:00Z', firstName:'Pat', phone:'7325550142' });
+r = await POST({ service:'SVC_A', startAt:'2026-12-04T15:00:00Z', firstName:'Pat', phone:'7325550142', email:'pat@example.com' });
 segs = r.calls.find(c => c.path === '/v2/bookings' && c.method === 'POST')?.body?.booking?.appointment_segments;
 check('a single service still books one segment', r.status === 200 && segs?.length === 1);
 
@@ -81,9 +81,9 @@ segs = r.calls.find(c => c.method === 'PUT')?.body?.booking?.appointment_segment
 check('reschedule moves the whole visit', r.status === 200 && segs?.length === 2, ids(segs));
 
 // limits
-r = await POST({ services:[], startAt:'2026-12-04T15:00:00Z', firstName:'Pat', phone:'7325550142' });
+r = await POST({ services:[], startAt:'2026-12-04T15:00:00Z', firstName:'Pat', phone:'7325550142', email:'pat@example.com' });
 check('no services is refused', r.status === 400);
-r = await POST({ services:['A','B','C','D','E','F','G'], startAt:'2026-12-04T15:00:00Z', firstName:'Pat', phone:'7325550142' });
+r = await POST({ services:['A','B','C','D','E','F','G'], startAt:'2026-12-04T15:00:00Z', firstName:'Pat', phone:'7325550142', email:'pat@example.com' });
 check('an absurd number of services is refused', r.status === 400, JSON.stringify(r.body));
 check('and that refusal is readable', /call or text Sandy/i.test(r.body.error || ''), r.body.error);
 

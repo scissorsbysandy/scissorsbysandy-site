@@ -48,7 +48,7 @@ async function pickFirstSlotAndConfirm(page) {
   await page.locator('.slot').first().click(); await page.waitForTimeout(150);
   await page.locator('#toS3').click(); await page.waitForTimeout(250);
   await page.locator('#fn').fill('Pat'); await page.locator('#ln').fill('Example');
-  await page.locator('#ph').fill('7325550142'); await page.waitForTimeout(120);
+  await page.locator('#ph').fill('7325550142'); await page.locator('#em').fill('pat@example.com'); await page.waitForTimeout(120);
   await page.locator('#confirmBtn').click(); await page.waitForTimeout(600);
 }
 const ok = (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"booking":{"id":"BK","status":"ACCEPTED"}}' });
@@ -63,7 +63,7 @@ for (const tz of ['America/Los_Angeles', 'Europe/London', 'America/New_York']) {
   check(`${tz}: times are shown in shop time`, times.join('|') === '10:00 AM|2:30 PM', times.join('|'));
   await s.page.locator('.slot').first().click(); await s.page.waitForTimeout(150);
   await s.page.locator('#toS3').click(); await s.page.waitForTimeout(250);
-  await s.page.locator('#fn').fill('Pat'); await s.page.locator('#ln').fill('Example'); await s.page.locator('#ph').fill('7325550142'); await s.page.waitForTimeout(120);
+  await s.page.locator('#fn').fill('Pat'); await s.page.locator('#ln').fill('Example'); await s.page.locator('#ph').fill('7325550142'); await s.page.locator('#em').fill('pat@example.com'); await s.page.waitForTimeout(120);
   await s.page.locator('#confirmBtn').click(); await s.page.waitForTimeout(600);
   const at = s.posts[0]?.startAt;
   check(`${tz}: the booking is for 10:00 AM in New Jersey`, Date.parse(at) === Date.parse(SLOTS[0]), at);
