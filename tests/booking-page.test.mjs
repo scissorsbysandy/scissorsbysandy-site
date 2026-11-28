@@ -94,7 +94,7 @@ async function session({cancelFails=false}={}) {
   const {page,seen,errs,ctx}=await session();
   await page.locator('#upcoming button', {hasText:'Reschedule'}).first().click();
   await page.waitForTimeout(600);
-  const dayBtn=page.locator(`button.day:not([disabled])`).first();
+  const dayBtn=page.locator(`button.day:not([disabled]):not(.full)`).first();
   await dayBtn.click(); await page.waitForTimeout(300);
   await page.locator('.slot').first().click(); await page.waitForTimeout(200);
   await page.locator('#toS3').click(); await page.waitForTimeout(300);

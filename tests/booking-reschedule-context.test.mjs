@@ -112,7 +112,7 @@ const startMove=async page=>{
   await page.locator('[id^="svc-"]').first().click(); await page.waitForTimeout(100);
   await page.locator('#pickBar button',{hasText:'Continue'}).click(); await page.waitForTimeout(500);
   check('a fresh booking opens on this month again', (await page.locator('#monLabel').textContent())==='November 2026', await page.locator('#monLabel').textContent());
-  await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(200);
+  await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(200);
   await page.locator('.slot').first().click(); await page.click('#toS3'); await page.waitForTimeout(300);
   check('step 3 is worded as a booking again', (await page.locator('#confirmBtn').textContent())==='Confirm Booking');
   await page.fill('#fn','Pat'); await page.fill('#ln','Example'); await page.fill('#ph','7325550101');

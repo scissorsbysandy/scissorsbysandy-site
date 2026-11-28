@@ -158,6 +158,36 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
 .slot:hover{border-color:var(--gold-deep);background:rgba(248,208,148,.2)}
 .slot.sel,.slot.sel:hover{background:var(--navy);color:var(--gold);border-color:var(--navy)}
 .no-slots{text-align:center;color:var(--ink-soft);font-size:.85rem;padding:2rem 0}
+/* waitlist: a full day stays tappable, so a client can ask to hear about openings */
+.day.full{color:rgba(22,41,60,.42);background:transparent;border:1px dashed rgba(22,41,60,.2)}
+.day.full:hover:not(:disabled){color:var(--ink)}
+.day.full.sel,.day.full.sel:hover:not(:disabled){color:var(--gold);border:1px solid var(--navy);background:var(--navy)}
+.cal-key{text-align:center;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-top:.55rem;opacity:.9}
+.cal-key i{display:inline-block;width:.8rem;height:.8rem;border:1px dashed rgba(22,41,60,.35);vertical-align:-2px;margin-right:.35rem}
+.slots .no-slots{grid-column:1/-1}
+.no-slots.full-day{padding:.4rem 0 .2rem}
+.wl{max-width:460px;margin:1.2rem auto 0;text-align:center}
+.wl-toggle{background:none;border:none;padding:.4rem .2rem;cursor:pointer;font-family:var(--sans);
+  font-size:.8rem;line-height:1.5;color:var(--navy)}
+.wl-toggle b{font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.wl-box{text-align:left;margin-top:.6rem;padding:1.2rem 1.1rem 1rem;background:#fff;border:1px solid rgba(162,126,47,.45)}
+.wl-head{font-family:var(--serif);font-weight:600;color:var(--navy);font-size:1.25rem;letter-spacing:.04em;margin:0 0 .35rem}
+.wl-lead{font-size:.84rem;line-height:1.55;color:var(--ink);margin:0 0 1rem}
+.wl-win{display:flex;flex-wrap:wrap;gap:6px}
+.wl-win button{flex:1 1 auto;min-height:44px;padding:.55rem .7rem;background:#fff;border:1px solid rgba(22,41,60,.18);
+  cursor:pointer;font-family:var(--sans);font-size:.76rem;letter-spacing:.04em;color:var(--ink)}
+.wl-win button.sel{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+.wl-win button:disabled{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+.wl-box .btn{width:100%;margin-top:.2rem}
+.wl-msg{font-size:.84rem;line-height:1.45;margin-top:.8rem;color:var(--ink)}
+.wl-msg:empty{display:none}
+.wl-msg.err{color:#8A2E2E}
+.wl-done{text-align:left;margin-top:.8rem;padding:1rem 1.1rem;background:rgba(248,208,148,.22);border:1px solid rgba(162,126,47,.45);
+  font-size:.86rem;line-height:1.55;color:var(--ink)}
+.wl-done b{font-family:var(--serif);font-size:1.05rem}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.wl-leave{max-width:460px;margin:0 auto 1.6rem;padding:1rem 1.1rem;background:#fff;border:1px solid rgba(162,126,47,.45);text-align:center;font-size:.88rem;line-height:1.55}
+.wl-leave .btn{margin-top:.8rem}
 
 /* form */
 .form{max-width:440px;margin:0 auto}
@@ -327,6 +357,7 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
     <div class="moving hidden" id="moving" role="status" aria-live="polite"></div>
     <!-- STEP 1 -->
     <section id="s1">
+      <div class="wl-leave hidden" id="wlLeave" role="status" aria-live="polite"></div>
       <div class="upcoming hidden" id="upcoming"></div>
       <div class="finder" id="finder">
         <button class="find-toggle" id="findToggle" type="button" onclick="toggleFind()">Already have an appointment? <b>Find it to move or cancel</b></button>
@@ -364,10 +395,31 @@ body{background:var(--cream);color:var(--ink);font-family:var(--sans);font-weigh
         <div class="grid" id="grid"></div>
         <div class="cal-status" id="calStatus"></div>
         <div class="closed-note">Only the times Sandy is free are shown.</div>
+        <div class="cal-key hidden" id="calKey"><i></i>No openings &middot; tap to join the waitlist</div>
       </div>
       <div class="slots-wrap hidden" id="slotsWrap">
         <div class="slots-day" id="slotsDay"></div>
         <div class="slots" id="slots"></div>
+        <div class="wl hidden" id="wl">
+          <button class="wl-toggle" id="wlToggle" type="button" onclick="openWl()">None of these work? <b>Join the waitlist</b></button>
+          <div class="wl-box hidden" id="wlBox">
+            <h3 class="wl-head">Join the Waitlist</h3>
+            <p class="wl-lead" id="wlLead"></p>
+            <div class="field"><label id="wlWinLabel">When could you come in?</label>
+              <div class="wl-win" id="wlWin" role="radiogroup" aria-labelledby="wlWinLabel"></div></div>
+            <div class="two">
+              <div class="field"><label for="wfn">First Name</label><input id="wfn" autocomplete="given-name"></div>
+              <div class="field"><label for="wln">Last Name</label><input id="wln" autocomplete="family-name"></div>
+            </div>
+            <div class="field"><label for="wph">Mobile Number</label><input id="wph" type="tel" autocomplete="tel" placeholder="(848) 230-5995"></div>
+            <div class="field"><label for="wem">Email</label><input id="wem" type="email" autocomplete="email" inputmode="email" aria-describedby="wemHint">
+              <div class="field-hint" id="wemHint">If a time opens up, this is where I&rsquo;ll let you know.</div></div>
+            <div class="hp" aria-hidden="true"><label for="wsite">Leave this empty</label><input id="wsite" tabindex="-1" autocomplete="off"></div>
+            <button class="btn btn-gold" id="wlBtn" type="button" disabled onclick="joinWl()">Join the Waitlist</button>
+            <div class="wl-msg" id="wlMsg" role="alert"></div>
+          </div>
+          <div class="wl-done hidden" id="wlDone" role="status" aria-live="polite"></div>
+        </div>
       </div>
       <div class="actions">
         <button class="btn btn-line" id="s2back" onclick="backFromTime()">Back</button>
@@ -664,16 +716,21 @@ function renderCal(){
     : '';
   const first=new Date(view.getFullYear(),view.getMonth(),1);
   const days=new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
-  let h='';
+  let h='', anyFull=false;
   for(let i=0;i<first.getDay();i++) h+='<div class="day empty"></div>';
   for(let dnum=1;dnum<=days;dnum++){
     const dt=new Date(view.getFullYear(),view.getMonth(),dnum);
     const ok = dt>=today && availState==='ready' && slotsFor(dt).length>0;
+    // A day the shop is open but has nothing left: still tappable, to join the waitlist.
+    const full = !ok && fullDay(dt);
+    if(full) anyFull=true;
     const sel = day && dt.toDateString()===day.toDateString();
-    h+='<button class="day'+(sel?' sel':'')+'" '+(ok?'':'disabled')+
+    h+='<button class="day'+(full?' full':'')+(sel?' sel':'')+'" '+(ok||full?'':'disabled')+
+       (full?' aria-label="'+dnum+', no openings, join the waitlist"':'')+
        ' onclick="setDay('+dnum+')">'+dnum+'</button>';
   }
   el('grid').innerHTML=h;
+  el('calKey').classList.toggle('hidden',!anyFull);
   const cm=new Date(); cm.setDate(1); cm.setHours(0,0,0,0);
   el('prevM').disabled = view<=cm;
 }
@@ -693,7 +750,8 @@ function setDay(dnum,stay){
     shown.splice(at,0,'<button class="slot current" disabled aria-label="'+fmt(cur)+', your current time">'+fmt(cur)+'<br><small>Current</small></button>');
   }
   el('slots').innerHTML=shown.join('')
-    || '<div class="no-slots">No openings this day.</div>';
+    || '<div class="no-slots full-day">Nothing is open this day right now.</div>';
+  renderWl(list);
   el('slotsWrap').classList.remove('hidden');
   if(!stay) el('slotsWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -714,6 +772,121 @@ el('prevM').onclick=()=>{view.setMonth(view.getMonth()-1);day=null;slot=null;
   el('slotsWrap').classList.add('hidden');el('toS3').disabled=true;renderCal();loadMonth()};
 el('nextM').onclick=()=>{view.setMonth(view.getMonth()+1);day=null;slot=null;
   el('slotsWrap').classList.add('hidden');el('toS3').disabled=true;renderCal();loadMonth()};
+
+
+/* ---------- waitlist ---------- */
+/* A day with no time that suits: leave a name, and hear by email the moment a
+   time opens. Everyone waiting for that day hears at once; first to book gets
+   it. The list itself, and the emails, live behind /api/waitlist. */
+const WL_API='/api/waitlist';
+const WINS=[['any','Any time',0,1440],['morning','Morning',0,720],['afternoon','Afternoon',720,960],['evening','Evening',960,1440]];
+let wlWin=null;
+function fullDay(dt){
+  if(rescheduleId||availState!=='ready'||!picked.length) return false;
+  const t=new Date(); t.setHours(0,0,0,0);
+  return dt>=t && !!HOURS[dt.getDay()];
+}
+function dayISO(){return day?dkey(day):''}
+function dayWords(){return day.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+/** Show the waitlist under the day's times, or instead of them on a full day. */
+function renderWl(list){
+  const box=el('wl');
+  el('wlDone').classList.add('hidden'); el('wlMsg').textContent=''; el('wlMsg').className='wl-msg';
+  if(rescheduleId||!day){box.classList.add('hidden');return}
+  // A part of the day with a time open is not something to wait for: book it.
+  const taken=WINS.map(w=>list.some(m=>m>=w[2]&&m<w[3]));
+  // Parts of the day the visit can't fit in at all (an evening on a 5 PM day) aren't offered.
+  const hrs=HOURS[day.getDay()]||[0,24], latest=hrs[1]*60-totalMin();
+  const fits=WINS.map(w=>w[2]<=latest&&w[3]>hrs[0]*60);
+  if(WINS.every((w,i)=>i===0||taken[i]||!fits[i])){box.classList.add('hidden');return}
+  el('wlWin').innerHTML=WINS.map((w,i)=>!fits[i]?'':'<button type="button" role="radio" data-w="'+w[0]+'" '+
+    (taken[i]?'disabled aria-disabled="true" title="There is a time open, book it above"':'')+
+    ' onclick="pickWin(\''+w[0]+'\')">'+w[1]+'</button>').join('');
+  wlWin=null;
+  const firstFree=WINS.find((w,i)=>!taken[i]); if(firstFree) pickWin(firstFree[0]);
+  el('wlLead').innerHTML='Tell me when you could come in on <b>'+escH(dayWords())+'</b>. '+
+    'If a time opens up, I&rsquo;ll email you right away. Everyone on the list hears at the same moment, so the first to book gets it.';
+  box.classList.remove('hidden');
+  const fullD=!list.length;
+  el('wlToggle').classList.toggle('hidden',fullD);
+  el('wlBox').classList.toggle('hidden',!fullD);
+  if(fullD) prefillWl();
+}
+function pickWin(w){
+  wlWin=w;
+  [...el('wlWin').children].forEach(b=>{const on=b.dataset.w===w; b.classList.toggle('sel',on); b.setAttribute('aria-checked',on)});
+  checkWl();
+}
+function openWl(){
+  el('wlToggle').classList.add('hidden'); el('wlBox').classList.remove('hidden'); prefillWl();
+  el('wlBox').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function prefillWl(){
+  let d=null; try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(d&&d.fn&&!el('wfn').value){el('wfn').value=d.fn;el('wln').value=d.ln||'';el('wph').value=d.ph||'';el('wem').value=d.em||''}
+  checkWl();
+}
+function checkWl(){
+  el('wlBtn').disabled=!(wlWin&&el('wfn').value.trim()&&el('wln').value.trim()&&
+    el('wph').value.replace(/\D/g,'').length>=10&&okEmail(el('wem').value));
+}
+['wfn','wln','wph','wem'].forEach(id=>el(id).addEventListener('input',checkWl));
+async function joinWl(){
+  const btn=el('wlBtn'), msg=el('wlMsg');
+  msg.textContent=''; msg.className='wl-msg';
+  btn.disabled=true; btn.textContent='Adding you…';
+  const body={action:'join',date:dayISO(),services:pickedVars(),window:wlWin,
+    firstName:el('wfn').value.trim(),lastName:el('wln').value.trim(),
+    phone:el('wph').value.trim(),email:el('wem').value.trim(),website:el('wsite').value};
+  try{
+    const r=await fetch(WL_API,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    const data=await r.json().catch(()=>({}));
+    if(r.status===409&&data.open&&data.open.length){
+      // Something opened while they were filling this in: offer it instead.
+      msg.innerHTML='Good news: <b>'+data.open.slice(0,3).map(i=>fmt(shopMin(new Date(i)))).join(', ')+
+        '</b> just opened up. Tap the time above to book it.';
+      loadMonth(); return;
+    }
+    if(!r.ok) throw new Error(data.error||'Something went wrong');
+    try{localStorage.setItem(KEY,JSON.stringify({fn:body.firstName,ln:body.lastName,ph:body.phone,em:body.email}))}catch(e){}
+    const w=WINS.find(x=>x[0]===wlWin);
+    el('wlBox').classList.add('hidden');
+    el('wlDone').innerHTML='<b>You&rsquo;re on the waitlist.</b><br>'+escH(dayWords())+
+      (wlWin!=='any'?', '+w[1].toLowerCase():'')+'. I&rsquo;ve emailed you a confirmation at '+escH(body.email)+
+      '. If a time opens up, you&rsquo;ll hear from me straight away.';
+    el('wlDone').classList.remove('hidden');
+    try{gtag('event','waitlist_join',{window:wlWin})}catch(e){}
+  }catch(e){
+    msg.className='wl-msg err';
+    msg.textContent=(e&&e.message)||'I could not add you just now. Please call or text Sandy at (848) 230-5995.';
+  }finally{
+    btn.textContent='Join the Waitlist'; checkWl();
+  }
+}
+/* The "take me off the waitlist" link in the emails: ?leave=<day>.<id>.<token>.
+   It asks first, so a mail scanner opening the link changes nothing. */
+(function leaveLink(){
+  let v=''; try{v=new URLSearchParams(location.search).get('leave')||''}catch(e){}
+  const m=v.match(/^(\d{4}-\d{2}-\d{2})\.([0-9a-f]+)\.([0-9a-f]+)$/); if(!m) return;
+  const box=el('wlLeave');
+  const words=new Date(+m[1].slice(0,4),+m[1].slice(5,7)-1,+m[1].slice(8)).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  box.innerHTML='Take yourself off the waitlist for <b>'+escH(words)+'</b>?<br>'+
+    '<button class="btn btn-line" type="button" id="wlLeaveBtn">Yes, take me off</button>';
+  box.classList.remove('hidden');
+  el('wlLeaveBtn').onclick=async function(){
+    this.disabled=true;
+    try{
+      const r=await fetch(WL_API,{method:'POST',headers:{'content-type':'application/json'},
+        body:JSON.stringify({action:'leave',day:m[1],id:m[2],token:m[3]})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(data.error||'');
+      box.innerHTML=data.removed?'Done. You&rsquo;re off the waitlist for <b>'+escH(words)+'</b>. Book any time below.'
+        :'You&rsquo;re not on the waitlist for that day any more. Book any time below.';
+    }catch(e){
+      box.innerHTML='I could not do that just now. Please call or text Sandy at <a href="tel:+18482305995">(848) 230-5995</a>.';
+    }
+  };
+})();
 
 /* ---------- step 3 ---------- */
 function sumHTML(){
@@ -1202,7 +1375,18 @@ function linkedSlug(){
 }
 (function deepLink(){
   var slug=linkedSlug();
-  if(slug && findSvc(slug)) pick(slug);
+  // "?service=signature,scalp" books a visit of several services, in order.
+  var list=slug.split(',').map(function(x){return x.trim()}).filter(function(x){return findSvc(x)});
+  if(list.length>1){ picked=list.map(findSvc); renderPicked(); toTime(); }
+  else if(slug && findSvc(slug)) pick(slug);
+  else return;
+  // "&date=2026-12-12" opens that day, as the waitlist's "a time opened" email does.
+  var d=''; try{ d=(new URLSearchParams(location.search||'')).get('date')||''; }catch(e){}
+  var m=d.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(!m) return;
+  var want=new Date(+m[1],+m[2]-1,+m[3]); var t=new Date(); t.setHours(0,0,0,0);
+  if(want<t) return;
+  view=new Date(+m[1],+m[2]-1,1); day=want;
+  renderCal(); loadMonth();
 })();
 window.addEventListener('hashchange',function(){
   var slug=(location.hash||'').replace('#','').trim();

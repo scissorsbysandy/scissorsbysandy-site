@@ -1,0 +1,9 @@
+{
+  "name": "scissorsbysandy-site",
+  "private": true,
+  "type": "module",
+  "description": "Only the Netlify Functions use these. The site itself is plain HTML with no build step.",
+  "dependencies": {
+    "@netlify/blobs": "11.1.12"
+  }
+}

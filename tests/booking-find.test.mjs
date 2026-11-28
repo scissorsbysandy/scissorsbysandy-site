@@ -97,9 +97,9 @@ const BOOKED=[{id:'BK_OLD',startAt:SOON,minutes:60,
   await page.fill('#fph','7325550101'); await page.fill('#fnm','Pat');
   await page.click('#findBtn'); await page.waitForTimeout(500);
   await page.locator('#upcoming button', {hasText:'Reschedule'}).click(); await page.waitForTimeout(500);
-  await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(400);
+  await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(400);
   await page.locator('.slot').first().click(); await page.waitForTimeout(200);
-  const cont=page.locator('#s2 button.btn-gold'); if(await cont.isVisible()) await cont.click();
+  const cont=page.locator('#toS3'); if(await cont.isVisible()) await cont.click();
   await page.waitForTimeout(300);
   await page.click('#confirmBtn'); await page.waitForTimeout(500);
   const r=seen.find(s=>s.action==='reschedule');

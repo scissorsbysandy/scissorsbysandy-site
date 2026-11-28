@@ -76,9 +76,9 @@ const CARD={id:'BK1',svcIds:['executive'],svcNames:['The Executive'],price:60,mi
   const {page,seen,ctx}=await session();
   await page.locator('.svc').first().click(); await page.waitForTimeout(150);
   await page.locator('#pickBar button').click(); await page.waitForTimeout(500);
-  await page.locator('button.day:not([disabled])').first().click(); await page.waitForTimeout(300);
+  await page.locator('button.day:not([disabled]):not(.full)').first().click(); await page.waitForTimeout(300);
   await page.locator('.slot').first().click(); await page.waitForTimeout(200);
-  const cont=page.locator('#s2 button.btn-gold'); if(await cont.isVisible()) await cont.click();
+  const cont=page.locator('#toS3'); if(await cont.isVisible()) await cont.click();
   await page.waitForTimeout(300);
   await page.click('#confirmBtn'); await page.waitForTimeout(500);
   check('the confirmation offers Pay Ahead Now', await page.locator('#payNow .btn-gold').isVisible());
